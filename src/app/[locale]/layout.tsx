@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { fontVars } from "@/lib/fonts";
 import { getDictionary, isLocale, locales } from "@/lib/i18n";
+import { site } from "@/lib/site";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -17,6 +18,7 @@ export async function generateMetadata({
   if (!isLocale(locale)) return {};
   const t = getDictionary(locale);
   return {
+    metadataBase: new URL(site.url),
     title: t.meta.title,
     description: t.meta.description,
     alternates: { languages: { ru: "/ru", kk: "/kk" } },

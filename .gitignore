@@ -10,3 +10,6 @@ next-env.d.ts
 # не для публичного репозитория
 _to_delete/
 design/refs/
+
+.vercel
+.env*.local

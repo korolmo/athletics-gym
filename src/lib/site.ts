@@ -1,5 +1,6 @@
 export const site = {
   name: "Athletic's Gym",
+  url: "https://athletics-gym.vercel.app",
   phoneDisplay: "+7 771 484 63 44",
   phoneTel: "+77714846344",
   whatsappNumber: "77714846344",
