@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import "../globals.css";
-import { fontVars } from "@/lib/fonts";
+import { siteFontVars } from "@/lib/fonts";
 import { getDictionary, isLocale, locales } from "@/lib/i18n";
 import { site } from "@/lib/site";
 
@@ -37,8 +37,8 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   return (
-    <html lang={locale} className={fontVars}>
-      <body className="bg-bg font-sans text-fg antialiased">{children}</body>
+    <html lang={locale} className={siteFontVars}>
+      <body className="bg-background font-site text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">{children}</body>
     </html>
   );
 }

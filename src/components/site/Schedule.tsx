@@ -38,8 +38,10 @@ export function Schedule({ lessons, labels }: { lessons: LessonView[]; labels: L
               role="tab"
               aria-selected={active}
               onClick={() => setDay(n)}
-              className={`min-w-12 shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-                active ? "bg-accent text-accent-ink" : "bg-card text-muted hover:text-fg"
+              className={`h-12 min-w-14 shrink-0 rounded-xl px-5 text-label-uppercase uppercase transition-all ${
+                active
+                  ? "bg-primary-container text-on-primary"
+                  : "bg-surface-card text-text-muted hover:text-primary-container"
               }`}
             >
               {label}
@@ -48,23 +50,23 @@ export function Schedule({ lessons, labels }: { lessons: LessonView[]; labels: L
         })}
       </div>
 
-      <ul className="mt-4 grid gap-3 md:grid-cols-2">
+      <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         {items.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-line p-6 text-center text-muted md:col-span-2">
+          <li className="rounded-2xl bg-surface-card p-6 text-center text-body-md text-text-muted md:col-span-2">
             {labels.empty}
           </li>
         ) : (
           items.map((l) => (
-            <li key={l.id} className="flex items-center gap-4 rounded-2xl bg-card p-4">
-              <div className="w-20 shrink-0">
-                <div className="font-display text-2xl leading-none text-accent">{l.startTime}</div>
-                <div className="mt-1 text-xs text-muted">
+            <li key={l.id} className="flex min-w-0 items-center gap-4 rounded-2xl bg-surface-card p-5 shadow-md md:p-6">
+              <div className="w-20 shrink-0 md:w-24">
+                <div className="text-price-numeral text-primary-container">{l.startTime}</div>
+                <div className="mt-1 text-body-sm text-text-muted">
                   {l.durationMin} {labels.min}
                 </div>
               </div>
-              <div className="min-w-0">
-                <div className="truncate font-semibold">{l.discipline}</div>
-                {l.trainer && <div className="truncate text-sm text-muted">{l.trainer}</div>}
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-headline-sm uppercase text-text-primary">{l.discipline}</div>
+                {l.trainer && <div className="truncate text-body-md text-text-muted">{l.trainer}</div>}
               </div>
             </li>
           ))

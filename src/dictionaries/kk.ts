@@ -97,5 +97,17 @@ export const kk: Dictionary = {
   footer: {
     rights: "Athletic's Gym, Қызылорда",
   },
+  eyebrow: {
+    about: "Клубтың артықшылықтары",
+    disciplines: "Топтық жаттығулар",
+    prices: "Тарифтер мен абонементтер",
+    gallery: "Атмосфера және жабдық",
+    trainers: "Команда",
+    schedule: "Күндер бойынша сабақтар",
+    contacts: "Орналасқан жері",
+  },
+  gallery: {
+    title: "Зал ішінен",
+  },
   lang: { ru: "RU", kk: "KZ" },
 };

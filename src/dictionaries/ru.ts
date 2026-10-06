@@ -94,6 +94,19 @@ export const ru = {
   footer: {
     rights: "Athletic's Gym, Кызылорда",
   },
+  // Надзаголовки разделов и галерея — появились с макетом Stitch
+  eyebrow: {
+    about: "Преимущества клуба",
+    disciplines: "Групповые тренировки",
+    prices: "Тарифы и абонементы",
+    gallery: "Атмосфера и оборудование",
+    trainers: "Команда",
+    schedule: "Занятия по дням",
+    contacts: "Местоположение",
+  },
+  gallery: {
+    title: "Зал изнутри",
+  },
   lang: { ru: "RU", kk: "KZ" },
 };
 

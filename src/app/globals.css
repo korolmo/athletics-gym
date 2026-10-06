@@ -3,8 +3,10 @@
 @theme inline {
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-oswald), "Arial Narrow", sans-serif;
+  --font-site: var(--font-manrope), system-ui, sans-serif;
 }
 
+/* Админка */
 @theme {
   --color-bg: #141416;
   --color-card: #1f1f23;
@@ -18,13 +20,82 @@
   --color-danger: #f87171;
 }
 
+/* Публичный сайт — токены макета Stitch (design/stitch/home-desktop.html) */
+@theme {
+  --color-background: #131315;
+  --color-surface-dim: #131315;
+  --color-surface-container-lowest: #0e0e10;
+  --color-surface-container-low: #1b1b1d;
+  --color-surface-container: #1f1f21;
+  --color-surface-container-high: #2a2a2c;
+  --color-surface-card: #1f1f23;
+  --color-surface-border: #2e2e33;
+  --color-surface-tint: #d8ca23;
+  --color-primary-container: #f5e642;
+  --color-on-primary: #363100;
+  --color-on-primary-container: #6e6600;
+  --color-on-surface: #e5e1e4;
+  --color-on-surface-variant: #ccc7ad;
+  --color-text-primary: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-whatsapp-green: #25d366;
+  --color-star: #f5a623;
+
+  --spacing-gutter: 1.5rem;
+  --container-site: 1280px;
+
+  --text-display-hero: 56px;
+  --text-display-hero--line-height: 60px;
+  --text-display-hero--letter-spacing: 0.02em;
+  --text-display-hero--font-weight: 800;
+  --text-display-hero-mobile: 32px;
+  --text-display-hero-mobile--line-height: 38px;
+  --text-display-hero-mobile--letter-spacing: 0.02em;
+  --text-display-hero-mobile--font-weight: 800;
+  --text-headline-lg: 36px;
+  --text-headline-lg--line-height: 44px;
+  --text-headline-lg--letter-spacing: 0.01em;
+  --text-headline-lg--font-weight: 800;
+  --text-headline-lg-mobile: 26px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile--letter-spacing: 0.01em;
+  --text-headline-lg-mobile--font-weight: 800;
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 30px;
+  --text-headline-md--letter-spacing: 0.01em;
+  --text-headline-md--font-weight: 700;
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 24px;
+  --text-headline-sm--font-weight: 700;
+  --text-price-numeral: 28px;
+  --text-price-numeral--line-height: 32px;
+  --text-price-numeral--letter-spacing: -0.01em;
+  --text-price-numeral--font-weight: 800;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--font-weight: 500;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-body-sm--font-weight: 400;
+  --text-label-uppercase: 12px;
+  --text-label-uppercase--line-height: 16px;
+  --text-label-uppercase--letter-spacing: 0.08em;
+  --text-label-uppercase--font-weight: 800;
+
+  --shadow-header: 0 1px 8px rgb(0 0 0 / 0.35);
+  --shadow-wa: 0 4px 20px rgb(37 211 102 / 0.4);
+}
+
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
 }
 
 section[id] {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 6rem;
 }
 
 .no-scrollbar {
@@ -32,18 +103,4 @@ section[id] {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
-}
-
-.hero-bg {
-  background:
-    radial-gradient(60% 60% at 85% 20%, rgb(245 230 66 / 0.18), transparent 70%),
-    radial-gradient(40% 50% at 0% 100%, rgb(245 230 66 / 0.08), transparent 70%),
-    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 14px),
-    #141416;
-}
-
-.card-glow {
-  background:
-    radial-gradient(120% 80% at 100% 0%, rgb(245 230 66 / 0.12), transparent 60%),
-    #1f1f23;
 }

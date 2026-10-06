@@ -6,11 +6,11 @@ import {
   Contacts,
   Disciplines,
   Footer,
+  Gallery,
   Header,
   Hero,
   MobileBar,
   Prices,
-  Rating,
   ScheduleSection,
   Trainers,
   Women,
@@ -52,19 +52,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return (
     <>
       <Header {...props} />
-      <main>
+      <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} />
         <About {...props} />
-        <Women {...props} />
         <Disciplines {...props} items={disciplines} />
+        <Women {...props} />
         <Prices {...props} items={tariffs} />
+        <Gallery {...props} />
         {trainers.length > 0 && <Trainers {...props} items={trainers} />}
         {lessons.length > 0 && (
           <ScheduleSection {...props} isDemo={lessons.some((l) => l.isDemo)}>
             <Schedule lessons={lessonViews} labels={t.schedule} />
           </ScheduleSection>
         )}
-        <Rating {...props} />
         <Contacts {...props} />
       </main>
       <Footer {...props} />
