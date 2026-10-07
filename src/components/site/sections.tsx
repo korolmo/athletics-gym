@@ -305,7 +305,9 @@ export function About({ t }: Props) {
                   <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container text-primary-container transition-colors group-hover:bg-primary-container group-hover:text-on-primary">
                     <Icon className="h-6 w-6" />
                   </span>
-                  <span className={`${label} text-text-muted`}>{String(i + 1).padStart(2, "0")}</span>
+                  <span className={`${label} text-text-muted`}>
+                    {String(i + 1).padStart(2, "0")} {"//"} {t.about.kickers[i]}
+                  </span>
                 </div>
                 <div>
                   <h3 className="mb-2 text-headline-sm uppercase text-text-primary">{item.title}</h3>
@@ -331,11 +333,11 @@ export type DisciplineData = {
   descriptionKk: string | null;
 };
 
-// Фото из макета Stitch (сгенерированы, не съёмка зала)
+// Фото из макета Stitch (сгенерированы, не съёмка зала); кадры обрезаны так, чтобы не было надписей и логотипов
 const disciplinePhoto: Record<string, string> = {
-  functional: "/stitch/functional.jpg",
-  crossfit: "/stitch/crossfit.jpg",
-  cycle: "/stitch/cycle.jpg",
+  functional: "/stitch/functional-crop.jpg",
+  crossfit: "/stitch/crossfit-crop.jpg",
+  cycle: "/stitch/cycle-crop.jpg",
   trx: "/stitch/trx.jpg",
 };
 
@@ -357,7 +359,7 @@ function ProgramBody({ title, text, caption }: { title: string; text: string; ca
   );
 }
 
-function ProgramPhoto({ src, cropBottom, chip }: { src?: string; cropBottom?: boolean; chip?: string }) {
+function ProgramPhoto({ src, chip, accent }: { src?: string; chip?: string; accent?: boolean }) {
   return (
     <div className="relative h-44 w-full overflow-hidden bg-surface-container">
       {src ? (
@@ -366,7 +368,7 @@ function ProgramPhoto({ src, cropBottom, chip }: { src?: string; cropBottom?: bo
           alt=""
           fill
           sizes="(min-width: 1024px) 240px, 256px"
-          className={`object-cover transition-transform duration-500 ${cropBottom ? "origin-top scale-[1.45] group-hover:scale-150" : "group-hover:scale-105"}`}
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
         <div className="flex h-full items-center justify-center text-surface-border">
@@ -374,7 +376,11 @@ function ProgramPhoto({ src, cropBottom, chip }: { src?: string; cropBottom?: bo
         </div>
       )}
       {chip && (
-        <span className="absolute left-3 top-3 rounded-sm bg-primary-container px-2 py-0.5 text-[11px] uppercase text-on-primary">
+        <span
+          className={`absolute left-3 top-3 rounded-sm px-2 py-0.5 text-[11px] uppercase ${
+            accent ? "bg-primary-container text-on-primary" : "bg-surface-dim/80 text-primary-container backdrop-blur-md"
+          }`}
+        >
           {chip}
         </span>
       )}
@@ -391,15 +397,14 @@ export function Disciplines({ locale, t, items }: Props & { items: DisciplineDat
           title={t.disciplines.title}
           aside={
             <span className={`${label} text-text-muted`}>
-              {String(items.length + 1).padStart(2, "0")} {"//"} {t.disciplines.title}
+              {items.length + 1} {t.disciplines.counter}
             </span>
           }
         />
         <div className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
           {items.map((d) => (
             <a key={d.id} href="#schedule" className={programCard}>
-              {/* на фото кроссфита из макета на полу написано чужое название клуба — низ кадра обрезаем */}
-              <ProgramPhoto src={disciplinePhoto[d.slug]} cropBottom={d.slug === "crossfit"} />
+              <ProgramPhoto src={disciplinePhoto[d.slug]} chip={t.disciplines.tags[d.slug]} />
               <ProgramBody
                 title={pick(locale, d.nameRu, d.nameKk)}
                 text={pick(locale, d.descriptionRu, d.descriptionKk)}
@@ -408,7 +413,7 @@ export function Disciplines({ locale, t, items }: Props & { items: DisciplineDat
             </a>
           ))}
           <a href={whatsappUrl(t.wa.personal)} target="_blank" rel="noopener noreferrer" className={programCard}>
-            <ProgramPhoto src="/stitch/personal.jpg" chip={t.trainers.personal} />
+            <ProgramPhoto src="/stitch/personal-crop.jpg" chip={t.disciplines.tags.personal} accent />
             <ProgramBody title={t.disciplines.personalTitle} text={t.disciplines.personalText} caption={t.cta.whatsapp} />
           </a>
         </div>
@@ -652,8 +657,8 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
 
 export function Gallery({ t }: Props) {
   const tiles = [
-    { src: "/stitch/gallery-weights.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw", item: t.about.items[0] },
-    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw", item: t.about.items[2] },
+    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw", item: t.about.items[2] },
+    { src: "/stitch/gallery-weights-crop.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw", item: t.about.items[0] },
   ];
   return (
     <section id="gallery" className={`w-full bg-surface-container-low ${sectionY}`}>

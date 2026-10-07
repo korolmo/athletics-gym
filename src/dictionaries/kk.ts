@@ -37,6 +37,7 @@ export const kk: Dictionary = {
   },
   about: {
     title: "Зал туралы",
+    kickers: ["Жабдық", "Оңашалық", "Микроклимат", "Режим"],
     items: [
       { title: "Жаңа тренажерлар", text: "Барлық бұлшық ет топтарына арналған жабдық" },
       { title: "Бөлек әйелдер залы", text: "Тек әйелдерге арналған жеке кеңістік" },
@@ -53,6 +54,14 @@ export const kk: Dictionary = {
     title: "Бағыттар",
     personalTitle: "Жеке жаттығулар",
     personalText: "Жеке жаттықтырушымен мақсатыңызға сай бағдарлама",
+    counter: "Бағыт",
+    tags: {
+      functional: "Функционал",
+      crossfit: "HIIT / күш",
+      cycle: "Кардио драйв",
+      trx: "Тепе-теңдік және кор",
+      personal: "Pro нәтиже",
+    },
   },
   prices: {
     title: "Бағалар",
@@ -99,7 +108,7 @@ export const kk: Dictionary = {
   },
   eyebrow: {
     about: "Клубтың артықшылықтары",
-    disciplines: "Топтық жаттығулар",
+    disciplines: "Пәндер мен форматтар",
     prices: "Тарифтер мен абонементтер",
     gallery: "Атмосфера және жабдық",
     trainers: "Команда",
