@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { saveTrainer, type TrainerFormState } from "./actions";
+import { deleteTrainer, saveTrainer, type TrainerFormState } from "./actions";
 import { HALLS, HALL_LABEL_RU, type HallId } from "@/lib/tariffs";
 
 export type TrainerInput = {
-  id: string;
+  /** Пусто — новый Тренер */
+  id?: string;
   name: string;
   hallId: HallId;
   descriptionRu: string;
   descriptionKk: string;
-  sortOrder: number;
+  sortOrder: number | "";
   isVisible: boolean;
 };
 
@@ -25,11 +26,11 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
 
   return (
     <form action={action} className="space-y-5">
-      <input type="hidden" name="id" value={initial.id} />
+      {initial.id && <input type="hidden" name="id" value={initial.id} />}
 
       <label className="block">
         <span className={labelCls}>Имя *</span>
-        <input name="name" required defaultValue={initial.name} className={field} />
+        <input name="name" required defaultValue={initial.name} placeholder="Например, Нұрмахан" className={field} />
       </label>
 
       <label className="block">
@@ -41,7 +42,7 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
             </option>
           ))}
         </select>
-        <span className={hint}>Тарифы тренера переедут в выбранный зал вместе с ним.</span>
+        {initial.id && <span className={hint}>Тарифы тренера переедут в выбранный зал вместе с ним.</span>}
       </label>
 
       <label className="block">
@@ -63,6 +64,7 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
           min={0}
           inputMode="numeric"
           defaultValue={initial.sortOrder}
+          placeholder={initial.id ? "0" : "в конец списка"}
           className={field}
         />
         <span className={hint}>Меньше число — выше в списке своего зала.</span>
@@ -84,16 +86,33 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
           href={`/admin/trainers?hall=${initial.hallId}`}
           className="rounded-xl border border-line px-5 py-3.5 font-semibold text-muted"
         >
-          К списку
+          {initial.id ? "К списку" : "Отмена"}
         </Link>
         <button
           type="submit"
           disabled={pending}
           className="flex-1 rounded-xl bg-accent py-3.5 font-semibold text-accent-ink transition hover:brightness-95 disabled:opacity-60"
         >
-          {pending ? "Сохраняем…" : "Сохранить"}
+          {pending ? "Сохраняем…" : initial.id ? "Сохранить" : "Добавить тренера"}
         </button>
       </div>
+    </form>
+  );
+}
+
+export function DeleteTrainerButton({ id, name, tariffCount }: { id: string; name: string; tariffCount: number }) {
+  return (
+    <form
+      action={deleteTrainer}
+      onSubmit={(e) => {
+        const tariffs = tariffCount > 0 ? ` Вместе с ним удалятся его тарифы (${tariffCount}).` : "";
+        if (!window.confirm(`Удалить тренера «${name}»?${tariffs} Он пропадёт с сайта.`)) e.preventDefault();
+      }}
+    >
+      <input type="hidden" name="id" value={id} />
+      <button type="submit" className="w-full rounded-xl py-3 text-sm font-semibold text-danger hover:bg-danger/10">
+        Удалить тренера
+      </button>
     </form>
   );
 }

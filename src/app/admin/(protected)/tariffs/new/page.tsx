@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { isHall } from "@/lib/tariffs";
 import { TariffForm } from "../TariffForm";
@@ -9,25 +10,23 @@ export default async function NewTariffPage({
 }: {
   searchParams: Promise<{ hall?: string; trainer?: string }>;
 }) {
-  const { hall: rawHall, trainer: trainerParam } = await searchParams;
-  const trainers = await db.trainer.findMany({
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, hallId: true },
-  });
-  // Из карточки Тренера приходим с ?trainer=…: сразу персональный Тариф этого Тренера
-  const trainer = trainers.find((t) => t.id === trainerParam);
+  const { hall: rawHall, trainer: trainerId } = await searchParams;
+  // Из карточки Тренера приходим с ?trainer=…: это его персональный Тариф
+  const trainer = trainerId ? await db.trainer.findUnique({ where: { id: trainerId } }) : null;
+  if (trainerId && (!trainer || !isHall(trainer.hallId))) notFound();
   const hallId = trainer && isHall(trainer.hallId) ? trainer.hallId : rawHall && isHall(rawHall) ? rawHall : "general";
 
   return (
     <>
       <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">Новый тариф</h1>
-      <p className="mb-6 text-sm text-muted">{trainer ? `Тренер: ${trainer.name}` : "Позиция прайса зала"}</p>
+      <p className="mb-6 text-sm text-muted">
+        {trainer ? `Персональные тренировки · тренер ${trainer.name}` : "Позиция прайса зала"}
+      </p>
       <TariffForm
-        trainers={trainers}
+        trainer={trainer ? { id: trainer.id, name: trainer.name } : undefined}
         cancelHref={trainer ? `/admin/trainers/${trainer.id}` : `/admin/tariffs?hall=${hallId}`}
         initial={{
           hallId,
-          trainerId: trainer?.id ?? "",
           category: trainer ? "PERSONAL" : "VISITS",
           titleRu: "",
           titleKk: "",

@@ -79,10 +79,11 @@ export async function saveTariff(_prev: TariffFormState, fd: FormData): Promise<
   const audience = fields.audience ? text(fd, "audience") : "ALL";
   if (!isAudience(audience)) return { error: "Выберите аудиторию" };
 
+  // Персональные тренировки — только у Тренеров; остальные Категории — только в прайсе Зала
   let trainerId: string | null = null;
-  if (fields.trainer && text(fd, "trainerId")) {
-    const trainer = await db.trainer.findUnique({ where: { id: text(fd, "trainerId") } });
-    if (!trainer) return { error: "Тренер не найден" };
+  if (fields.trainer) {
+    const trainer = text(fd, "trainerId") ? await db.trainer.findUnique({ where: { id: text(fd, "trainerId") } }) : null;
+    if (!trainer) return { error: "Персональный тариф добавляется в карточке тренера" };
     trainerId = trainer.id;
     // Тариф Тренера всегда в Зале Тренера
     hallId = trainer.hallId;

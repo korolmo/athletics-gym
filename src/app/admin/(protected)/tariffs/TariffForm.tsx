@@ -10,9 +10,9 @@ import {
   AUDIENCE_LABEL_RU,
   CATEGORY_FIELDS,
   CATEGORY_LABEL_RU,
-  CATEGORY_ORDER,
   HALLS,
   HALL_LABEL_RU,
+  HALL_CATEGORIES,
   type Access,
   type Audience,
   type Category,
@@ -22,7 +22,6 @@ import {
 export type TariffInput = {
   id?: string;
   hallId: HallId;
-  trainerId: string;
   category: Category;
   titleRu: string;
   titleKk: string;
@@ -35,8 +34,6 @@ export type TariffInput = {
   isVisible: boolean;
 };
 
-export type TrainerOption = { id: string; name: string; hallId: string };
-
 const field =
   "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted/60 focus:border-accent";
 const labelCls = "mb-1.5 block text-sm text-muted";
@@ -44,81 +41,62 @@ const hint = "mt-1 block text-xs text-muted";
 
 export function TariffForm({
   initial,
-  trainers,
+  trainer,
   cancelHref,
 }: {
   initial: TariffInput;
-  trainers: TrainerOption[];
+  /** Задан — это персональный Тариф Тренера: Зал и Категория определены Тренером */
+  trainer?: { id: string; name: string };
   cancelHref: string;
 }) {
   const [state, action, pending] = useActionState<TariffFormState, FormData>(saveTariff, undefined);
-  const [category, setCategory] = useState<Category>(initial.category);
-  const [hallId, setHallId] = useState<HallId>(initial.hallId);
-  const [trainerId, setTrainerId] = useState(initial.trainerId);
+  const [category, setCategory] = useState<Category>(trainer ? "PERSONAL" : initial.category);
   // Показываем только поля, которые есть у выбранной Категории
   const fields = CATEGORY_FIELDS[category];
   const personal = category === "PERSONAL";
-  const hallTrainers = trainers.filter((t) => t.hallId === hallId);
 
   return (
     <form action={action} className="space-y-5">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
 
-      <label className="block">
-        <span className={labelCls}>Зал</span>
-        <select
-          name="hallId"
-          value={hallId}
-          onChange={(e) => {
-            const next = e.target.value as HallId;
-            setHallId(next);
-            if (!trainers.some((t) => t.id === trainerId && t.hallId === next)) setTrainerId("");
-          }}
-          className={field}
-        >
-          {HALLS.map((h) => (
-            <option key={h} value={h}>
-              {HALL_LABEL_RU[h]}
-            </option>
-          ))}
-        </select>
-      </label>
+      {trainer ? (
+        <>
+          <input type="hidden" name="trainerId" value={trainer.id} />
+          <input type="hidden" name="hallId" value={initial.hallId} />
+          <input type="hidden" name="category" value="PERSONAL" />
+        </>
+      ) : (
+        <>
+          <label className="block">
+            <span className={labelCls}>Зал</span>
+            <select name="hallId" defaultValue={initial.hallId} className={field}>
+              {HALLS.map((h) => (
+                <option key={h} value={h}>
+                  {HALL_LABEL_RU[h]}
+                </option>
+              ))}
+            </select>
+          </label>
 
-      <label className="block">
-        <span className={labelCls}>Категория</span>
-        <select name="category" value={category} onChange={(e) => setCategory(e.target.value as Category)} className={field}>
-          {CATEGORY_ORDER.map((c) => (
-            <option key={c} value={c}>
-              {CATEGORY_LABEL_RU[c]}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {fields.trainer && (
-        <label className="block">
-          <span className={labelCls}>Тренер</span>
-          <select name="trainerId" value={trainerId} onChange={(e) => setTrainerId(e.target.value)} className={field}>
-            <option value="">Без тренера — общая позиция прайса зала</option>
-            {hallTrainers.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label className="block">
+            <span className={labelCls}>Категория</span>
+            <select name="category" value={category} onChange={(e) => setCategory(e.target.value as Category)} className={field}>
+              {HALL_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {CATEGORY_LABEL_RU[c]}
+                </option>
+              ))}
+            </select>
+            <span className={hint}>Персональные тренировки заводятся в карточке тренера.</span>
+          </label>
+        </>
       )}
 
       {fields.title && (
         <>
           <label className="block">
             <span className={labelCls}>Уточнение (RU)</span>
-            <input
-              name="titleRu"
-              defaultValue={initial.titleRu}
-              placeholder="1+1 (подходит для подруг)"
-              className={field}
-            />
+            <input name="titleRu" defaultValue={initial.titleRu} placeholder="1+1 (подходит для подруг)" className={field} />
             <span className={hint}>Необязательно. Если пусто — название соберётся из полей ниже.</span>
           </label>
           <label className="block">

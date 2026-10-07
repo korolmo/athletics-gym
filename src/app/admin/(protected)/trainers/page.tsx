@@ -2,14 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { formatPrice, isHall } from "@/lib/tariffs";
-import { PencilIcon } from "@/components/icons";
+import { PencilIcon, PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
 import { toggleTrainer } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function TrainersPage({ searchParams }: { searchParams: Promise<{ hall?: string }> }) {
-  const { hall: rawHall } = await searchParams;
+export default async function TrainersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ hall?: string; deleted?: string }>;
+}) {
+  const { hall: rawHall, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
   const trainers = await db.trainer.findMany({
     where: { hallId: hall },
@@ -25,6 +29,12 @@ export default async function TrainersPage({ searchParams }: { searchParams: Pro
       </div>
 
       <HallFilter base="/admin/trainers" hall={hall} />
+
+      {deleted && (
+        <div role="status" className="mb-6 rounded-xl border border-wa/40 bg-wa/10 px-4 py-3 text-sm text-wa">
+          Тренер удалён
+        </div>
+      )}
 
       {trainers.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
@@ -82,8 +92,16 @@ export default async function TrainersPage({ searchParams }: { searchParams: Pro
       )}
 
       <p className="mt-6 text-sm text-muted">
-        Добавление тренеров и загрузка фото появятся на следующем этапе. Сейчас фото — карточки из папки проекта.
+        Загрузка фото появится на следующем этапе. Сейчас фото — карточки из папки проекта; у новых тренеров фото пока нет.
       </p>
+
+      <Link
+        href={`/admin/trainers/new?hall=${hall}`}
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-4 font-semibold text-accent-ink shadow-lg shadow-black/40"
+      >
+        <PlusIcon />
+        Добавить тренера
+      </Link>
     </>
   );
 }

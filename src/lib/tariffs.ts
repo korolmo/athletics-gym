@@ -4,6 +4,8 @@ export type HallId = (typeof HALLS)[number];
 
 export const CATEGORY_ORDER = ["SINGLE", "VISITS", "UNLIMITED", "PERSONAL"] as const;
 export type Category = (typeof CATEGORY_ORDER)[number];
+/** Категории прайса Зала. Персональные тренировки — только у Тренеров. */
+export const HALL_CATEGORIES = ["SINGLE", "VISITS", "UNLIMITED"] as const satisfies readonly Category[];
 
 export const ACCESS = ["DAY", "FULL"] as const;
 export type Access = (typeof ACCESS)[number];

@@ -30,8 +30,7 @@ const hallTariffs: Record<HallId, TariffSeed[]> = {
     { category: "UNLIMITED", durationMonths: 3, price: 60000 },
     { category: "UNLIMITED", durationMonths: 6, price: 120000 },
     { category: "UNLIMITED", durationMonths: 12, price: 170000 },
-    // «Жеке жаттықтырушы 15 000 – 25 000»: разброс между Тренерами
-    { category: "PERSONAL", visitsPerMonth: 12, price: 15000, priceTo: 25000 },
+    // Строку «Жеке жаттықтырушы 15 000 – 25 000» не заводим: персональные цены — только у Тренеров
   ],
   women: [
     { category: "SINGLE", price: 3000 },
@@ -43,7 +42,6 @@ const hallTariffs: Record<HallId, TariffSeed[]> = {
     { category: "UNLIMITED", durationMonths: 3, price: 50000 },
     { category: "UNLIMITED", durationMonths: 6, price: 105000 },
     { category: "UNLIMITED", durationMonths: 12, price: 140000 },
-    { category: "PERSONAL", visitsPerMonth: 12, price: 20000 },
   ],
 };
 

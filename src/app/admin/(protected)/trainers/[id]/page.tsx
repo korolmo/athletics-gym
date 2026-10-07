@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { isHall } from "@/lib/tariffs";
 import { PlusIcon } from "@/components/icons";
 import { TariffRow } from "../../tariffs/TariffRow";
-import { TrainerForm } from "../TrainerForm";
+import { DeleteTrainerButton, TrainerForm } from "../TrainerForm";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +79,10 @@ export default async function EditTrainerPage({
           </ul>
         )}
       </section>
+
+      <div className="mt-8 border-t border-line pt-4">
+        <DeleteTrainerButton id={tr.id} name={tr.name} tariffCount={tr.tariffs.length} />
+      </div>
     </>
   );
 }

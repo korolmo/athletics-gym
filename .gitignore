@@ -3,6 +3,9 @@ node_modules
 out
 .env
 .env*.local
+# любые файлы окружения с секретами (.env.preview и т.п.), кроме примера
+.env.*
+!.env.example
 *.tsbuildinfo
 next-env.d.ts
 .vercel
@@ -10,6 +13,9 @@ next-env.d.ts
 # не для публичного репозитория
 _to_delete/
 design/refs/
+# плакаты от Владельца: на них личные контакты тренеров
+docs/owner/**/*.png
+docs/owner/**/*.jpg
 
 .vercel
 .env*.local
