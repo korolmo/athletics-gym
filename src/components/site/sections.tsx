@@ -203,9 +203,9 @@ export function Hero({ t }: Props) {
               </h1>
             </div>
 
-            <p className="max-w-[580px] pt-1 text-body-lg leading-relaxed text-text-muted">{t.hero.subtitle}</p>
+            <p className="max-w-[580px] pt-1 text-body-lg leading-relaxed text-text-muted lg:min-h-[82px]">{t.hero.subtitle}</p>
 
-            <div className="flex w-full flex-wrap items-center gap-4 pt-3 sm:w-auto">
+            <div className="flex w-full flex-wrap items-center gap-4 pt-3 sm:w-auto lg:flex-col lg:items-start">
               <a
                 href={whatsappUrl(t.wa.trial)}
                 target="_blank"
@@ -223,7 +223,7 @@ export function Hero({ t }: Props) {
               </a>
             </div>
 
-            <div className="mt-4 grid w-full max-w-[620px] grid-cols-1 gap-4 pt-6 sm:grid-cols-3">
+            <div className="mt-4 grid w-full max-w-[620px] grid-cols-1 gap-4 pt-6 sm:grid-cols-3 lg:max-w-none lg:grid-cols-[1fr_1.4fr_1fr]">
               {stats.map(({ Icon, title, text }) => (
                 <div key={title} className="flex flex-col">
                   <span className="flex items-center gap-1 text-headline-sm uppercase text-text-primary">
@@ -288,7 +288,11 @@ export function About({ t }: Props) {
   return (
     <section id="about" className={`w-full bg-surface-container-low ${sectionY}`}>
       <div className={container}>
-        <SectionHead eyebrow={t.eyebrow.about} title={t.about.title} />
+        <SectionHead
+          eyebrow={t.eyebrow.about}
+          title={t.about.title}
+          aside={<p className="max-w-[420px] text-body-md text-text-muted">{t.meta.description}</p>}
+        />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {t.about.items.map((item, i) => {
             const Icon = icons[i] ?? ExerciseSym;
@@ -338,21 +342,22 @@ const disciplinePhoto: Record<string, string> = {
 const programCard =
   "group flex w-64 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-surface-card shadow-md transition-all hover:-translate-y-1 sm:w-auto";
 
-function ProgramBody({ title, text }: { title: string; text: string }) {
+function ProgramBody({ title, text, caption }: { title: string; text: string; caption: string }) {
   return (
-    <div className="flex grow flex-col justify-between p-5">
+    <div className="flex grow flex-col justify-between p-5 lg:min-h-[174px]">
       <div>
         <h3 className="mb-1 text-headline-sm uppercase text-text-primary">{title}</h3>
         <p className="text-body-sm text-text-muted">{text}</p>
       </div>
-      <div className="flex items-center justify-end pt-4 text-[12px] text-text-muted">
+      <div className="flex items-center justify-between pt-4 text-[12px] text-text-muted">
+        <span>{caption}</span>
         <ArrowForwardSym className="h-4 w-4 text-primary-container" />
       </div>
     </div>
   );
 }
 
-function ProgramPhoto({ src, cropBottom }: { src?: string; cropBottom?: boolean }) {
+function ProgramPhoto({ src, cropBottom, chip }: { src?: string; cropBottom?: boolean; chip?: string }) {
   return (
     <div className="relative h-44 w-full overflow-hidden bg-surface-container">
       {src ? (
@@ -368,6 +373,11 @@ function ProgramPhoto({ src, cropBottom }: { src?: string; cropBottom?: boolean 
           <ExerciseSym className="h-16 w-16" />
         </div>
       )}
+      {chip && (
+        <span className="absolute left-3 top-3 rounded-sm bg-primary-container px-2 py-0.5 text-[11px] uppercase text-on-primary">
+          {chip}
+        </span>
+      )}
     </div>
   );
 }
@@ -376,8 +386,16 @@ export function Disciplines({ locale, t, items }: Props & { items: DisciplineDat
   return (
     <section id="disciplines" className={`w-full ${sectionY}`}>
       <div className={container}>
-        <SectionHead eyebrow={t.eyebrow.disciplines} title={t.disciplines.title} />
-        <div className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-5">
+        <SectionHead
+          eyebrow={t.eyebrow.disciplines}
+          title={t.disciplines.title}
+          aside={
+            <span className={`${label} text-text-muted`}>
+              {String(items.length + 1).padStart(2, "0")} {"//"} {t.disciplines.title}
+            </span>
+          }
+        />
+        <div className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
           {items.map((d) => (
             <a key={d.id} href="#schedule" className={programCard}>
               {/* на фото кроссфита из макета на полу написано чужое название клуба — низ кадра обрезаем */}
@@ -385,12 +403,13 @@ export function Disciplines({ locale, t, items }: Props & { items: DisciplineDat
               <ProgramBody
                 title={pick(locale, d.nameRu, d.nameKk)}
                 text={pick(locale, d.descriptionRu, d.descriptionKk)}
+                caption={t.nav.schedule}
               />
             </a>
           ))}
           <a href={whatsappUrl(t.wa.personal)} target="_blank" rel="noopener noreferrer" className={programCard}>
-            <ProgramPhoto src="/stitch/personal.jpg" />
-            <ProgramBody title={t.disciplines.personalTitle} text={t.disciplines.personalText} />
+            <ProgramPhoto src="/stitch/personal.jpg" chip={t.trainers.personal} />
+            <ProgramBody title={t.disciplines.personalTitle} text={t.disciplines.personalText} caption={t.cta.whatsapp} />
           </a>
         </div>
       </div>
@@ -404,15 +423,23 @@ export function Women({ t }: Props) {
   return (
     <section id="women" className="w-full py-4">
       <div className={container}>
-        <div className="relative w-full overflow-hidden rounded-2xl bg-linear-to-r from-surface-card via-surface-container-high to-surface-card p-8 shadow-2xl lg:p-12">
-          <div className="relative z-10 grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
-            <div className="flex flex-col items-start gap-4 lg:col-span-8">
+        <div className="relative w-full overflow-hidden rounded-2xl bg-linear-to-r from-surface-card via-surface-container-high to-surface-card p-8 shadow-2xl lg:flex lg:min-h-[480px] lg:p-12">
+          <div className="relative z-10 grid w-full grid-cols-1 items-center gap-8 lg:grid-cols-12">
+            <div className="flex flex-col items-start gap-4 lg:col-span-8 lg:self-start">
               <div className={`${label} inline-flex items-center gap-2 rounded-sm bg-primary-container/10 px-3 py-1 text-primary-container`}>
                 <LockSym className="h-4 w-4 shrink-0" />
                 {t.about.items[1].text}
               </div>
               <h2 className={h2}>{t.women.title}</h2>
               <p className="max-w-[640px] text-body-lg text-text-muted">{t.women.text}</p>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2 text-body-md text-text-primary">
+                {[t.prices.trialNote, t.prices.payment].map((x) => (
+                  <div key={x} className="flex items-center gap-2">
+                    <CheckCircleSym className="h-5 w-5 shrink-0 text-primary-container" />
+                    <span>{x}</span>
+                  </div>
+                ))}
+              </div>
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <a
                   href={site.instagramWomen}
@@ -462,6 +489,8 @@ export type TariffData = {
   category: string;
   nameRu: string;
   nameKk: string | null;
+  descriptionRu?: string | null;
+  descriptionKk?: string | null;
   price: number;
   durationValue: number;
   durationUnit: string;
@@ -484,7 +513,7 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
         <div className="mx-auto mb-12 max-w-[680px] text-center">
           <div className={eyebrow}>{t.eyebrow.prices}</div>
           <h2 className={h2}>{t.prices.title}</h2>
-          <p className="mt-2 text-body-md text-text-muted">{t.prices.payment}</p>
+          <p className="mt-2 text-body-md text-text-muted lg:min-h-10">{t.prices.payment}</p>
         </div>
 
         <div className={`grid grid-cols-1 items-stretch gap-6 ${cats.length === 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
@@ -492,13 +521,18 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
             const list = items.filter((x) => x.category === cat);
             const cheapest = list.length ? list.reduce((a, b) => (b.price < a.price ? b : a)) : null;
             const highlight = cat === "YEARLY" && cheapest !== null;
+            const description = cheapest ? pick(locale, cheapest.descriptionRu ?? "", cheapest.descriptionKk ?? null) : "";
+            // Строки с галочками: сначала Тарифы категории, затем общие преимущества зала — как в макете, 4 строки у акцентной карточки и 3 у остальных
+            const others = list.filter((x) => x !== cheapest);
+            const perks = t.about.items.map((x) => x.title).slice(0, Math.max(2, (highlight ? 4 : 3) - others.length));
+            const Check = highlight ? CheckCircleSym : CheckSym;
             return (
               <div
                 key={cat}
                 className={
                   highlight
-                    ? "relative flex flex-col justify-between rounded-2xl bg-linear-to-b from-surface-card via-surface-container to-surface-card p-8 shadow-2xl outline-2 outline-primary-container"
-                    : "flex flex-col justify-between rounded-2xl bg-surface-card p-8 shadow-md"
+                    ? "relative flex flex-col justify-between rounded-2xl bg-linear-to-b from-surface-card via-surface-container to-surface-card p-8 shadow-2xl outline-2 outline-primary-container lg:min-h-[533px]"
+                    : "flex flex-col justify-between rounded-2xl bg-surface-card p-8 shadow-md lg:min-h-[533px]"
                 }
               >
                 {highlight && (
@@ -508,7 +542,7 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
                   </div>
                 )}
                 <div>
-                  <div className="mb-4 flex items-center justify-between">
+                  <div className="mb-4 flex min-h-5 items-center justify-between">
                     <span className={`${label} ${highlight ? "text-primary-container" : "text-text-muted"}`}>
                       {String(i + 1).padStart(2, "0")}
                     </span>
@@ -523,6 +557,7 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
                     )}
                   </div>
                   <h3 className="text-headline-md uppercase text-text-primary">{t.prices.categories[cat]}</h3>
+                  <p className="mt-1 min-h-4 text-body-sm text-text-muted">{description}</p>
                   <div className="my-6">
                     {cheapest ? (
                       <div className="flex items-baseline gap-1">
@@ -542,25 +577,31 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
                     ) : (
                       <div className="text-price-numeral text-text-muted">{t.prices.ask}</div>
                     )}
+                    {cheapest && (
+                      <span className="text-body-sm text-text-muted">
+                        {pick(locale, cheapest.nameRu, cheapest.nameKk)}
+                        {cheapest.durationUnit !== "VISIT" && duration(cheapest) ? ` · ${duration(cheapest)}` : ""}
+                      </span>
+                    )}
                   </div>
-                  {list.length > 0 && (
-                    <ul className="flex flex-col gap-3 py-4 text-body-md text-text-primary">
-                      {list.map((x) => (
+                  <ul className="flex flex-col gap-3 py-4 text-body-md text-text-primary">
+                    {others.map((x) => (
                         <li key={x.id} className="flex items-center gap-2">
-                          {highlight ? (
-                            <CheckCircleSym className="h-[18px] w-[18px] shrink-0 text-primary-container" />
-                          ) : (
-                            <CheckSym className="h-[18px] w-[18px] shrink-0 text-primary-container" />
-                          )}
-                          <span className="min-w-0 grow">
+                          <Check className="h-[18px] w-[18px] shrink-0 text-primary-container" />
+                          <span className="min-w-0 grow font-bold">
                             {pick(locale, x.nameRu, x.nameKk)}
                             {x.durationUnit !== "VISIT" && duration(x) ? ` · ${duration(x)}` : ""}
                           </span>
                           <span className="shrink-0 font-bold">{splitNumber(x.price)} ₸</span>
                         </li>
-                      ))}
-                    </ul>
-                  )}
+                    ))}
+                    {perks.map((x) => (
+                      <li key={x} className="flex items-center gap-2">
+                        <Check className="h-[18px] w-[18px] shrink-0 text-primary-container" />
+                        <span>{x}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
                 <div className="pt-6">
                   <a
@@ -586,7 +627,12 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-whatsapp-green/20 text-whatsapp-green">
               <ChatSym className="h-[26px] w-[26px]" />
             </div>
-            <div className="text-headline-sm text-text-primary">{t.prices.trialNote}</div>
+            <div>
+              <div className="text-headline-sm text-text-primary">{t.prices.trialNote}</div>
+              <p className="text-body-sm text-text-muted">
+                {t.contacts.city}, {t.contacts.address} · {t.contacts.hours}
+              </p>
+            </div>
           </div>
           <a
             href={whatsappUrl(t.wa.price)}
@@ -606,8 +652,8 @@ export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
 
 export function Gallery({ t }: Props) {
   const tiles = [
-    { src: "/stitch/gallery-weights.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw" },
-    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw" },
+    { src: "/stitch/gallery-weights.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw", item: t.about.items[0] },
+    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw", item: t.about.items[2] },
   ];
   return (
     <section id="gallery" className={`w-full bg-surface-container-low ${sectionY}`}>
@@ -637,6 +683,10 @@ export function Gallery({ t }: Props) {
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent" />
+              <div className="absolute bottom-5 left-5">
+                <span className={`${label} text-primary-container`}>{tile.item.title}</span>
+                <div className="text-headline-sm text-text-primary">{tile.item.text}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -724,14 +774,14 @@ export function ScheduleSection({
 export function Contacts({ t }: Props) {
   const rows = [
     { Icon: LocationOnSym, title: t.contacts.address, text: t.contacts.city, href: undefined },
-    { Icon: ScheduleSym, title: t.contacts.hours, text: undefined, href: undefined },
+    { Icon: ScheduleSym, title: t.contacts.hours, text: t.about.items[3].text, href: undefined },
     { Icon: CallSym, title: site.phoneDisplay, text: t.cta.whatsapp, href: `tel:${site.phoneTel}` },
   ];
   return (
     <section id="contacts" className={`w-full ${sectionY}`}>
       <div className={container}>
         <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-12">
-          <div className="flex flex-col justify-between rounded-2xl bg-surface-card p-8 shadow-md lg:col-span-5">
+          <div className="flex flex-col justify-between rounded-2xl bg-surface-card p-8 shadow-md lg:col-span-5 lg:min-h-[451px]">
             <div>
               <div className={eyebrow}>{t.eyebrow.contacts}</div>
               <h2 className={`${h2} mb-6`}>{t.contacts.title}</h2>
@@ -768,7 +818,7 @@ export function Contacts({ t }: Props) {
             </div>
           </div>
 
-          <div className="relative h-[320px] overflow-hidden rounded-2xl bg-surface-card shadow-lg md:h-[420px] lg:col-span-7 lg:h-auto lg:min-h-[420px]">
+          <div className="relative h-[320px] overflow-hidden rounded-2xl bg-surface-card shadow-lg md:h-[420px] lg:col-span-7">
             <iframe
               title={t.contacts.mapTitle}
               src={mapEmbedUrl}
@@ -830,12 +880,6 @@ export function Footer({ t }: Props) {
                 {text}
               </a>
             ))}
-            <a href={site.instagram} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary-container">
-              {t.contacts.instagram}
-            </a>
-            <a href={site.twoGis} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary-container">
-              2ГИС
-            </a>
             <a href={whatsappUrl(t.wa.trial)} target="_blank" rel="noopener noreferrer" className="text-whatsapp-green">
               {t.cta.whatsapp}
             </a>
@@ -843,7 +887,14 @@ export function Footer({ t }: Props) {
         </div>
         <div className="flex flex-col items-center justify-between gap-2 pt-4 text-body-sm text-text-muted sm:flex-row">
           <p>
-            © {new Date().getFullYear()} {t.footer.rights}
+            © {new Date().getFullYear()} {t.footer.rights} ·{" "}
+            <a href={site.instagram} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary-container">
+              {t.contacts.instagram}
+            </a>{" "}
+            ·{" "}
+            <a href={site.twoGis} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary-container">
+              2ГИС
+            </a>
           </p>
           <p className={`${label} tracking-widest text-text-muted/60`}>{t.hero.title}</p>
         </div>
