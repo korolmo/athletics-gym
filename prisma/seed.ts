@@ -1,123 +1,161 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Access, type Audience, type TariffCategory } from "@prisma/client";
 
+// Реальный прайс и Тренеры от Владельца (7 октября 2026):
+// docs/owner/prices-2026-10.md и docs/owner/trainers-2026-10.md
 const db = new PrismaClient();
 
-async function main() {
-  await db.lesson.deleteMany();
-  await db.trainer.deleteMany();
-  await db.discipline.deleteMany();
-  await db.tariff.deleteMany();
+type HallId = "general" | "women";
 
-  // Тарифы: только известные из открытых источников (2ГИС), остальное — «уточняйте»
-  await db.tariff.createMany({
+type TariffSeed = {
+  category: TariffCategory;
+  price: number;
+  priceTo?: number;
+  visitsPerMonth?: number;
+  durationMonths?: number;
+  access?: Access;
+  audience?: Audience;
+  titleRu?: string;
+};
+
+// Позиции прайса Зала — в порядке плаката
+const hallTariffs: Record<HallId, TariffSeed[]> = {
+  general: [
+    { category: "SINGLE", price: 3000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "STUDENTS", price: 10000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "STUDENTS", price: 12000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "ALL", price: 12000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "WOMEN", price: 15000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "MEN", price: 17000 },
+    { category: "UNLIMITED", durationMonths: 1, price: 25000 },
+    { category: "UNLIMITED", durationMonths: 3, price: 60000 },
+    { category: "UNLIMITED", durationMonths: 6, price: 120000 },
+    { category: "UNLIMITED", durationMonths: 12, price: 170000 },
+    // Строку «Жеке жаттықтырушы 15 000 – 25 000» не заводим: персональные цены — только у Тренеров
+  ],
+  women: [
+    { category: "SINGLE", price: 3000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "STUDENTS", price: 10000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "STUDENTS", price: 12000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "ALL", price: 12000 },
+    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "ALL", price: 15000 },
+    { category: "UNLIMITED", durationMonths: 1, price: 20000 },
+    { category: "UNLIMITED", durationMonths: 3, price: 50000 },
+    { category: "UNLIMITED", durationMonths: 6, price: 105000 },
+    { category: "UNLIMITED", durationMonths: 12, price: 140000 },
+  ],
+};
+
+// «Месяц» персональных = 12 тренировок в месяц (так на карточках Нұрмахана, Батырхана, Бауыржана)
+const MONTH = { category: "PERSONAL" as const, visitsPerMonth: 12 };
+const ONCE = { category: "PERSONAL" as const };
+
+type TrainerSeed = {
+  name: string;
+  hall: HallId;
+  photo: string;
+  descriptionRu?: string;
+  tariffs: TariffSeed[];
+};
+
+const trainers: TrainerSeed[] = [
+  {
+    name: "Нұрмахан",
+    hall: "general",
+    photo: "/trainers/nurmakhan.jpg",
+    descriptionRu:
+      "9 лет опыта в сфере фитнеса. Профессиональный тренер по пауэрлифтингу. Индивидуальные тренировки: набор мышечной массы, снижение веса, коррекция фигуры.",
+    tariffs: [
+      { ...MONTH, price: 20000 },
+      // На карточке: «студентам и ученикам 25% скидка» → 20 000 − 25% = 15 000
+      { ...MONTH, audience: "STUDENTS", price: 15000 },
+    ],
+  },
+  {
+    name: "Батырхан",
+    hall: "general",
+    photo: "/trainers/batyrkhan.jpg",
+    descriptionRu:
+      "Мастер спорта по боксу. Профессиональный тренер по пауэрлифтингу. Индивидуальные тренировки: набор мышечной массы, снижение веса, коррекция фигуры.",
+    tariffs: [{ ...MONTH, price: 20000 }],
+  },
+  {
+    name: "Бауыржан",
+    hall: "general",
+    photo: "/trainers/bauyrzhan.jpg",
+    descriptionRu:
+      "Стаж 10 лет. Персональные и индивидуальные тренировки: поможет набрать массу или скинуть вес. Школьникам и студентам предусмотрены скидки.",
+    tariffs: [
+      { ...MONTH, audience: "MEN", price: 25000 },
+      { ...MONTH, audience: "WOMEN", price: 20000 },
+    ],
+  },
+  {
+    name: "Айша",
+    hall: "women",
+    photo: "/trainers/aisha.jpg",
+    tariffs: [
+      { ...MONTH, price: 20000 },
+      { ...MONTH, audience: "STUDENTS", price: 15000 },
+      { ...ONCE, price: 2000 },
+    ],
+  },
+  {
+    name: "Ақберген Шамшат",
+    hall: "women",
+    photo: "/trainers/shamshat.jpg",
+    descriptionRu: "Персональные тренировки: сброс веса, набор массы, поддержание веса.",
+    tariffs: [
+      { ...MONTH, price: 20000 },
+      // На карточке не сказано, за человека или за двоих — пишем как есть
+      { ...MONTH, titleRu: "1+1 (подходит для подруг)", price: 13000 },
+      { ...ONCE, price: 2000 },
+    ],
+  },
+  {
+    name: "Жанерке",
+    hall: "women",
+    photo: "/trainers/zhanerke.jpg",
+    tariffs: [
+      { ...MONTH, price: 20000 },
+      { ...MONTH, audience: "STUDENTS", price: 15000 },
+      { ...ONCE, price: 2000 },
+    ],
+  },
+];
+
+async function main() {
+  await db.tariff.deleteMany();
+  await db.trainer.deleteMany();
+  await db.hall.deleteMany();
+
+  await db.hall.createMany({
     data: [
-      {
-        category: "MONTHLY",
-        nameRu: "Месячный абонемент",
-        nameKk: "Айлық абонемент",
-        price: 9000,
-        durationValue: 1,
-        durationUnit: "MONTH",
-        sortOrder: 1,
-      },
-      {
-        category: "YEARLY",
-        nameRu: "Годовой абонемент",
-        nameKk: "Жылдық абонемент",
-        price: 140000,
-        durationValue: 12,
-        durationUnit: "MONTH",
-        sortOrder: 2,
-      },
+      { id: "general", nameRu: "Общий зал", nameKk: "Жалпы зал", sortOrder: 0 },
+      { id: "women", nameRu: "Женский зал", nameKk: "Әйелдер залы", sortOrder: 1 },
     ],
   });
 
-  const disciplines = [
-    {
-      slug: "functional",
-      nameRu: "Функциональный тренинг",
-      nameKk: "Функционалдық тренинг",
-      descriptionRu: "Сила, выносливость и координация в одной тренировке",
-      descriptionKk: "Бір жаттығуда күш, төзімділік және үйлесімділік",
-    },
-    {
-      slug: "crossfit",
-      nameRu: "Кроссфит",
-      nameKk: "Кроссфит",
-      descriptionRu: "Интенсивные круговые тренировки в группе",
-      descriptionKk: "Топпен қарқынды айналмалы жаттығулар",
-    },
-    {
-      slug: "cycle",
-      nameRu: "Сайкл",
-      nameKk: "Сайкл",
-      descriptionRu: "Кардио на велотренажёрах под музыку",
-      descriptionKk: "Музыкамен велотренажердегі кардио",
-    },
-    {
-      slug: "trx",
-      nameRu: "TRX",
-      nameKk: "TRX",
-      descriptionRu: "Тренировки с петлями на весе собственного тела",
-      descriptionKk: "Өз салмағыңызбен ілмектегі жаттығулар",
-    },
-  ];
-
-  const d: Record<string, string> = {};
-  for (const [i, item] of disciplines.entries()) {
-    const created = await db.discipline.create({ data: { ...item, sortOrder: i } });
-    d[item.slug] = created.id;
+  for (const hall of ["general", "women"] as const) {
+    await db.tariff.createMany({
+      data: hallTariffs[hall].map((t, i) => ({ ...t, hallId: hall, sortOrder: i })),
+    });
   }
 
-  // Демо-тренеры: без реальных имён до согласия зала
-  const trainerSpecs = [
-    { slugs: ["functional", "crossfit"], takesPersonal: true },
-    { slugs: ["cycle", "trx"], takesPersonal: false },
-    { slugs: ["functional", "trx"], takesPersonal: true },
-  ];
-  const trainerIds: string[] = [];
-  for (const [i, spec] of trainerSpecs.entries()) {
-    const t = await db.trainer.create({
+  for (const [i, tr] of trainers.entries()) {
+    await db.trainer.create({
       data: {
-        nameRu: "Тренер",
-        nameKk: "Жаттықтырушы",
-        takesPersonal: spec.takesPersonal,
-        isDemo: true,
+        name: tr.name,
+        hallId: tr.hall,
+        photo: tr.photo,
+        descriptionRu: tr.descriptionRu ?? null,
         sortOrder: i,
-        disciplines: { connect: spec.slugs.map((s) => ({ id: d[s] })) },
+        tariffs: { create: tr.tariffs.map((t, j) => ({ ...t, hallId: tr.hall, sortOrder: j })) },
       },
     });
-    trainerIds.push(t.id);
   }
 
-  // Демо-расписание (еженедельный шаблон)
-  type Row = [weekday: number, time: string, slug: string, min: number, trainer: number | null];
-  const rows: Row[] = [];
-  for (const day of [1, 3, 5]) {
-    rows.push([day, "08:00", "functional", 60, 0]);
-    rows.push([day, "19:00", "crossfit", 60, 0]);
-    rows.push([day, "20:30", "cycle", 45, 1]);
-  }
-  for (const day of [2, 4]) {
-    rows.push([day, "09:00", "trx", 50, 1]);
-    rows.push([day, "19:00", "functional", 60, 2]);
-    rows.push([day, "20:00", "cycle", 45, null]);
-  }
-  rows.push([6, "10:00", "crossfit", 60, 0]);
-  rows.push([6, "11:30", "trx", 50, 2]);
-
-  await db.lesson.createMany({
-    data: rows.map(([weekday, startTime, slug, durationMin, trainer]) => ({
-      weekday,
-      startTime,
-      durationMin,
-      disciplineId: d[slug],
-      trainerId: trainer === null ? null : trainerIds[trainer],
-      isDemo: true,
-    })),
-  });
-
-  console.log("Готово: тарифы, направления, демо-тренеры и демо-расписание.");
+  const [tariffCount, trainerCount] = await Promise.all([db.tariff.count(), db.trainer.count()]);
+  console.log(`Готово: 2 Зала, ${trainerCount} Тренеров, ${tariffCount} Тарифов.`);
 }
 
 main()

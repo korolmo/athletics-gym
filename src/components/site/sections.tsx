@@ -1,33 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Dictionary } from "@/dictionaries/ru";
-import { locales, pick, type Locale } from "@/lib/i18n";
+import { locales, type Locale } from "@/lib/i18n";
 import { mapEmbedUrl, site, whatsappUrl } from "@/lib/site";
-import {
-  UNIT_LABEL_KK,
-  UNIT_LABEL_RU,
-  isUnit,
-  type Category,
-} from "@/lib/tariffs";
+import { PricesBoard, TrainersBoard, type TariffView, type TrainerView } from "@/components/site/HallBoards";
 import { WhatsAppIcon } from "@/components/icons";
 import {
+  AccessibilityNewSym,
   AirSym,
   ArrowForwardSym,
   CallSym,
   ChatSym,
   CheckCircleSym,
-  CheckSym,
   EventAvailableSym,
   ExerciseSym,
   FemaleSym,
   FitnessCenterSym,
-  LocalFireDepartmentSym,
   LocationOnSym,
   LockSym,
+  MonitorWeightSym,
   OpenInNewSym,
-  PersonSym,
   PhotoCameraSym,
   ScheduleSym,
+  SportsMmaSym,
 } from "@/components/symbols";
 
 type Props = { locale: Locale; t: Dictionary };
@@ -72,18 +67,14 @@ function SectionHead({
   );
 }
 
-function splitNumber(value: number): string {
-  return new Intl.NumberFormat("ru-RU").format(value);
-}
-
 /* ───────── Шапка ───────── */
 
 export function Header({ locale, t }: Props) {
   const links: [string, string][] = [
     ["#about", t.nav.about],
-    ["#disciplines", t.nav.disciplines],
+    ["#directions", t.nav.directions],
     ["#prices", t.nav.prices],
-    ["#schedule", t.nav.schedule],
+    ["#trainers", t.nav.trainers],
     ["#contacts", t.nav.contacts],
   ];
   return (
@@ -322,100 +313,45 @@ export function About({ t }: Props) {
   );
 }
 
-/* ───────── Направления ───────── */
+/* ───────── Направления: с чем помогут Тренеры (групповых занятий в зале нет) ───────── */
 
-export type DisciplineData = {
-  id: string;
-  slug: string;
-  nameRu: string;
-  nameKk: string | null;
-  descriptionRu: string;
-  descriptionKk: string | null;
-};
-
-// Фото из макета Stitch (сгенерированы, не съёмка зала); кадры обрезаны так, чтобы не было надписей и логотипов
-const disciplinePhoto: Record<string, string> = {
-  functional: "/stitch/functional-crop.jpg",
-  crossfit: "/stitch/crossfit-crop.jpg",
-  cycle: "/stitch/cycle-crop.jpg",
-  trx: "/stitch/trx.jpg",
-};
-
-const programCard =
-  "group flex w-64 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-surface-card shadow-md transition-all hover:-translate-y-1 sm:w-auto";
-
-function ProgramBody({ title, text, caption }: { title: string; text: string; caption: string }) {
+export function Directions({ t }: Props) {
+  const icons = [ExerciseSym, MonitorWeightSym, AccessibilityNewSym, FitnessCenterSym, SportsMmaSym];
   return (
-    <div className="flex grow flex-col justify-between p-5 lg:min-h-[174px]">
-      <div>
-        <h3 className="mb-1 text-headline-sm uppercase text-text-primary">{title}</h3>
-        <p className="text-body-sm text-text-muted">{text}</p>
-      </div>
-      <div className="flex items-center justify-between pt-4 text-[12px] text-text-muted">
-        <span>{caption}</span>
-        <ArrowForwardSym className="h-4 w-4 text-primary-container" />
-      </div>
-    </div>
-  );
-}
-
-function ProgramPhoto({ src, chip, accent }: { src?: string; chip?: string; accent?: boolean }) {
-  return (
-    <div className="relative h-44 w-full overflow-hidden bg-surface-container">
-      {src ? (
-        <Image
-          src={src}
-          alt=""
-          fill
-          sizes="(min-width: 1024px) 240px, 256px"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      ) : (
-        <div className="flex h-full items-center justify-center text-surface-border">
-          <ExerciseSym className="h-16 w-16" />
-        </div>
-      )}
-      {chip && (
-        <span
-          className={`absolute left-3 top-3 rounded-sm px-2 py-0.5 text-[11px] uppercase ${
-            accent ? "bg-primary-container text-on-primary" : "bg-surface-dim/80 text-primary-container backdrop-blur-md"
-          }`}
-        >
-          {chip}
-        </span>
-      )}
-    </div>
-  );
-}
-
-export function Disciplines({ locale, t, items }: Props & { items: DisciplineData[] }) {
-  return (
-    <section id="disciplines" className={`w-full ${sectionY}`}>
+    <section id="directions" className={`w-full ${sectionY}`}>
       <div className={container}>
         <SectionHead
-          eyebrow={t.eyebrow.disciplines}
-          title={t.disciplines.title}
+          eyebrow={t.eyebrow.directions}
+          title={t.directions.title}
           aside={
-            <span className={`${label} text-text-muted`}>
-              {items.length + 1} {t.disciplines.counter}
-            </span>
+            <a
+              href="#trainers"
+              className={`${label} inline-flex items-center gap-1.5 text-text-muted transition-colors hover:text-primary-container`}
+            >
+              {t.directions.toTrainers}
+              <ArrowForwardSym className="h-4 w-4 text-primary-container" />
+            </a>
           }
         />
-        <div className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
-          {items.map((d) => (
-            <a key={d.id} href="#schedule" className={programCard}>
-              <ProgramPhoto src={disciplinePhoto[d.slug]} chip={t.disciplines.tags[d.slug]} />
-              <ProgramBody
-                title={pick(locale, d.nameRu, d.nameKk)}
-                text={pick(locale, d.descriptionRu, d.descriptionKk)}
-                caption={t.nav.schedule}
-              />
-            </a>
-          ))}
-          <a href={whatsappUrl(t.wa.personal)} target="_blank" rel="noopener noreferrer" className={programCard}>
-            <ProgramPhoto src="/stitch/personal-crop.jpg" chip={t.disciplines.tags.personal} accent />
-            <ProgramBody title={t.disciplines.personalTitle} text={t.disciplines.personalText} caption={t.cta.whatsapp} />
-          </a>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {t.directions.items.map((title, i) => {
+            const Icon = icons[i] ?? ExerciseSym;
+            return (
+              <a
+                key={title}
+                href="#trainers"
+                className="group flex h-[150px] flex-col justify-between rounded-2xl bg-surface-card p-5 shadow-md transition-transform hover:-translate-y-0.5 lg:h-[180px] lg:p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container text-primary-container transition-colors group-hover:bg-primary-container group-hover:text-on-primary">
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <span className={`${label} text-text-muted`}>{String(i + 1).padStart(2, "0")}</span>
+                </div>
+                <h3 className="text-[15px] font-bold uppercase leading-5 text-text-primary sm:text-headline-sm">{title}</h3>
+              </a>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -489,143 +425,17 @@ export function Women({ t }: Props) {
 
 /* ───────── Цены ───────── */
 
-export type TariffData = {
-  id: string;
-  category: string;
-  nameRu: string;
-  nameKk: string | null;
-  descriptionRu?: string | null;
-  descriptionKk?: string | null;
-  price: number;
-  durationValue: number;
-  durationUnit: string;
-};
-
-// Порядок карточек как в макете: разовое — годовой (акцент) — месячный
-const PRICE_CARDS: Category[] = ["SINGLE", "YEARLY", "MONTHLY"];
-
-export function Prices({ locale, t, items }: Props & { items: TariffData[] }) {
-  const unitLabels = locale === "kk" ? UNIT_LABEL_KK : UNIT_LABEL_RU;
-  const [fromBefore, fromAfter] = t.prices.fromTemplate.split("{price}");
-  // Персональная тренировка получает карточку, только когда Администратор завёл для неё Тариф
-  const cats: Category[] = items.some((x) => x.category === "PERSONAL") ? [...PRICE_CARDS, "PERSONAL"] : PRICE_CARDS;
-  const duration = (x: TariffData) =>
-    isUnit(x.durationUnit) ? `${x.durationValue} ${unitLabels[x.durationUnit]}` : "";
-
+export function Prices({ t, tariffs, trainers }: Props & { tariffs: TariffView[]; trainers: TrainerView[] }) {
   return (
     <section id="prices" className={`w-full ${sectionY}`}>
       <div className={container}>
-        <div className="mx-auto mb-12 max-w-[680px] text-center">
+        <div className="mx-auto mb-8 max-w-[680px] text-center">
           <div className={eyebrow}>{t.eyebrow.prices}</div>
           <h2 className={h2}>{t.prices.title}</h2>
-          <p className="mt-2 text-body-md text-text-muted lg:min-h-10">{t.prices.payment}</p>
+          <p className="mt-2 text-body-md text-text-muted">{t.prices.payment}</p>
         </div>
 
-        <div className={`grid grid-cols-1 items-stretch gap-6 ${cats.length === 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
-          {cats.map((cat, i) => {
-            const list = items.filter((x) => x.category === cat);
-            const cheapest = list.length ? list.reduce((a, b) => (b.price < a.price ? b : a)) : null;
-            const highlight = cat === "YEARLY" && cheapest !== null;
-            const description = cheapest ? pick(locale, cheapest.descriptionRu ?? "", cheapest.descriptionKk ?? null) : "";
-            // Строки с галочками: сначала Тарифы категории, затем общие преимущества зала — как в макете, 4 строки у акцентной карточки и 3 у остальных
-            const others = list.filter((x) => x !== cheapest);
-            const perks = t.about.items.map((x) => x.title).slice(0, Math.max(2, (highlight ? 4 : 3) - others.length));
-            const Check = highlight ? CheckCircleSym : CheckSym;
-            return (
-              <div
-                key={cat}
-                className={
-                  highlight
-                    ? "relative flex flex-col justify-between rounded-2xl bg-linear-to-b from-surface-card via-surface-container to-surface-card p-8 shadow-2xl outline-2 outline-primary-container lg:min-h-[533px]"
-                    : "flex flex-col justify-between rounded-2xl bg-surface-card p-8 shadow-md lg:min-h-[533px]"
-                }
-              >
-                {highlight && (
-                  <div className={`${label} absolute -top-3.5 right-6 flex items-center gap-1 rounded-full bg-primary-container px-3.5 py-1 text-on-primary shadow-lg`}>
-                    <LocalFireDepartmentSym className="h-3.5 w-3.5" />
-                    {t.prices.best}
-                  </div>
-                )}
-                <div>
-                  <div className="mb-4 flex min-h-5 items-center justify-between">
-                    <span className={`${label} ${highlight ? "text-primary-container" : "text-text-muted"}`}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    {cheapest && duration(cheapest) && (
-                      <span
-                        className={`rounded-sm px-2.5 py-0.5 text-[11px] uppercase ${
-                          highlight ? "bg-primary-container/20 text-primary-container" : "bg-surface-container text-text-muted"
-                        }`}
-                      >
-                        {duration(cheapest)}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-headline-md uppercase text-text-primary">{t.prices.categories[cat]}</h3>
-                  <p className="mt-1 min-h-4 text-body-sm text-text-muted">{description}</p>
-                  <div className="my-6">
-                    {cheapest ? (
-                      <div className="flex items-baseline gap-1">
-                        {fromBefore.trim() && <span className="text-body-sm text-text-muted">{fromBefore.trim()}</span>}
-                        <span
-                          className={
-                            highlight
-                              ? "text-[36px] font-extrabold leading-8 tracking-[-0.01em] text-primary-container"
-                              : "text-price-numeral text-text-primary"
-                          }
-                        >
-                          {splitNumber(cheapest.price)}
-                        </span>
-                        <span className="text-headline-sm text-primary-container">₸</span>
-                        {fromAfter.trim() && <span className="text-body-sm text-text-muted">{fromAfter.trim()}</span>}
-                      </div>
-                    ) : (
-                      <div className="text-price-numeral text-text-muted">{t.prices.ask}</div>
-                    )}
-                    {cheapest && (
-                      <span className="text-body-sm text-text-muted">
-                        {pick(locale, cheapest.nameRu, cheapest.nameKk)}
-                        {cheapest.durationUnit !== "VISIT" && duration(cheapest) ? ` · ${duration(cheapest)}` : ""}
-                      </span>
-                    )}
-                  </div>
-                  <ul className="flex flex-col gap-3 py-4 text-body-md text-text-primary">
-                    {others.map((x) => (
-                        <li key={x.id} className="flex items-center gap-2">
-                          <Check className="h-[18px] w-[18px] shrink-0 text-primary-container" />
-                          <span className="min-w-0 grow font-bold">
-                            {pick(locale, x.nameRu, x.nameKk)}
-                            {x.durationUnit !== "VISIT" && duration(x) ? ` · ${duration(x)}` : ""}
-                          </span>
-                          <span className="shrink-0 font-bold">{splitNumber(x.price)} ₸</span>
-                        </li>
-                    ))}
-                    {perks.map((x) => (
-                      <li key={x} className="flex items-center gap-2">
-                        <Check className="h-[18px] w-[18px] shrink-0 text-primary-container" />
-                        <span>{x}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="pt-6">
-                  <a
-                    href={whatsappUrl(t.wa.price)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={
-                      highlight
-                        ? "flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary-container text-[14px] text-on-primary shadow-md transition-all hover:brightness-95"
-                        : "flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-surface-container text-[14px] text-text-primary transition-colors hover:text-primary-container"
-                    }
-                  >
-                    {t.cta.whatsapp}
-                  </a>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <PricesBoard t={t} tariffs={tariffs} trainers={trainers} />
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-2xl bg-surface-card p-6 shadow-xs md:flex-row">
           <div className="flex items-center gap-4">
@@ -666,7 +476,7 @@ export function Gallery({ t }: Props) {
         <SectionHead
           eyebrow={t.eyebrow.gallery}
           title={t.gallery.title}
-          badge={<DemoBadge label={t.schedule.demo} />}
+          badge={<DemoBadge label={t.gallery.demo} />}
           aside={
             <div className="flex items-center gap-3">
               <Image src="/logo.png" alt="" width={40} height={40} className="h-10 w-10 object-contain" />
@@ -702,73 +512,12 @@ export function Gallery({ t }: Props) {
 
 /* ───────── Тренеры ───────── */
 
-export type TrainerData = {
-  id: string;
-  nameRu: string;
-  nameKk: string | null;
-  takesPersonal: boolean;
-  isDemo: boolean;
-  disciplines: { id: string; nameRu: string; nameKk: string | null }[];
-};
-
-export function Trainers({ locale, t, items }: Props & { items: TrainerData[] }) {
-  const anyDemo = items.some((x) => x.isDemo);
+export function Trainers({ t, trainers }: Props & { trainers: TrainerView[] }) {
   return (
     <section id="trainers" className={`w-full ${sectionY}`}>
       <div className={container}>
-        <SectionHead
-          eyebrow={t.eyebrow.trainers}
-          title={t.trainers.title}
-          badge={anyDemo ? <DemoBadge label={t.schedule.demo} /> : undefined}
-        />
-        <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
-          {items.map((tr) => (
-            <article key={tr.id} className="w-64 shrink-0 overflow-hidden rounded-2xl bg-surface-card shadow-md md:w-auto">
-              <div className="flex h-44 items-center justify-center bg-surface-container text-surface-border">
-                <PersonSym className="h-24 w-24" />
-              </div>
-              <div className="p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-headline-sm uppercase text-text-primary">{pick(locale, tr.nameRu, tr.nameKk)}</h3>
-                  {tr.isDemo && <span className="text-body-sm text-text-muted">{t.trainers.demo}</span>}
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {tr.disciplines.map((d) => (
-                    <span key={d.id} className="rounded-sm bg-surface-container px-2.5 py-0.5 text-[11px] uppercase text-text-muted">
-                      {pick(locale, d.nameRu, d.nameKk)}
-                    </span>
-                  ))}
-                  {tr.takesPersonal && (
-                    <span className="rounded-sm bg-primary-container/20 px-2.5 py-0.5 text-[11px] uppercase text-primary-container">
-                      {t.trainers.personal}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ───────── Расписание (заголовок; сетка — клиентский компонент) ───────── */
-
-export function ScheduleSection({
-  t,
-  isDemo,
-  children,
-}: Props & { isDemo: boolean; children: React.ReactNode }) {
-  return (
-    <section id="schedule" className={`w-full bg-surface-container-low ${sectionY}`}>
-      <div className={container}>
-        <SectionHead
-          eyebrow={t.eyebrow.schedule}
-          title={t.schedule.title}
-          badge={isDemo ? <DemoBadge label={t.schedule.demo} /> : undefined}
-        />
-        {children}
+        <SectionHead eyebrow={t.eyebrow.trainers} title={t.trainers.title} />
+        <TrainersBoard t={t} trainers={trainers} />
       </div>
     </section>
   );

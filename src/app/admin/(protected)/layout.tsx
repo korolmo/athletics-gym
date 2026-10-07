@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAuthed } from "@/lib/auth";
 import { logout } from "../actions";
+import { AdminNav } from "./AdminNav";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   if (!(await isAuthed())) redirect("/admin/login");
@@ -26,17 +27,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
             </form>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 pb-2 text-sm">
-          <Link href="/admin/tariffs" className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-accent-ink">
-            Тарифы
-          </Link>
-          <span className="cursor-not-allowed rounded-lg px-3 py-1.5 text-muted/60" title="Следующий этап">
-            Тренеры · скоро
-          </span>
-          <span className="cursor-not-allowed rounded-lg px-3 py-1.5 text-muted/60" title="Следующий этап">
-            Расписание · скоро
-          </span>
-        </nav>
+        <AdminNav />
       </header>
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-6">{children}</div>
     </div>

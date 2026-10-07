@@ -15,7 +15,7 @@ export function LoginForm() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-5 py-10">
       <Image src="/logo.png" alt="Athletic's Gym" width={88} height={88} className="mx-auto rounded-full" priority />
-      <h1 className="mt-6 text-center font-display text-3xl uppercase tracking-wide">Вход для администратора</h1>
+      <h1 className="mt-6 text-center font-display text-3xl uppercase tracking-wide">Вход в админку</h1>
 
       <form action={action} className="mt-8 space-y-4">
         <label className="block">
