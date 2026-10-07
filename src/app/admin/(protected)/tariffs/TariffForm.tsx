@@ -1,44 +1,92 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { saveTariff, type TariffFormState } from "./actions";
 import {
+  ACCESS,
+  ACCESS_LABEL_RU,
+  AUDIENCES,
+  AUDIENCE_LABEL_RU,
+  CATEGORY_FIELDS,
   CATEGORY_LABEL_RU,
   CATEGORY_ORDER,
-  UNIT_LABEL_RU,
-  UNITS,
+  HALLS,
+  HALL_LABEL_RU,
+  type Access,
+  type Audience,
   type Category,
-  type Unit,
+  type HallId,
 } from "@/lib/tariffs";
 
 export type TariffInput = {
   id?: string;
+  hallId: HallId;
+  trainerId: string;
   category: Category;
-  nameRu: string;
-  nameKk: string;
-  descriptionRu: string;
-  descriptionKk: string;
+  titleRu: string;
+  titleKk: string;
+  visitsPerMonth: number | "";
+  durationMonths: number | "";
+  access: Access;
+  audience: Audience;
   price: number | "";
-  durationValue: number;
-  durationUnit: Unit;
+  priceTo: number | "";
   isVisible: boolean;
 };
+
+export type TrainerOption = { id: string; name: string; hallId: string };
 
 const field =
   "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted/60 focus:border-accent";
 const labelCls = "mb-1.5 block text-sm text-muted";
+const hint = "mt-1 block text-xs text-muted";
 
-export function TariffForm({ initial }: { initial: TariffInput }) {
+export function TariffForm({
+  initial,
+  trainers,
+  cancelHref,
+}: {
+  initial: TariffInput;
+  trainers: TrainerOption[];
+  cancelHref: string;
+}) {
   const [state, action, pending] = useActionState<TariffFormState, FormData>(saveTariff, undefined);
+  const [category, setCategory] = useState<Category>(initial.category);
+  const [hallId, setHallId] = useState<HallId>(initial.hallId);
+  const [trainerId, setTrainerId] = useState(initial.trainerId);
+  // Показываем только поля, которые есть у выбранной Категории
+  const fields = CATEGORY_FIELDS[category];
+  const personal = category === "PERSONAL";
+  const hallTrainers = trainers.filter((t) => t.hallId === hallId);
 
   return (
     <form action={action} className="space-y-5">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
 
       <label className="block">
+        <span className={labelCls}>Зал</span>
+        <select
+          name="hallId"
+          value={hallId}
+          onChange={(e) => {
+            const next = e.target.value as HallId;
+            setHallId(next);
+            if (!trainers.some((t) => t.id === trainerId && t.hallId === next)) setTrainerId("");
+          }}
+          className={field}
+        >
+          {HALLS.map((h) => (
+            <option key={h} value={h}>
+              {HALL_LABEL_RU[h]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="block">
         <span className={labelCls}>Категория</span>
-        <select name="category" defaultValue={initial.category} className={field}>
+        <select name="category" value={category} onChange={(e) => setCategory(e.target.value as Category)} className={field}>
           {CATEGORY_ORDER.map((c) => (
             <option key={c} value={c}>
               {CATEGORY_LABEL_RU[c]}
@@ -47,64 +95,128 @@ export function TariffForm({ initial }: { initial: TariffInput }) {
         </select>
       </label>
 
-      <label className="block">
-        <span className={labelCls}>Название (RU) *</span>
-        <input name="nameRu" required defaultValue={initial.nameRu} placeholder="Месячный безлимит" className={field} />
-      </label>
-
-      <label className="block">
-        <span className={labelCls}>Атауы (KZ)</span>
-        <input name="nameKk" defaultValue={initial.nameKk} placeholder="Айлық шексіз" className={field} />
-        <span className="mt-1 block text-xs text-muted">Если пусто — на казахской версии покажем русский.</span>
-      </label>
-
-      <label className="block">
-        <span className={labelCls}>Цена, ₸ *</span>
-        <input
-          name="price"
-          required
-          inputMode="numeric"
-          pattern="[0-9 ]*"
-          defaultValue={initial.price}
-          placeholder="9000"
-          className={`${field} font-display text-3xl`}
-        />
-      </label>
-
-      <div className="grid grid-cols-[1fr_1.4fr] gap-3">
+      {fields.trainer && (
         <label className="block">
-          <span className={labelCls}>Срок *</span>
-          <input
-            name="durationValue"
-            required
-            type="number"
-            min={1}
-            inputMode="numeric"
-            defaultValue={initial.durationValue}
-            className={field}
-          />
-        </label>
-        <label className="block">
-          <span className={labelCls}>&nbsp;</span>
-          <select name="durationUnit" defaultValue={initial.durationUnit} className={field}>
-            {UNITS.map((u) => (
-              <option key={u} value={u}>
-                {UNIT_LABEL_RU[u]}
+          <span className={labelCls}>Тренер</span>
+          <select name="trainerId" value={trainerId} onChange={(e) => setTrainerId(e.target.value)} className={field}>
+            <option value="">Без тренера — общая позиция прайса зала</option>
+            {hallTrainers.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
               </option>
             ))}
           </select>
         </label>
+      )}
+
+      {fields.title && (
+        <>
+          <label className="block">
+            <span className={labelCls}>Уточнение (RU)</span>
+            <input
+              name="titleRu"
+              defaultValue={initial.titleRu}
+              placeholder="1+1 (подходит для подруг)"
+              className={field}
+            />
+            <span className={hint}>Необязательно. Если пусто — название соберётся из полей ниже.</span>
+          </label>
+          <label className="block">
+            <span className={labelCls}>Нақтылау (KZ)</span>
+            <input name="titleKk" defaultValue={initial.titleKk} className={field} />
+            <span className={hint}>Если пусто — на казахской версии покажем русский.</span>
+          </label>
+        </>
+      )}
+
+      {fields.visits && (
+        <label className="block">
+          <span className={labelCls}>{personal ? "Тренировок в месяц" : "Посещений в месяц *"}</span>
+          <input
+            name="visitsPerMonth"
+            type="number"
+            min={1}
+            inputMode="numeric"
+            required={!personal}
+            defaultValue={initial.visitsPerMonth}
+            placeholder="12"
+            className={field}
+          />
+          {personal && <span className={hint}>Пусто — разовая тренировка.</span>}
+        </label>
+      )}
+
+      {fields.months && (
+        <label className="block">
+          <span className={labelCls}>Срок, месяцев *</span>
+          <input
+            name="durationMonths"
+            type="number"
+            min={1}
+            inputMode="numeric"
+            required
+            defaultValue={initial.durationMonths}
+            placeholder="1"
+            className={field}
+          />
+          <span className={hint}>Безлимит — 1 вход в день.</span>
+        </label>
+      )}
+
+      {fields.access && (
+        <label className="block">
+          <span className={labelCls}>Время доступа</span>
+          <select name="access" defaultValue={initial.access} className={field}>
+            {ACCESS.map((a) => (
+              <option key={a} value={a}>
+                {ACCESS_LABEL_RU[a]}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {fields.audience && (
+        <label className="block">
+          <span className={labelCls}>Аудитория</span>
+          <select name="audience" defaultValue={initial.audience} className={field}>
+            {AUDIENCES.map((a) => (
+              <option key={a} value={a}>
+                {AUDIENCE_LABEL_RU[a]}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      <div className={fields.priceTo ? "grid grid-cols-2 gap-3" : ""}>
+        <label className="block">
+          <span className={labelCls}>{fields.priceTo ? "Цена от, ₸ *" : "Цена, ₸ *"}</span>
+          <input
+            name="price"
+            required
+            inputMode="numeric"
+            pattern="[0-9 ]*"
+            defaultValue={initial.price}
+            placeholder="12000"
+            className={`${field} font-display text-3xl`}
+          />
+        </label>
+        {fields.priceTo && (
+          <label className="block">
+            <span className={labelCls}>до, ₸</span>
+            <input
+              name="priceTo"
+              inputMode="numeric"
+              pattern="[0-9 ]*"
+              defaultValue={initial.priceTo}
+              placeholder="—"
+              className={`${field} font-display text-3xl`}
+            />
+          </label>
+        )}
       </div>
-
-      <label className="block">
-        <span className={labelCls}>Описание (RU)</span>
-        <textarea name="descriptionRu" rows={3} defaultValue={initial.descriptionRu} className={field} />
-      </label>
-
-      <label className="block">
-        <span className={labelCls}>Сипаттама (KZ)</span>
-        <textarea name="descriptionKk" rows={3} defaultValue={initial.descriptionKk} className={field} />
-      </label>
+      {fields.priceTo && <span className={hint}>«до» заполняйте только для диапазона, например 15 000 – 25 000 ₸.</span>}
 
       <label className="flex items-center justify-between gap-4 rounded-xl bg-card px-4 py-3.5">
         <span>Показывать на сайте</span>
@@ -118,7 +230,7 @@ export function TariffForm({ initial }: { initial: TariffInput }) {
       )}
 
       <div className="sticky bottom-0 -mx-4 flex gap-3 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur">
-        <Link href="/admin/tariffs" className="rounded-xl border border-line px-5 py-3.5 font-semibold text-muted">
+        <Link href={cancelHref} className="rounded-xl border border-line px-5 py-3.5 font-semibold text-muted">
           Отмена
         </Link>
         <button

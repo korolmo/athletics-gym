@@ -11,78 +11,89 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-/// Категория тарифа: заданы заранее, Администратор их не создаёт
+/// Категория тарифа: заданы заранее, Владелец их не создаёт
 enum TariffCategory {
-  MONTHLY
-  YEARLY
+  /// Разовое посещение
   SINGLE
+  /// Абонемент на посещения: N раз в месяц
+  VISITS
+  /// Безлимит: 1 вход в день на N месяцев
+  UNLIMITED
+  /// Персональная тренировка
   PERSONAL
 }
 
-enum DurationUnit {
+/// Время доступа
+enum Access {
+  /// Дневной, 08:00–17:00
   DAY
-  MONTH
-  VISIT
+  /// Весь день, 08:00–23:00 (у зала — «кешкі»)
+  FULL
 }
 
-/// Тариф — позиция прайса
+/// Аудитория тарифа: проверяет ресепшен, не сайт
+enum Audience {
+  ALL
+  STUDENTS
+  WOMEN
+  MEN
+}
+
+/// Зал — помещение со своим прайсом: general (Общий зал) или women (Женский зал)
+model Hall {
+  /// "general" | "women"
+  id        String    @id
+  nameRu    String
+  nameKk    String?
+  sortOrder Int       @default(0)
+  tariffs   Tariff[]
+  trainers  Trainer[]
+}
+
+/// Тариф — позиция прайса Зала или Тренера (для персональных тренировок)
 model Tariff {
-  id            String         @id @default(cuid())
-  category      TariffCategory
-  nameRu        String
-  nameKk        String?
+  id             String         @id @default(cuid())
+  hall           Hall           @relation(fields: [hallId], references: [id])
+  hallId         String
+  /// Только для PERSONAL: чей это Тариф; пусто — общая позиция прайса Зала
+  trainer        Trainer?       @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId      String?
+  category       TariffCategory
+  /// Уточнение, которого нет в полях: например «1+1 (подходит для подруг)»
+  titleRu        String?
+  titleKk        String?
+  /// VISITS — посещений в месяц; PERSONAL — тренировок в месяц (пусто = разовая тренировка)
+  visitsPerMonth Int?
+  /// UNLIMITED — срок в месяцах
+  durationMonths Int?
+  access         Access         @default(FULL)
+  audience       Audience       @default(ALL)
+  /// Цена в тенге; при диапазоне — нижняя граница
+  price          Int
+  /// Верхняя граница диапазона «от–до»
+  priceTo        Int?
+  isVisible      Boolean        @default(true)
+  sortOrder      Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([hallId, category])
+  @@index([trainerId])
+}
+
+/// Тренер — сотрудник одного Зала, проводит персональные тренировки по своим Тарифам
+model Trainer {
+  id            String   @id @default(cuid())
+  name          String
+  hall          Hall     @relation(fields: [hallId], references: [id])
+  hallId        String
+  /// Путь к карточке-плакату; до этапа 2 — файл из public/trainers/
+  photo         String?
   descriptionRu String?
   descriptionKk String?
-  /// Цена в тенге
-  price         Int
-  durationValue Int            @default(1)
-  durationUnit  DurationUnit
-  isVisible     Boolean        @default(true)
-  sortOrder     Int            @default(0)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-}
+  sortOrder     Int      @default(0)
+  isVisible     Boolean  @default(true)
+  tariffs       Tariff[]
 
-/// Направление — вид групповой тренировки
-model Discipline {
-  id            String    @id @default(cuid())
-  slug          String    @unique
-  nameRu        String
-  nameKk        String?
-  descriptionRu String
-  descriptionKk String?
-  sortOrder     Int       @default(0)
-  trainers      Trainer[]
-  lessons       Lesson[]
-}
-
-model Trainer {
-  id            String       @id @default(cuid())
-  nameRu        String
-  nameKk        String?
-  bioRu         String?
-  bioKk         String?
-  photoUrl      String?
-  takesPersonal Boolean      @default(false)
-  isDemo        Boolean      @default(false)
-  sortOrder     Int          @default(0)
-  disciplines   Discipline[]
-  lessons       Lesson[]
-}
-
-/// Занятие — строка недельного Расписания
-model Lesson {
-  id           String     @id @default(cuid())
-  /// 1 = понедельник … 7 = воскресенье
-  weekday      Int
-  /// "HH:MM"
-  startTime    String
-  durationMin  Int        @default(60)
-  discipline   Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
-  disciplineId String
-  trainer      Trainer?   @relation(fields: [trainerId], references: [id], onDelete: SetNull)
-  trainerId    String?
-  isDemo       Boolean    @default(false)
-
-  @@index([weekday])
+  @@index([hallId])
 }
