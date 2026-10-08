@@ -97,3 +97,13 @@ model Trainer {
 
   @@index([hallId])
 }
+
+/// Неудачная попытка входа в админку. Нужна для ограничения перебора пароля;
+/// IP хранится только в виде хэша.
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  @@index([ipHash, createdAt])
+}
