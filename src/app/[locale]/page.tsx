@@ -14,7 +14,7 @@ import {
   Trainers,
   Women,
 } from "@/components/site/sections";
-import type { TariffView, TrainerView } from "@/components/site/HallBoards";
+import type { TariffView, TrainerView } from "@/components/site/halls/types";
 
 // Данные меняет Владелец — всегда читаем свежие из базы
 export const dynamic = "force-dynamic";

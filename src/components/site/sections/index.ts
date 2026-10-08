@@ -1,0 +1,11 @@
+export { Header } from "./Header";
+export { Hero } from "./Hero";
+export { About } from "./About";
+export { Directions } from "./Directions";
+export { Women } from "./Women";
+export { Prices } from "./Prices";
+export { Gallery } from "./Gallery";
+export { Trainers } from "./Trainers";
+export { Contacts } from "./Contacts";
+export { Footer } from "./Footer";
+export { MobileBar } from "./MobileBar";
