@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import { fontVars } from "@/lib/fonts";
+import { logoIconUrl } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Админка — Athletic's Gym",
   robots: { index: false, follow: false },
-  icons: { icon: "/logo.png" },
+  icons: { icon: logoIconUrl },
 };
 
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {

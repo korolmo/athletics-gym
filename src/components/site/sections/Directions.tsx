@@ -29,6 +29,8 @@ export function Directions({ t }: SectionProps) {
             </a>
           }
         />
+        {/* Карточка — две строки общей сетки (subgrid): иконка с номером и заголовок;
+            заголовки в ряду начинаются на одной линии, в одну они строку или в две */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
           {t.directions.items.map((title, i) => {
             const Icon = icons[i] ?? ExerciseSym;
@@ -36,15 +38,21 @@ export function Directions({ t }: SectionProps) {
               <a
                 key={title}
                 href="#trainers"
-                className="group flex h-[150px] flex-col justify-between rounded-2xl bg-surface-card p-5 shadow-md transition-transform hover:-translate-y-0.5 lg:h-[180px] lg:p-6"
+                data-card
+                className="group row-span-2 grid grid-rows-subgrid gap-y-0 rounded-2xl bg-surface-card p-5 shadow-md transition-transform hover:-translate-y-0.5 lg:p-6"
               >
-                <div className="flex items-center justify-between">
+                <div data-slot="top" className="flex items-center justify-between">
                   <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container text-primary-container transition-colors group-hover:bg-primary-container group-hover:text-on-primary">
                     <Icon className="h-6 w-6" />
                   </span>
                   <span className={`${label} text-text-muted`}>{String(i + 1).padStart(2, "0")}</span>
                 </div>
-                <h3 className="text-[15px] font-bold uppercase leading-5 text-text-primary sm:text-headline-sm">{title}</h3>
+                <h3
+                  data-slot="title"
+                  className="mt-8 text-[15px] font-bold uppercase leading-5 text-text-primary [overflow-wrap:anywhere] sm:text-headline-sm lg:mt-14"
+                >
+                  {title}
+                </h3>
               </a>
             );
           })}

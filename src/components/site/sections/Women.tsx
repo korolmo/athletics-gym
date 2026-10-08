@@ -3,6 +3,7 @@ import { site, whatsappUrl } from "@/lib/site";
 import { ChatSym, CheckCircleSym, LockSym, PhotoCameraSym } from "@/components/symbols";
 import { container, label, h2 } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
+import { logoWomen } from "@/lib/brand";
 
 // Женский зал
 export function Women({ t }: SectionProps) {
@@ -50,7 +51,7 @@ export function Women({ t }: SectionProps) {
             <div className="flex items-center justify-center lg:col-span-4">
               <div className="relative flex h-56 w-56 items-center justify-center rounded-full bg-surface-dim p-4 shadow-inner">
                 <Image
-                  src="/logo-women.png"
+                  src={logoWomen}
                   alt={t.women.title}
                   width={176}
                   height={176}

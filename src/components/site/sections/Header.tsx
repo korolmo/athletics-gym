@@ -4,6 +4,7 @@ import { locales } from "@/lib/i18n";
 import { site, whatsappUrl } from "@/lib/site";
 import { container, label } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
+import { logo } from "@/lib/brand";
 
 // Шапка
 export function Header({ locale, t }: SectionProps) {
@@ -18,7 +19,7 @@ export function Header({ locale, t }: SectionProps) {
     <header className="fixed inset-x-0 top-0 z-50 w-full bg-background/85 shadow-header backdrop-blur-xl">
       <div className={`${container} flex h-16 items-center justify-between gap-3 md:h-20 md:gap-6`}>
         <a href="#top" className="flex min-w-0 items-center gap-2 md:gap-4">
-          <Image src="/logo.png" alt={site.name} width={32} height={32} className="h-8 w-8 shrink-0 object-contain" priority />
+          <Image src={logo} alt={site.name} width={32} height={32} className="h-8 w-8 shrink-0 object-contain" priority />
           <span className="whitespace-nowrap text-[15px] font-bold uppercase leading-6 tracking-wide text-text-primary md:text-headline-sm md:tracking-wider">{site.name}</span>
         </a>
         <nav className="hidden items-center gap-4 lg:flex xl:gap-6">

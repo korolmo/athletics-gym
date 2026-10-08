@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useActionState, useState } from "react";
 import { login, type LoginState } from "../actions";
 import { EyeIcon } from "@/components/icons";
+import { logo } from "@/lib/brand";
 
 const input =
   "w-full rounded-xl border border-line bg-card px-4 py-3.5 text-base outline-none transition placeholder:text-muted/60 focus:border-accent";
@@ -14,7 +15,7 @@ export function LoginForm() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-5 py-10">
-      <Image src="/logo.png" alt="Athletic's Gym" width={88} height={88} className="mx-auto rounded-full" priority />
+      <Image src={logo} alt="Athletic's Gym" width={88} height={88} className="mx-auto rounded-full" priority />
       <h1 className="mt-6 text-center font-display text-3xl uppercase tracking-wide">Вход в админку</h1>
 
       <form action={action} className="mt-8 space-y-4">

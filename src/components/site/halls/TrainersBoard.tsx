@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import { whatsappUrl } from "@/lib/site";
-import { ChatSym, CloseSym, ZoomInSym } from "@/components/symbols";
+import { ChatSym, CloseSym, PersonSym, ZoomInSym } from "@/components/symbols";
 import type { TrainerView } from "@/components/site/halls/types";
 import { useHall } from "@/components/site/halls/hall-store";
 import { HallSwitch } from "@/components/site/halls/HallSwitch";
@@ -36,43 +36,59 @@ export function TrainersBoard({ t, trainers }: { t: Dictionary; trainers: Traine
       {list.length === 0 ? (
         <p className="rounded-2xl bg-surface-card p-6 text-body-md text-text-muted">{t.trainers.empty}</p>
       ) : (
-        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
+        // Карточка занимает пять строк общей сетки (subgrid): плакат, имя, описание, цены, кнопка.
+        // В ряду всё стоит на одной линии; строка описания общая, поэтому место под ним остаётся и у тех, у кого его нет.
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {list.map((tr) => (
-            <article key={tr.id} className="flex flex-col overflow-hidden rounded-2xl bg-surface-card shadow-md">
-              {tr.photo && (
+            <article
+              key={tr.id}
+              data-card
+              className="row-span-5 grid min-w-0 grid-rows-subgrid gap-y-0 overflow-hidden rounded-2xl bg-surface-card shadow-md"
+            >
+              {/* Рамка одной пропорции 3:4; плакат от Владельца виден целиком, без обрезки */}
+              {tr.photo ? (
                 <button
                   type="button"
+                  data-slot="frame"
                   onClick={() => setZoomed(tr)}
                   aria-label={`${t.trainers.open}: ${tr.name}`}
-                  className="group relative block w-full cursor-zoom-in bg-surface-container"
+                  className="group relative block aspect-[3/4] w-full cursor-zoom-in bg-surface-container"
                 >
-                  {/* Карточка-плакат от Владельца показывается целиком, без обрезки */}
                   <Image
                     src={tr.photo}
                     alt={tr.name}
-                    width={900}
-                    height={1300}
+                    fill
                     sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, 100vw"
-                    className="h-auto w-full"
+                    className="object-contain"
                   />
                   <span className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-dim/80 text-text-primary backdrop-blur-md transition-colors group-hover:text-primary-container">
                     <ZoomInSym className="h-5 w-5" />
                   </span>
                 </button>
+              ) : (
+                <div
+                  data-slot="frame"
+                  className="flex aspect-[3/4] w-full items-center justify-center bg-surface-container text-surface-border"
+                >
+                  <PersonSym className="h-24 w-24" />
+                </div>
               )}
-              <div className="flex grow flex-col p-6">
-                <h3 className="text-headline-md uppercase text-text-primary">{tr.name}</h3>
-                {tr.description && <p className="mt-2 text-body-md text-text-muted">{tr.description}</p>}
-                {tr.tariffs.length > 0 && (
-                  <div className="mt-5">
-                    <TariffRows p={t.prices} items={tr.tariffs} />
-                  </div>
-                )}
+              <h3 data-slot="title" className="px-6 pt-6 text-headline-md uppercase text-text-primary [overflow-wrap:anywhere]">
+                {tr.name}
+              </h3>
+              <p data-slot="text" className="px-6 pt-2 text-body-md text-text-muted">
+                {tr.description}
+              </p>
+              <div data-slot="list" className="px-6 pt-5">
+                {tr.tariffs.length > 0 && <TariffRows p={t.prices} items={tr.tariffs} />}
+              </div>
+              <div className="self-end px-6 pb-6 pt-6">
                 <a
+                  data-slot="action"
                   href={whatsappUrl(t.wa.trainer.replace("{name}", tr.name))}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-green text-[14px] uppercase text-white shadow-md transition-all hover:brightness-105"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-green text-[14px] uppercase text-white shadow-md transition-all hover:brightness-105"
                 >
                   <ChatSym className="h-5 w-5" />
                   {t.trainers.book}
