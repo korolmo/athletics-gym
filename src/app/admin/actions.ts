@@ -7,8 +7,9 @@ import { checkLoginLimit, clearFailedLogins, currentIpHash, recordFailedLogin } 
 export type LoginState = { error?: string } | undefined;
 
 export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
-  const loginValue = String(formData.get("login") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
+  // Обрезаем: сравнение идёт по хэшу, длинная строка только тратит ресурсы
+  const loginValue = String(formData.get("login") ?? "").trim().slice(0, 200);
+  const password = String(formData.get("password") ?? "").slice(0, 200);
 
   // Сначала лимит: при блокировке пароль даже не сравниваем
   const ipHash = await currentIpHash();

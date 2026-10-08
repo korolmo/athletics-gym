@@ -18,6 +18,7 @@ import {
   type Category,
   type HallId,
 } from "@/lib/tariffs";
+import { LIMITS } from "@/lib/admin/limits";
 
 export type TariffInput = {
   id?: string;
@@ -96,12 +97,18 @@ export function TariffForm({
         <>
           <label className="block">
             <span className={labelCls}>Уточнение (RU)</span>
-            <input name="titleRu" defaultValue={initial.titleRu} placeholder="1+1 (подходит для подруг)" className={field} />
+            <input
+              name="titleRu"
+              maxLength={LIMITS.title}
+              defaultValue={initial.titleRu}
+              placeholder="1+1 (подходит для подруг)"
+              className={field}
+            />
             <span className={hint}>Необязательно. Если пусто — название соберётся из полей ниже.</span>
           </label>
           <label className="block">
             <span className={labelCls}>Нақтылау (KZ)</span>
-            <input name="titleKk" defaultValue={initial.titleKk} className={field} />
+            <input name="titleKk" maxLength={LIMITS.title} defaultValue={initial.titleKk} className={field} />
             <span className={hint}>Если пусто — на казахской версии покажем русский.</span>
           </label>
         </>
@@ -114,6 +121,7 @@ export function TariffForm({
             name="visitsPerMonth"
             type="number"
             min={1}
+            max={LIMITS.visitsPerMonth}
             inputMode="numeric"
             required={!personal}
             defaultValue={initial.visitsPerMonth}
@@ -131,6 +139,7 @@ export function TariffForm({
             name="durationMonths"
             type="number"
             min={1}
+            max={LIMITS.durationMonths}
             inputMode="numeric"
             required
             defaultValue={initial.durationMonths}
@@ -173,6 +182,7 @@ export function TariffForm({
           <input
             name="price"
             required
+            maxLength={12}
             inputMode="numeric"
             pattern="[0-9 ]*"
             defaultValue={initial.price}
@@ -185,6 +195,7 @@ export function TariffForm({
             <span className={labelCls}>до, ₸</span>
             <input
               name="priceTo"
+              maxLength={12}
               inputMode="numeric"
               pattern="[0-9 ]*"
               defaultValue={initial.priceTo}
