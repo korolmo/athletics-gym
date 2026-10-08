@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { requireOwner } from "@/lib/admin/guard";
 import { CATEGORY_LABEL_RU, HALL_CATEGORIES, formatPrice, isHall } from "@/lib/tariffs";
 import { PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
@@ -12,6 +13,7 @@ export default async function TariffsPage({
 }: {
   searchParams: Promise<{ hall?: string; saved?: string; deleted?: string }>;
 }) {
+  await requireOwner();
   const { hall: rawHall, saved, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
   // Позиции прайса Зала; Тарифы Тренеров правятся в разделе «Тренеры»

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { requireOwner } from "@/lib/admin/guard";
 import { isHall } from "@/lib/tariffs";
 import { TariffForm } from "../TariffForm";
 
@@ -10,6 +11,7 @@ export default async function NewTariffPage({
 }: {
   searchParams: Promise<{ hall?: string; trainer?: string }>;
 }) {
+  await requireOwner();
   const { hall: rawHall, trainer: trainerId } = await searchParams;
   // Из карточки Тренера приходим с ?trainer=…: это его персональный Тариф
   const trainer = trainerId ? await db.trainer.findUnique({ where: { id: trainerId } }) : null;

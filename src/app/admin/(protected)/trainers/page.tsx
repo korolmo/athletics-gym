@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { requireOwner } from "@/lib/admin/guard";
 import { formatPrice, isHall } from "@/lib/tariffs";
 import { PencilIcon, PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
@@ -13,6 +14,7 @@ export default async function TrainersPage({
 }: {
   searchParams: Promise<{ hall?: string; deleted?: string }>;
 }) {
+  await requireOwner();
   const { hall: rawHall, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
   const trainers = await db.trainer.findMany({

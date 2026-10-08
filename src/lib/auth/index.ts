@@ -1,18 +1,6 @@
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
-
-const COOKIE = "ag_admin";
-const MAX_AGE_SEC = 60 * 60 * 24 * 7;
-
-function secret(): string {
-  const s = process.env.AUTH_SECRET;
-  if (!s || s.length < 32) throw new Error("AUTH_SECRET не задан или короче 32 символов (см. .env)");
-  return s;
-}
-
-function sign(value: string): string {
-  return crypto.createHmac("sha256", secret()).update(value).digest("hex");
-}
+import { SESSION_COOKIE, SESSION_MAX_AGE_SEC, signSession, verifySession } from "./session";
 
 function safeEqual(a: string, b: string): boolean {
   const ha = crypto.createHash("sha256").update(a).digest();
@@ -30,31 +18,23 @@ export function checkCredentials(login: string, password: string): boolean {
 }
 
 export async function createSession(): Promise<void> {
-  const payload = `admin.${Date.now() + MAX_AGE_SEC * 1000}`;
+  const token = await signSession(process.env.AUTH_SECRET, Date.now() + SESSION_MAX_AGE_SEC * 1000);
   const store = await cookies();
-  store.set(COOKIE, `${payload}.${sign(payload)}`, {
+  store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: MAX_AGE_SEC,
+    maxAge: SESSION_MAX_AGE_SEC,
   });
 }
 
 export async function destroySession(): Promise<void> {
   const store = await cookies();
-  store.delete(COOKIE);
+  store.delete(SESSION_COOKIE);
 }
 
 export async function isAuthed(): Promise<boolean> {
   const store = await cookies();
-  const raw = store.get(COOKIE)?.value;
-  if (!raw) return false;
-  const dot = raw.lastIndexOf(".");
-  if (dot < 0) return false;
-  const payload = raw.slice(0, dot);
-  const signature = raw.slice(dot + 1);
-  if (!safeEqual(signature, sign(payload))) return false;
-  const exp = Number(payload.split(".")[1]);
-  return Number.isFinite(exp) && exp > Date.now();
+  return verifySession(store.get(SESSION_COOKIE)?.value, process.env.AUTH_SECRET);
 }

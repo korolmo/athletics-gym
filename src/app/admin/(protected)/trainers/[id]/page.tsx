@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { requireOwner } from "@/lib/admin/guard";
 import { isHall } from "@/lib/tariffs";
 import { PlusIcon } from "@/components/icons";
 import { TariffRow } from "../../tariffs/TariffRow";
@@ -16,6 +17,7 @@ export default async function EditTrainerPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string; deleted?: string }>;
 }) {
+  await requireOwner();
   const { id } = await params;
   const { saved, deleted } = await searchParams;
   const tr = await db.trainer.findUnique({

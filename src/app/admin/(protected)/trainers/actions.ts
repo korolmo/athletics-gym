@@ -3,14 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { isAuthed } from "@/lib/auth";
+import { requireOwner } from "@/lib/admin/guard";
 import { isHall } from "@/lib/tariffs";
 
 export type TrainerFormState = { error?: string } | undefined;
-
-async function requireOwner() {
-  if (!(await isAuthed())) redirect("/admin/login");
-}
 
 function revalidateSite() {
   revalidatePath("/ru");
