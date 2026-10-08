@@ -10,7 +10,15 @@ import { useHall } from "@/components/site/halls/hall-store";
 import { HallSwitch } from "@/components/site/halls/HallSwitch";
 import { TariffRows } from "@/components/site/halls/TariffRows";
 
-/** Тренеры выбранного Зала: плакат целиком (по нажатию — крупно), Тарифы и запись в WhatsApp. */
+/**
+ * Плакат заполняет рамку 3:4 и прижат к верху. Плакат шире рамки обрезается по бокам, и если важное у края,
+ * ему нужно своё прижатие: у Жанерке имя стоит вплотную к левому краю.
+ */
+const posterPosition: Record<string, string> = {
+  "/trainers/zhanerke.jpg": "object-top-left",
+};
+
+/** Тренеры выбранного Зала: плакат в рамке 3:4 (по нажатию — целиком), Тарифы и запись в WhatsApp. */
 export function TrainersBoard({ t, trainers }: { t: Dictionary; trainers: TrainerView[] }) {
   const hall = useHall();
   const [zoomed, setZoomed] = useState<TrainerView | null>(null);
@@ -37,15 +45,17 @@ export function TrainersBoard({ t, trainers }: { t: Dictionary; trainers: Traine
         <p className="rounded-2xl bg-surface-card p-6 text-body-md text-text-muted">{t.trainers.empty}</p>
       ) : (
         // Карточка занимает пять строк общей сетки (subgrid): плакат, имя, описание, цены, кнопка.
-        // В ряду всё стоит на одной линии; строка описания общая, поэтому место под ним остаётся и у тех, у кого его нет.
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        // В ряду всё стоит на одной линии; строка описания общая: место под ним остаётся и у тех, у кого его нет,
+        // а если описания нет ни у кого в ряду — строка схлопывается в ноль. Поэтому зазор между строками сетки
+        // нулевой (иначе пустая строка не станет ниже зазора), а расстояние между рядами карточек — их нижний отступ.
+        <div className="-mb-6 grid grid-cols-1 gap-x-6 gap-y-0 md:grid-cols-2 lg:grid-cols-3">
           {list.map((tr) => (
             <article
               key={tr.id}
               data-card
-              className="row-span-5 grid min-w-0 grid-rows-subgrid gap-y-0 overflow-hidden rounded-2xl bg-surface-card shadow-md"
+              className="row-span-5 mb-6 grid min-w-0 grid-rows-subgrid gap-y-0 overflow-hidden rounded-2xl bg-surface-card shadow-md"
             >
-              {/* Рамка одной пропорции 3:4; плакат от Владельца виден целиком, без обрезки */}
+              {/* Рамка одной пропорции 3:4; плакат заполняет её и прижат к верху: обрезается только низ с контактами */}
               {tr.photo ? (
                 <button
                   type="button"
@@ -59,9 +69,10 @@ export function TrainersBoard({ t, trainers }: { t: Dictionary; trainers: Traine
                     alt={tr.name}
                     fill
                     sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, 100vw"
-                    className="object-contain"
+                    className={`object-cover ${posterPosition[tr.photo] ?? "object-top"}`}
                   />
-                  <span className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-dim/80 text-text-primary backdrop-blur-md transition-colors group-hover:text-primary-container">
+                  {/* Лупа — в левом нижнем углу: там у плакатов контакты, а цены стоят справа */}
+                  <span className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-dim/80 text-text-primary backdrop-blur-md transition-colors group-hover:text-primary-container">
                     <ZoomInSym className="h-5 w-5" />
                   </span>
                 </button>
@@ -76,9 +87,13 @@ export function TrainersBoard({ t, trainers }: { t: Dictionary; trainers: Traine
               <h3 data-slot="title" className="px-6 pt-6 text-headline-md uppercase text-text-primary [overflow-wrap:anywhere]">
                 {tr.name}
               </h3>
-              <p data-slot="text" className="px-6 pt-2 text-body-md text-text-muted">
-                {tr.description}
-              </p>
+              {tr.description?.trim() ? (
+                <p data-slot="text" className="px-6 pt-2 text-body-md text-text-muted">
+                  {tr.description}
+                </p>
+              ) : (
+                <div data-slot="text" />
+              )}
               <div data-slot="list" className="px-6 pt-5">
                 {tr.tariffs.length > 0 && <TariffRows p={t.prices} items={tr.tariffs} />}
               </div>
