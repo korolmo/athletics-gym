@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
+import { listHallTariffs } from "@/lib/services/tariffs";
 import { HALL_CATEGORIES, isHall } from "@/lib/domain/tariff";
 import { CATEGORY_LABEL_RU, formatPrice } from "@/lib/presentation/tariff-labels";
 import { PlusIcon } from "@/components/icons";
@@ -14,14 +13,10 @@ export default async function TariffsPage({
 }: {
   searchParams: Promise<{ hall?: string; saved?: string; deleted?: string }>;
 }) {
-  await requireOwner();
   const { hall: rawHall, saved, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
   // Позиции прайса Зала; Тарифы Тренеров правятся в разделе «Тренеры»
-  const [tariffs, trainerTariffCount] = await Promise.all([
-    db.tariff.findMany({ where: { hallId: hall, trainerId: null }, orderBy: [{ sortOrder: "asc" }, { price: "asc" }] }),
-    db.tariff.count({ where: { hallId: hall, trainerId: { not: null } } }),
-  ]);
+  const { tariffs, trainerTariffCount } = await listHallTariffs(hall);
 
   return (
     <>

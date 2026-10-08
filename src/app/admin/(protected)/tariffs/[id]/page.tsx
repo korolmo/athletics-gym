@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
+import { getTariff } from "@/lib/services/tariffs";
 import { isAccess, isAudience, isCategory, isHall } from "@/lib/domain/tariff";
 import { tariffLabelRu } from "@/lib/presentation/tariff-labels";
 import { TariffForm } from "../TariffForm";
@@ -9,9 +8,8 @@ import { DeleteButton } from "../DeleteButton";
 export const dynamic = "force-dynamic";
 
 export default async function EditTariffPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireOwner();
   const { id } = await params;
-  const t = await db.tariff.findUnique({ where: { id }, include: { trainer: true } });
+  const t = await getTariff(id);
   if (!t || !isCategory(t.category) || !isHall(t.hallId) || !isAccess(t.access) || !isAudience(t.audience)) notFound();
 
   return (
