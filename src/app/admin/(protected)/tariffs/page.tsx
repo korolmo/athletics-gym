@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { CATEGORY_LABEL_RU, HALL_CATEGORIES, formatPrice, isHall } from "@/lib/tariffs";
+import { HALL_CATEGORIES, isHall } from "@/lib/domain/tariff";
+import { CATEGORY_LABEL_RU, formatPrice } from "@/lib/presentation/tariff-labels";
 import { PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
 import { TariffRow } from "./TariffRow";

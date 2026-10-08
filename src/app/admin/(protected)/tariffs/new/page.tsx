@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { isHall } from "@/lib/tariffs";
+import { isHall } from "@/lib/domain/tariff";
 import { TariffForm } from "../TariffForm";
 
 export const dynamic = "force-dynamic";

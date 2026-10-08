@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { isHall } from "@/lib/tariffs";
+import { isHall } from "@/lib/domain/tariff";
 import { PlusIcon } from "@/components/icons";
 import { TariffRow } from "../../tariffs/TariffRow";
 import { DeleteTrainerButton, TrainerForm } from "../TrainerForm";

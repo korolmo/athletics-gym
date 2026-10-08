@@ -7,7 +7,7 @@ import { checked, optionalInt, text } from "@/lib/admin/form";
 import { revalidateSite } from "@/lib/admin/revalidate";
 import { LIMITS } from "@/lib/admin/limits";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
-import { CATEGORY_FIELDS, isAccess, isAudience, isCategory, isHall } from "@/lib/tariffs";
+import { CATEGORY_FIELDS, isAccess, isAudience, isCategory, isHall } from "@/lib/domain/tariff";
 
 export type TariffFormState = { error?: string } | undefined;
 

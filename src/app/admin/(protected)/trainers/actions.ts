@@ -7,7 +7,7 @@ import { checked, text } from "@/lib/admin/form";
 import { revalidateSite } from "@/lib/admin/revalidate";
 import { LIMITS } from "@/lib/admin/limits";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
-import { isHall } from "@/lib/tariffs";
+import { isHall } from "@/lib/domain/tariff";
 
 export type TrainerFormState = { error?: string } | undefined;
 

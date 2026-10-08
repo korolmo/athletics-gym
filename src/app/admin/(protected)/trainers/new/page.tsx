@@ -1,4 +1,4 @@
-import { isHall } from "@/lib/tariffs";
+import { isHall } from "@/lib/domain/tariff";
 import { requireOwner } from "@/lib/admin/guard";
 import { TrainerForm } from "../TrainerForm";
 

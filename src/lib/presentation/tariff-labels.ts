@@ -1,19 +1,15 @@
-// Без импорта @prisma/client: файл используется и в клиентских компонентах
-export const HALLS = ["general", "women"] as const;
-export type HallId = (typeof HALLS)[number];
+// Как Тарифы показываются в админке: русские подписи, названия из полей, форматирование цен.
+// Админка только на русском; подписи сайта на двух языках — в src/dictionaries.
+import {
+  isAccess,
+  isAudience,
+  type Access,
+  type Audience,
+  type Category,
+  type HallId,
+  type TariffShape,
+} from "@/lib/domain/tariff";
 
-export const CATEGORY_ORDER = ["SINGLE", "VISITS", "UNLIMITED", "PERSONAL"] as const;
-export type Category = (typeof CATEGORY_ORDER)[number];
-/** Категории прайса Зала. Персональные тренировки — только у Тренеров. */
-export const HALL_CATEGORIES = ["SINGLE", "VISITS", "UNLIMITED"] as const satisfies readonly Category[];
-
-export const ACCESS = ["DAY", "FULL"] as const;
-export type Access = (typeof ACCESS)[number];
-
-export const AUDIENCES = ["ALL", "STUDENTS", "WOMEN", "MEN"] as const;
-export type Audience = (typeof AUDIENCES)[number];
-
-// Подписи админки (она только на русском); подписи сайта — в словарях
 export const HALL_LABEL_RU: Record<HallId, string> = {
   general: "Общий зал",
   women: "Женский зал",
@@ -36,29 +32,6 @@ export const AUDIENCE_LABEL_RU: Record<Audience, string> = {
   STUDENTS: "Студентам",
   WOMEN: "Женщинам",
   MEN: "Мужчинам",
-};
-
-/** Какие поля имеют смысл для Категории — остальные форма прячет, а сервер обнуляет. */
-export const CATEGORY_FIELDS: Record<
-  Category,
-  { visits: boolean; months: boolean; access: boolean; audience: boolean; trainer: boolean; title: boolean; priceTo: boolean }
-> = {
-  SINGLE: { visits: false, months: false, access: false, audience: false, trainer: false, title: false, priceTo: false },
-  VISITS: { visits: true, months: false, access: true, audience: true, trainer: false, title: false, priceTo: false },
-  UNLIMITED: { visits: false, months: true, access: false, audience: false, trainer: false, title: false, priceTo: false },
-  PERSONAL: { visits: true, months: false, access: false, audience: true, trainer: true, title: true, priceTo: true },
-};
-
-export type TariffShape = {
-  category: string;
-  titleRu?: string | null;
-  titleKk?: string | null;
-  visitsPerMonth: number | null;
-  durationMonths: number | null;
-  access: string;
-  audience: string;
-  price: number;
-  priceTo: number | null;
 };
 
 export function formatNumber(value: number): string {
@@ -109,20 +82,4 @@ export function tariffTagsRu(t: TariffShape): string[] {
   if (isAudience(t.audience) && t.audience !== "ALL") tags.push(AUDIENCE_LABEL_RU[t.audience]);
   if (t.category === "VISITS" && isAccess(t.access)) tags.push(ACCESS_LABEL_RU[t.access]);
   return tags;
-}
-
-export function isHall(v: string): v is HallId {
-  return (HALLS as readonly string[]).includes(v);
-}
-
-export function isCategory(v: string): v is Category {
-  return (CATEGORY_ORDER as readonly string[]).includes(v);
-}
-
-export function isAccess(v: string): v is Access {
-  return (ACCESS as readonly string[]).includes(v);
-}
-
-export function isAudience(v: string): v is Audience {
-  return (AUDIENCES as readonly string[]).includes(v);
 }

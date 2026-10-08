@@ -5,19 +5,16 @@ import { useActionState, useState } from "react";
 import { saveTariff, type TariffFormState } from "./actions";
 import {
   ACCESS,
-  ACCESS_LABEL_RU,
   AUDIENCES,
-  AUDIENCE_LABEL_RU,
   CATEGORY_FIELDS,
-  CATEGORY_LABEL_RU,
   HALLS,
-  HALL_LABEL_RU,
   HALL_CATEGORIES,
   type Access,
   type Audience,
   type Category,
   type HallId,
-} from "@/lib/tariffs";
+} from "@/lib/domain/tariff";
+import { ACCESS_LABEL_RU, AUDIENCE_LABEL_RU, CATEGORY_LABEL_RU, HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
 import { LIMITS } from "@/lib/admin/limits";
 
 export type TariffInput = {

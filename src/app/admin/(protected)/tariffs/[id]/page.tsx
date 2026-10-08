@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { isAccess, isAudience, isCategory, isHall, tariffLabelRu } from "@/lib/tariffs";
+import { isAccess, isAudience, isCategory, isHall } from "@/lib/domain/tariff";
+import { tariffLabelRu } from "@/lib/presentation/tariff-labels";
 import { TariffForm } from "../TariffForm";
 import { DeleteButton } from "../DeleteButton";
 

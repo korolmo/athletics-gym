@@ -4,17 +4,8 @@ import Image from "next/image";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import { whatsappUrl } from "@/lib/site";
-import {
-  CATEGORY_ORDER,
-  HALLS,
-  formatNumber,
-  formatTariffPrice,
-  isAccess,
-  isAudience,
-  plural,
-  type Category,
-  type HallId,
-} from "@/lib/tariffs";
+import { CATEGORY_ORDER, HALLS, isAccess, isAudience, type Category, type HallId } from "@/lib/domain/tariff";
+import { formatNumber, formatTariffPrice, plural } from "@/lib/presentation/tariff-labels";
 import { ArrowForwardSym, ChatSym, CheckCircleSym, CheckSym, CloseSym, ZoomInSym } from "@/components/symbols";
 
 export type TariffView = {

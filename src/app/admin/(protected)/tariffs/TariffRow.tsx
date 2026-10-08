@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { formatTariffPrice, tariffLabelRu, tariffTagsRu, type TariffShape } from "@/lib/tariffs";
+import { type TariffShape } from "@/lib/domain/tariff";
+import { formatTariffPrice, tariffLabelRu, tariffTagsRu } from "@/lib/presentation/tariff-labels";
 import { PencilIcon } from "@/components/icons";
 import { toggleTariff } from "./actions";
 
