@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
-import { isHall } from "@/lib/tariffs";
+import { getTrainer } from "@/lib/services/trainers";
+import { isHall } from "@/lib/domain/tariff";
 import { TariffForm } from "../TariffForm";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export default async function NewTariffPage({
 }) {
   const { hall: rawHall, trainer: trainerId } = await searchParams;
   // Из карточки Тренера приходим с ?trainer=…: это его персональный Тариф
-  const trainer = trainerId ? await db.trainer.findUnique({ where: { id: trainerId } }) : null;
+  const trainer = trainerId ? await getTrainer(trainerId) : null;
   if (trainerId && (!trainer || !isHall(trainer.hallId))) notFound();
   const hallId = trainer && isHall(trainer.hallId) ? trainer.hallId : rawHall && isHall(rawHall) ? rawHall : "general";
 

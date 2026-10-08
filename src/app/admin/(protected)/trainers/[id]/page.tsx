@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
-import { isHall } from "@/lib/tariffs";
+import { getTrainerWithTariffs } from "@/lib/services/trainers";
+import { isHall } from "@/lib/domain/tariff";
 import { PlusIcon } from "@/components/icons";
 import { TariffRow } from "../../tariffs/TariffRow";
 import { DeleteTrainerButton, TrainerForm } from "../TrainerForm";
@@ -18,10 +18,7 @@ export default async function EditTrainerPage({
 }) {
   const { id } = await params;
   const { saved, deleted } = await searchParams;
-  const tr = await db.trainer.findUnique({
-    where: { id },
-    include: { tariffs: { orderBy: [{ sortOrder: "asc" }, { price: "asc" }] } },
-  });
+  const tr = await getTrainerWithTariffs(id);
   if (!tr || !isHall(tr.hallId)) notFound();
 
   return (

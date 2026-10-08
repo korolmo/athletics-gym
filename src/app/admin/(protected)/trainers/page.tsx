@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { db } from "@/lib/db";
-import { formatPrice, isHall } from "@/lib/tariffs";
+import { listTrainers } from "@/lib/services/trainers";
+import { isHall } from "@/lib/domain/tariff";
+import { formatPrice } from "@/lib/presentation/tariff-labels";
 import { PencilIcon, PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
 import { toggleTrainer } from "./actions";
@@ -15,11 +16,7 @@ export default async function TrainersPage({
 }) {
   const { hall: rawHall, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
-  const trainers = await db.trainer.findMany({
-    where: { hallId: hall },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    include: { tariffs: { where: { isVisible: true } } },
-  });
+  const trainers = await listTrainers(hall);
 
   return (
     <>

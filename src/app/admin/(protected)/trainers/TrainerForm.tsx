@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { deleteTrainer, saveTrainer, type TrainerFormState } from "./actions";
-import { HALLS, HALL_LABEL_RU, type HallId } from "@/lib/tariffs";
+import { HALLS, type HallId } from "@/lib/domain/tariff";
+import { HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
+import { LIMITS } from "@/lib/admin/limits";
 
 export type TrainerInput = {
   /** Пусто — новый Тренер */
@@ -30,7 +32,14 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
 
       <label className="block">
         <span className={labelCls}>Имя *</span>
-        <input name="name" required defaultValue={initial.name} placeholder="Например, Нұрмахан" className={field} />
+        <input
+          name="name"
+          required
+          maxLength={LIMITS.name}
+          defaultValue={initial.name}
+          placeholder="Например, Нұрмахан"
+          className={field}
+        />
       </label>
 
       <label className="block">
@@ -47,12 +56,24 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
 
       <label className="block">
         <span className={labelCls}>Описание (RU)</span>
-        <textarea name="descriptionRu" rows={4} defaultValue={initial.descriptionRu} className={field} />
+        <textarea
+          name="descriptionRu"
+          rows={4}
+          maxLength={LIMITS.description}
+          defaultValue={initial.descriptionRu}
+          className={field}
+        />
       </label>
 
       <label className="block">
         <span className={labelCls}>Сипаттама (KZ)</span>
-        <textarea name="descriptionKk" rows={4} defaultValue={initial.descriptionKk} className={field} />
+        <textarea
+          name="descriptionKk"
+          rows={4}
+          maxLength={LIMITS.description}
+          defaultValue={initial.descriptionKk}
+          className={field}
+        />
         <span className={hint}>Если пусто — на казахской версии покажем русский.</span>
       </label>
 
@@ -62,12 +83,15 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
           name="sortOrder"
           type="number"
           min={0}
+          max={LIMITS.sortOrder}
           inputMode="numeric"
           defaultValue={initial.sortOrder}
-          placeholder={initial.id ? "0" : "в конец списка"}
+          placeholder={initial.id ? "не менять" : "в конец списка"}
           className={field}
         />
-        <span className={hint}>Меньше число — выше в списке своего зала.</span>
+        <span className={hint}>
+          Меньше число — выше в списке своего зала.{initial.id ? " Пустое поле — порядок не меняется." : ""}
+        </span>
       </label>
 
       <label className="flex items-center justify-between gap-4 rounded-xl bg-card px-4 py-3.5">

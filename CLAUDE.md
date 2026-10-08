@@ -13,6 +13,13 @@
 ## Стек
 Next.js 15 (App Router, TS) · Tailwind CSS 4 · Prisma 6 · PostgreSQL на Supabase (`DATABASE_URL` — пулер 6543, `DIRECT_URL` — 5432) · деплой Vercel · публичный репозиторий GitHub.
 
+## Код и проверки
+- Слои: `lib/domain` (модель и правила) → `lib/validation` (zod) → `lib/services` (правила домена + Prisma, проверка сессии) → server actions (тонкие). К Prisma напрямую ходят только сервисы и лимит входа.
+- Сайт: одна секция — один файл в `components/site/sections/`; общие элементы — `components/ui/`.
+- Перед коммитом: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` (то же делает CI на каждый PR).
+- Схема базы — только миграциями (`npm run db:migrate:dev` на локальной/тестовой базе); порядок выкатки — `docs/deploy.md`. `prisma db push` на боевой базе не использовать.
+- Локальный `.env` — локальная или тестовая база. Боевая — только через `npm run db:status:prod` / `db:migrate:prod` (берут `.env.preview` на одну команду) и только по явной просьбе пользователя. `npm run seed` на боевой базе отказывается работать без `--force-production`.
+
 ## Принятые решения по сайту
 - Одна страница, `/ru` (по умолчанию) и `/kk`; казахский текст необязателен — если пуст, показываем русский.
 - Целевое действие — Обращение: переход в WhatsApp +7 771 484 63 44 с текстом про Пробное посещение. Форм заявок нет.

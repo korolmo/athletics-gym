@@ -6,6 +6,7 @@ import { logout } from "../actions";
 import { AdminNav } from "./AdminNav";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  // Только для интерфейса: сессию проверяют middleware и requireOwner() перед каждым чтением и записью данных
   if (!(await isAuthed())) redirect("/admin/login");
 
   return (

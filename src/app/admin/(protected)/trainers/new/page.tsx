@@ -1,7 +1,9 @@
-import { isHall } from "@/lib/tariffs";
+import { isHall } from "@/lib/domain/tariff";
+import { requireOwner } from "@/lib/admin/guard";
 import { TrainerForm } from "../TrainerForm";
 
 export default async function NewTrainerPage({ searchParams }: { searchParams: Promise<{ hall?: string }> }) {
+  await requireOwner();
   const { hall: rawHall } = await searchParams;
   const hallId = rawHall && isHall(rawHall) ? rawHall : "general";
 

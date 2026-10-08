@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
+import { getPriceListAndTrainers } from "@/lib/services/site";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
 import {
   About,
@@ -14,7 +14,7 @@ import {
   Trainers,
   Women,
 } from "@/components/site/sections";
-import type { TariffView, TrainerView } from "@/components/site/HallBoards";
+import type { TariffView, TrainerView } from "@/components/site/halls/types";
 
 // Данные меняет Владелец — всегда читаем свежие из базы
 export const dynamic = "force-dynamic";
@@ -48,22 +48,12 @@ function toTariffView(locale: Locale, x: TariffRow): TariffView {
   };
 }
 
-const tariffOrder = [{ sortOrder: "asc" as const }, { price: "asc" as const }];
-
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
 
-  const [hallTariffs, trainerRows] = await Promise.all([
-    // Позиции прайса Залов; Тарифы Тренеров приходят вместе с Тренерами
-    db.tariff.findMany({ where: { isVisible: true, trainerId: null }, orderBy: tariffOrder }),
-    db.trainer.findMany({
-      where: { isVisible: true },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      include: { tariffs: { where: { isVisible: true }, orderBy: tariffOrder } },
-    }),
-  ]);
+  const { hallTariffs, trainers: trainerRows } = await getPriceListAndTrainers();
 
   const tariffs = hallTariffs.map((x) => toTariffView(locale, x));
   const trainers: TrainerView[] = trainerRows.map((tr) => ({

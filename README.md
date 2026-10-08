@@ -38,14 +38,31 @@
 
    ```powershell
    npm install
-   npm run db:push
+   npm run db:migrate
    npm run seed
    npm run dev
    ```
 
 4. Откройте http://localhost:3000 (сайт) и http://localhost:3000/admin (админка).
 
-> `npm run db:push` и `npm run seed` работают с базой из `.env`. `seed` **удаляет** все Залы, Тарифы и Тренеров и заводит их заново из прайса — на боевой базе запускать только осознанно.
+> `npm run db:migrate` и `npm run seed` работают с базой из `.env`. `seed` **удаляет** все Залы, Тарифы и Тренеров и заводит их заново из прайса — на боевой базе запускать только осознанно.
+
+## Проверки
+
+```powershell
+npm run lint        # ESLint
+npm run typecheck   # TypeScript
+npm test            # Vitest
+npm run build
+```
+
+Те же четыре шага GitHub Actions запускает на каждый pull request (`.github/workflows/ci.yml`).
+
+## База и выкатка
+
+Схема меняется только миграциями (`prisma/migrations/`). Порядок выкатки и разовые шаги для перехода боевой базы на миграции — в [docs/deploy.md](./docs/deploy.md).
+
+Локальный `.env` должен смотреть на локальную или тестовую базу, не на боевую. Команды для боевой базы — `npm run db:status:prod` и `npm run db:migrate:prod` — берут строки из `.env.preview` на время одной команды. `npm run seed` на боевой базе откажется работать.
 
 ## Окружения
 
