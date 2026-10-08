@@ -4,6 +4,17 @@
 export const SESSION_COOKIE = "ag_admin";
 export const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7;
 
+/** Что лежит в действующем токене. */
+export type Session = {
+  /**
+   * Версия сессии на момент входа. Пока аккаунта Владельца в базе нет, версия одна
+   * на всех (AUTH_SESSION_VERSION). На этапе 1 она будет храниться в аккаунте:
+   * смена пароля и «выйти везде» увеличивают её — и все старые куки перестают подходить.
+   */
+  version: number;
+  expiresAt: number;
+};
+
 const encoder = new TextEncoder();
 
 function assertSecret(secret: string | undefined): string {
@@ -26,32 +37,38 @@ function fromHex(hex: string): Uint8Array<ArrayBuffer> | null {
   return out;
 }
 
-/** Токен вида `admin.<срок в мс>.<подпись>`. */
-export async function signSession(secret: string | undefined, expiresAt: number): Promise<string> {
-  const payload = `admin.${expiresAt}`;
+/** Токен вида `admin.<срок в мс>.v<версия>.<подпись>`: версия входит в подпись. */
+export async function signSession(secret: string | undefined, session: Session): Promise<string> {
+  const payload = `admin.${session.expiresAt}.v${session.version}`;
   const signature = await crypto.subtle.sign("HMAC", await hmacKey(assertSecret(secret), "sign"), encoder.encode(payload));
   return `${payload}.${toHex(signature)}`;
 }
 
-/** Проверяет подпись (за постоянное время) и срок действия. */
-export async function verifySession(
+/**
+ * Проверяет подпись (за постоянное время) и срок действия.
+ * Возвращает содержимое токена или null. Версию с текущей сравнивает вызывающий:
+ * middleware её не знает (на этапе 1 она в базе), а requireOwner() — знает.
+ */
+export async function readSession(
   token: string | undefined,
   secret: string | undefined,
   now: number = Date.now(),
-): Promise<boolean> {
-  if (!token) return false;
+): Promise<Session | null> {
+  if (!token) return null;
   const dot = token.lastIndexOf(".");
-  if (dot < 0) return false;
+  if (dot < 0) return null;
   const payload = token.slice(0, dot);
   const signature = fromHex(token.slice(dot + 1));
-  if (!signature) return false;
+  if (!signature) return null;
 
-  const parts = payload.split(".");
-  if (parts.length !== 2 || parts[0] !== "admin") return false;
+  const match = /^admin\.(\d+)\.v(\d+)$/.exec(payload);
+  if (!match) return null;
 
   const ok = await crypto.subtle.verify("HMAC", await hmacKey(assertSecret(secret), "verify"), signature, encoder.encode(payload));
-  if (!ok) return false;
+  if (!ok) return null;
 
-  const expiresAt = Number(parts[1]);
-  return Number.isFinite(expiresAt) && expiresAt > now;
+  const expiresAt = Number(match[1]);
+  const version = Number(match[2]);
+  if (!Number.isSafeInteger(expiresAt) || !Number.isSafeInteger(version) || expiresAt <= now) return null;
+  return { version, expiresAt };
 }
