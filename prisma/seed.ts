@@ -1,4 +1,5 @@
 import { PrismaClient, type Access, type Audience, type TariffCategory } from "@prisma/client";
+import { decideSeed } from "../src/lib/db-guard/production";
 
 // Реальный прайс и Тренеры от Владельца (7 октября 2026):
 // docs/owner/prices-2026-10.md и docs/owner/trainers-2026-10.md
@@ -124,6 +125,18 @@ const trainers: TrainerSeed[] = [
 ];
 
 async function main() {
+  // Seed стирает данные: на боевой базе — только с явным флагом
+  const decision = decideSeed(
+    { DATABASE_URL: process.env.DATABASE_URL, DIRECT_URL: process.env.DIRECT_URL },
+    process.argv,
+  );
+  if (!decision.allowed) {
+    console.error(decision.reason);
+    process.exitCode = 1;
+    return;
+  }
+  if (decision.production) console.warn("Внимание: seed запущен на БОЕВОЙ базе (--force-production).");
+
   await db.tariff.deleteMany();
   await db.trainer.deleteMany();
   await db.hall.deleteMany();

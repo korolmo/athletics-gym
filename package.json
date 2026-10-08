@@ -15,6 +15,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:status": "prisma migrate status",
     "seed": "prisma db seed",
+    "seed:force-production": "prisma db seed -- --force-production",
     "studio": "prisma studio"
   },
   "prisma": {
