@@ -1,25 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
+import { checked, text } from "@/lib/admin/form";
+import { revalidateSite } from "@/lib/admin/revalidate";
 import { LIMITS } from "@/lib/admin/limits";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import { isHall } from "@/lib/tariffs";
 
 export type TrainerFormState = { error?: string } | undefined;
-
-function revalidateSite() {
-  revalidatePath("/ru");
-  revalidatePath("/kk");
-  revalidatePath("/admin/trainers");
-  revalidatePath("/admin/tariffs");
-}
-
-function text(fd: FormData, key: string): string {
-  return String(fd.get(key) ?? "").trim();
-}
 
 export async function saveTrainer(_prev: TrainerFormState, fd: FormData): Promise<TrainerFormState> {
   await requireOwner();
@@ -49,7 +39,7 @@ export async function saveTrainer(_prev: TrainerFormState, fd: FormData): Promis
     hallId,
     descriptionRu,
     descriptionKk,
-    isVisible: fd.get("isVisible") === "on",
+    isVisible: checked(fd, "isVisible"),
   };
 
   let savedId = id;

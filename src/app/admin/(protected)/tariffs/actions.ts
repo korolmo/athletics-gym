@@ -1,31 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
+import { checked, optionalInt, text } from "@/lib/admin/form";
+import { revalidateSite } from "@/lib/admin/revalidate";
 import { LIMITS } from "@/lib/admin/limits";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import { CATEGORY_FIELDS, isAccess, isAudience, isCategory, isHall } from "@/lib/tariffs";
 
 export type TariffFormState = { error?: string } | undefined;
-
-function revalidateSite() {
-  revalidatePath("/ru");
-  revalidatePath("/kk");
-  revalidatePath("/admin/tariffs");
-  revalidatePath("/admin/trainers");
-}
-
-function text(fd: FormData, key: string): string {
-  return String(fd.get(key) ?? "").trim();
-}
-
-/** Пустая строка → null, иначе число (возможно NaN — проверяет вызывающий). */
-function optionalInt(raw: string): number | null {
-  const clean = raw.replace(/\s/g, "");
-  return clean === "" ? null : Number(clean);
-}
 
 function backTo(trainerId: string | null, hallId: string, flag: string): string {
   return trainerId ? `/admin/trainers/${trainerId}?${flag}=1` : `/admin/tariffs?hall=${hallId}&${flag}=1`;
@@ -111,7 +95,7 @@ export async function saveTariff(_prev: TariffFormState, fd: FormData): Promise<
     audience,
     price,
     priceTo,
-    isVisible: fd.get("isVisible") === "on",
+    isVisible: checked(fd, "isVisible"),
   };
 
   if (id) {
