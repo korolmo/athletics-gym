@@ -3,6 +3,7 @@ import { mapEmbedUrl, site, whatsappUrl } from "@/lib/site";
 import { CallSym, ChatSym, LocationOnSym, OpenInNewSym, ScheduleSym } from "@/components/symbols";
 import { container, eyebrow, h2, sectionY } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
+import { logo } from "@/lib/brand";
 
 // Контакты
 export function Contacts({ t }: SectionProps) {
@@ -61,7 +62,7 @@ export function Contacts({ t }: SectionProps) {
             />
             <div className="pointer-events-none absolute inset-0 bg-background/20" />
             <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/95 p-4 shadow-xl backdrop-blur-md">
-              <Image src="/logo.png" alt="" width={32} height={32} className="h-8 w-8 object-contain" />
+              <Image src={logo} alt="" width={32} height={32} className="h-8 w-8 object-contain" />
               <div>
                 <div className="text-[13px] uppercase leading-5 text-text-primary">{site.name}</div>
                 <div className="text-[11px] leading-4 text-primary-container">

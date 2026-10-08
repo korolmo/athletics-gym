@@ -4,6 +4,7 @@ import { container, label, sectionY } from "@/components/ui/styles";
 import { DemoBadge } from "@/components/ui/DemoBadge";
 import { SectionHead } from "@/components/ui/SectionHead";
 import type { SectionProps } from "@/components/site/sections/types";
+import { logo } from "@/lib/brand";
 
 // Галерея (фото из макета — сгенерированы, поэтому с пометкой «ДЕМО»)
 export function Gallery({ t }: SectionProps) {
@@ -20,7 +21,7 @@ export function Gallery({ t }: SectionProps) {
           badge={<DemoBadge label={t.gallery.demo} />}
           aside={
             <div className="flex items-center gap-3">
-              <Image src="/logo.png" alt="" width={40} height={40} className="h-10 w-10 object-contain" />
+              <Image src={logo} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
               <div className="flex flex-col">
                 <span className={`${label} text-text-primary`}>{site.name}</span>
                 <span className="text-body-sm text-text-muted">{t.contacts.city}</span>

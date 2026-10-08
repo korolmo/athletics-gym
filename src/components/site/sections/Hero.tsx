@@ -3,6 +3,7 @@ import { site, whatsappUrl } from "@/lib/site";
 import { AirSym, CallSym, FitnessCenterSym, LocationOnSym, ScheduleSym } from "@/components/symbols";
 import { container, label } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
+import { logoWomen } from "@/lib/brand";
 
 // Полоса с адресом и первый экран
 export function Hero({ t }: SectionProps) {
@@ -115,7 +116,7 @@ export function Hero({ t }: SectionProps) {
               <div className="absolute inset-0 bg-linear-to-t from-background via-surface-dim/40 to-transparent" />
               <div className="absolute right-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/90 px-3.5 py-2 shadow-lg backdrop-blur-md">
                 <Image
-                  src="/logo-women.png"
+                  src={logoWomen}
                   alt=""
                   width={40}
                   height={40}

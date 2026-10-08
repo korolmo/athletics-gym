@@ -4,6 +4,7 @@ import "../globals.css";
 import { siteFontVars } from "@/lib/fonts";
 import { getDictionary, isLocale, locales } from "@/lib/i18n";
 import { site } from "@/lib/site";
+import { logoIconUrl } from "@/lib/brand";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -22,8 +23,8 @@ export async function generateMetadata({
     title: t.meta.title,
     description: t.meta.description,
     alternates: { languages: { ru: "/ru", kk: "/kk" } },
-    icons: { icon: "/logo.png" },
-    openGraph: { title: t.meta.title, description: t.meta.description, images: ["/logo.png"] },
+    icons: { icon: logoIconUrl },
+    openGraph: { title: t.meta.title, description: t.meta.description, images: [logoIconUrl] },
   };
 }
 
