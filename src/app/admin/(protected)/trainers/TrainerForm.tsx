@@ -86,10 +86,12 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
           max={LIMITS.sortOrder}
           inputMode="numeric"
           defaultValue={initial.sortOrder}
-          placeholder={initial.id ? "0" : "в конец списка"}
+          placeholder={initial.id ? "не менять" : "в конец списка"}
           className={field}
         />
-        <span className={hint}>Меньше число — выше в списке своего зала.</span>
+        <span className={hint}>
+          Меньше число — выше в списке своего зала.{initial.id ? " Пустое поле — порядок не меняется." : ""}
+        </span>
       </label>
 
       <label className="flex items-center justify-between gap-4 rounded-xl bg-card px-4 py-3.5">
