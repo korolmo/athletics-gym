@@ -12,9 +12,12 @@ import { tariffLabel } from "@/components/site/halls/tariff-text";
 import { TariffRows } from "@/components/site/halls/TariffRows";
 import { FromPrice } from "@/components/site/halls/FromPrice";
 
-// Кнопка внизу карточки — одного вида и размера во всех карточках
-const action =
-  "flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary-container px-4 text-[14px] text-on-primary shadow-md transition-all hover:brightness-95 active:translate-y-px";
+// Кнопки внизу карточек — одного размера и высоты. WhatsApp — зелёная, как «Записаться» у Тренеров
+// и остальные кнопки WhatsApp на сайте; «Выбрать тренера» — жёлтая, потому что ведёт не в WhatsApp, а к блоку Тренеров.
+const actionBase =
+  "flex h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-[14px] uppercase shadow-md transition-all";
+const actionWhatsApp = `${actionBase} bg-whatsapp-green text-white hover:brightness-105`;
+const actionTrainers = `${actionBase} bg-primary-container text-on-primary hover:brightness-95 active:translate-y-px`;
 
 /** Карточки цен по Категориям для выбранного Зала. */
 export function PricesBoard({
@@ -88,9 +91,9 @@ export function PricesBoard({
               <div data-slot="list">{list.length > 0 && <TariffRows p={p} items={list} accent={accent} />}</div>
               <div className="self-end pt-6">
                 {personal ? (
-                  <a data-slot="action" href="#trainers" className={action}>
+                  <a data-slot="action" href="#trainers" className={actionTrainers}>
                     {p.toTrainers}
-                    <ArrowForwardSym className="h-[18px] w-[18px] shrink-0" />
+                    <ArrowForwardSym className="h-5 w-5 shrink-0" />
                   </a>
                 ) : (
                   <a
@@ -98,9 +101,9 @@ export function PricesBoard({
                     href={whatsappUrl(t.wa.price)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={action}
+                    className={actionWhatsApp}
                   >
-                    <ChatSym className="h-[18px] w-[18px] shrink-0" />
+                    <ChatSym className="h-5 w-5 shrink-0" />
                     {t.cta.whatsapp}
                   </a>
                 )}
