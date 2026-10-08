@@ -14,6 +14,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:status": "prisma migrate status",
+    "db:migrate:prod": "dotenv -e .env.preview -- prisma migrate deploy",
+    "db:status:prod": "dotenv -e .env.preview -- prisma migrate status",
     "seed": "prisma db seed",
     "seed:force-production": "prisma db seed -- --force-production",
     "studio": "prisma studio"
@@ -35,6 +37,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.27",
     "prisma": "^6.10.0",

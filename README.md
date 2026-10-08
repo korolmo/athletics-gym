@@ -62,6 +62,8 @@ npm run build
 
 Схема меняется только миграциями (`prisma/migrations/`). Порядок выкатки и разовые шаги для перехода боевой базы на миграции — в [docs/deploy.md](./docs/deploy.md).
 
+Локальный `.env` должен смотреть на локальную или тестовую базу, не на боевую. Команды для боевой базы — `npm run db:status:prod` и `npm run db:migrate:prod` — берут строки из `.env.preview` на время одной команды. `npm run seed` на боевой базе откажется работать.
+
 ## Окружения
 
 - **Production** — https://athletics-gym.vercel.app, ветка `main`.
