@@ -2,7 +2,6 @@
 import type { BlockId, SettingsFormId } from "@/lib/domain/site-settings";
 
 export const BLOCK_LABEL_RU: Record<BlockId, string> = {
-  hero: "Первый экран",
   about: "О зале",
   directions: "С чем помогут тренеры",
   women: "Женский зал",
@@ -13,7 +12,7 @@ export const BLOCK_LABEL_RU: Record<BlockId, string> = {
 };
 
 export const SETTINGS_FORM_LABEL_RU: Record<SettingsFormId, string> = {
-  hero: BLOCK_LABEL_RU.hero,
+  hero: "Первый экран",
   about: BLOCK_LABEL_RU.about,
   women: BLOCK_LABEL_RU.women,
   contacts: BLOCK_LABEL_RU.contacts,

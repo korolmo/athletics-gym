@@ -85,10 +85,13 @@ describe("Женский зал из формы", () => {
     });
   });
 
-  it("чужая ссылка вместо Instagram — ошибка", () => {
-    const r = parseWomenForm(form({ womenTextRu: "Отдельный зал", womenTextKk: "", womenInstagram: "https://example.com/x" }));
-    expect(error(r)).toMatch(/Instagram Женского зала/);
-  });
+  it.each(["https://example.com/x", "javascript:alert(1)", "data:text/html,x", "https://instagram.com.evil.example/x"])(
+    "вместо Instagram «%s» — ошибка, в базу не уходит",
+    (womenInstagram) => {
+      const r = parseWomenForm(form({ womenTextRu: "Отдельный зал", womenTextKk: "", womenInstagram }));
+      expect(error(r)).toMatch(/Instagram Женского зала/);
+    },
+  );
 });
 
 describe("контакты из формы", () => {
@@ -118,6 +121,21 @@ describe("контакты из формы", () => {
     expect(error(parseContactsForm(form({ ...contacts, whatsapp: "12345" })))).toMatch(/^Номер WhatsApp:/);
     expect(error(parseContactsForm(form({ ...contacts, whatsapp: "" })))).toMatch(/^Номер WhatsApp:/);
   });
+
+  it.each(["+998 90 123 45 67", "javascript:alert(1)", "+77714846344?text=x", "tel:+77714846344"])(
+    "телефон и WhatsApp «%s» — ошибка: только казахстанский номер",
+    (value) => {
+      expect(error(parseContactsForm(form({ ...contacts, phone: value })))).toMatch(/^Телефон:/);
+      expect(error(parseContactsForm(form({ ...contacts, whatsapp: value })))).toMatch(/^Номер WhatsApp:/);
+    },
+  );
+
+  it.each(["javascript:alert(1)", "data:text/html,x", "https://evil.example/instagram.com/x"])(
+    "Instagram зала «%s» — ошибка",
+    (instagram) => {
+      expect(error(parseContactsForm(form({ ...contacts, instagram })))).toMatch(/^Instagram зала/);
+    },
+  );
 
   it("пустой Instagram или адрес — ошибка", () => {
     expect(error(parseContactsForm(form({ ...contacts, instagram: "" })))).toBe("Укажите Instagram зала");

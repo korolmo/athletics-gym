@@ -5,6 +5,8 @@ import {
   formatPhone,
   formatRating,
   instagramHandle,
+  isInstagramUrl,
+  isPhone,
   normalizeInstagram,
   normalizePhoneDigits,
   parseRating,
@@ -19,18 +21,46 @@ describe("телефон", () => {
     ["8 (771) 484-63-44", "77714846344"],
     ["7714846344", "77714846344"],
     ["77714846344", "77714846344"],
-    ["+998 90 123 45 67", "998901234567"],
+    ["+7(771)484-63-44", "77714846344"],
   ])("%s → %s", (raw, digits) => {
     expect(normalizePhoneDigits(raw)).toBe(digits);
+    // В базу и в ссылки идёт только +7 и десять цифр
+    expect(isPhone(`+${digits}`)).toBe(true);
   });
 
-  it.each(["", "12345", "позвоните нам", "+7 771 484 63 44 доб. 2", "1".repeat(16)])("не номер: «%s»", (raw) => {
+  it.each([
+    "",
+    "12345",
+    "позвоните нам",
+    "+7 771 484 63 44 доб. 2",
+    "+7 771 484 63 4",
+    "+7 771 484 63 444",
+    // другая страна
+    "+998 90 123 45 67",
+    "+8 771 484 63 44",
+    "+1 771 484 63 44",
+    // попытки подсунуть схему или лишнее в ссылку tel: / wa.me
+    "javascript:alert(1)",
+    "tel:+77714846344",
+    "+77714846344?text=x",
+    "+77714846344/../x",
+    "7771484634 4;ext=1",
+    "+7 771 484 63 44\n+7 700 000 00 00",
+    "++77714846344",
+    "7+7714846344",
+  ])("не номер: «%s»", (raw) => {
     expect(normalizePhoneDigits(raw)).toBeNull();
   });
 
-  it("казахстанский номер показываем группами, остальные — как есть", () => {
+  it("проверка готового значения: только +7 и десять цифр", () => {
+    expect(isPhone("+77714846344")).toBe(true);
+    for (const bad of ["77714846344", "+7771484634", "+777148463440", "+7 771 484 63 44", "+7771484634a", "tel:+77714846344", "+77714846344\n"]) {
+      expect(isPhone(bad), bad).toBe(false);
+    }
+  });
+
+  it("номер показываем группами", () => {
     expect(formatPhone("+77714846344")).toBe("+7 771 484 63 44");
-    expect(formatPhone("+998901234567")).toBe("+998901234567");
   });
 });
 
@@ -39,18 +69,75 @@ describe("Instagram", () => {
     "https://instagram.com/athletics_gym_qyzylorda",
     "https://www.instagram.com/athletics_gym_qyzylorda/",
     "instagram.com/athletics_gym_qyzylorda?igsh=abc",
+    // http в базу не попадает: ссылка собирается заново, всегда https
+    "http://instagram.com/athletics_gym_qyzylorda",
+    "HTTPS://WWW.INSTAGRAM.COM/athletics_gym_qyzylorda",
     "@athletics_gym_qyzylorda",
     "athletics_gym_qyzylorda",
   ])("%s → ссылка на профиль", (raw) => {
     expect(normalizeInstagram(raw)).toBe("https://instagram.com/athletics_gym_qyzylorda");
   });
 
-  it.each(["", "https://example.com/athletics", "javascript:alert(1)", "имя с пробелом", "https://instagram.com/"])(
-    "не профиль: «%s»",
-    (raw) => {
-      expect(normalizeInstagram(raw)).toBeNull();
-    },
-  );
+  it.each([
+    "",
+    "имя с пробелом",
+    "https://instagram.com/",
+    "a".repeat(31),
+    // другие сайты, в том числе похожие на Instagram
+    "https://example.com/athletics",
+    "https://instagram.com.evil.example/athletics",
+    "https://evil.example/instagram.com/athletics",
+    "https://instagram.com@evil.example/athletics",
+    "https://evil.example?instagram.com/athletics",
+    "https://notinstagram.com/athletics",
+    "https://m.instagram.com/athletics",
+    "//evil.example/athletics",
+    // другие схемы
+    "javascript:alert(1)",
+    "JaVaScRiPt:alert(1)",
+    " javascript:alert(1)",
+    "javascript://instagram.com/%0Aalert(1)",
+    "data:text/html,<script>alert(1)</script>",
+    "vbscript:msgbox(1)",
+    "ftp://instagram.com/athletics",
+    "file:///etc/passwd",
+    "mailto:owner@example.com",
+    // лишнее в пути и попытки выйти из атрибута
+    "https://instagram.com/athletics/../../evil",
+    "https://instagram.com/athletics\" onclick=\"alert(1)",
+    "https://instagram.com/athletics\njavascript:alert(1)",
+    "https://instagram.com/<script>",
+    "@athletics/evil",
+  ])("не профиль: «%s»", (raw) => {
+    expect(normalizeInstagram(raw)).toBeNull();
+  });
+
+  it("всё, что принято, — https, instagram.com и имя профиля, ничего больше", () => {
+    for (const raw of ["@a.b_c", "instagram.com/a.b_c/?hl=ru#x", "a.b_c"]) {
+      const url = normalizeInstagram(raw);
+      expect(url).toBe("https://instagram.com/a.b_c");
+      expect(isInstagramUrl(url ?? "")).toBe(true);
+      expect(new URL(url ?? "").protocol).toBe("https:");
+      expect(new URL(url ?? "").hostname).toBe("instagram.com");
+    }
+  });
+
+  it("проверка готового значения отсекает всё, кроме https://instagram.com/имя", () => {
+    expect(isInstagramUrl("https://instagram.com/athletics_gym_qyzylorda")).toBe(true);
+    for (const bad of [
+      "http://instagram.com/athletics",
+      "https://www.instagram.com/athletics",
+      "https://instagram.com/athletics/",
+      "https://instagram.com/athletics?x=1",
+      "https://instagram.com.evil.example/athletics",
+      "javascript:alert(1)",
+      "data:text/html,x",
+      "https://instagram.com/athletics\n",
+      "",
+    ]) {
+      expect(isInstagramUrl(bad), bad).toBe(false);
+    }
+  });
 
   it("в форме показываем имя профиля", () => {
     expect(instagramHandle("https://instagram.com/athletics__gym__women")).toBe("@athletics__gym__women");
@@ -128,6 +215,36 @@ describe("Настройки сайта на языке страницы", () =>
     const s = toSiteContent("ru", DEFAULT_SETTINGS, [...DEFAULT_ABOUT_CARDS].reverse());
     expect(s.about[0].kicker).toBe("Оборудование");
     expect(s.about[3].kicker).toBe("Режим");
+  });
+
+  it("в ссылки сайта не попадает то, что не прошло бы форму, — даже если оно оказалось в базе", () => {
+    const tampered = {
+      ...DEFAULT_SETTINGS,
+      instagram: "javascript:alert(1)",
+      womenInstagram: "data:text/html,<script>alert(1)</script>",
+      phone: "javascript:alert(1)",
+      whatsapp: "77714846344?text=x&evil=1",
+    };
+    const s = toSiteContent("ru", tampered, DEFAULT_ABOUT_CARDS);
+    expect(s.contacts.instagram).toBe(DEFAULT_SETTINGS.instagram);
+    expect(s.women.instagram).toBe(DEFAULT_SETTINGS.womenInstagram);
+    expect(s.contacts.phoneTel).toBe(DEFAULT_SETTINGS.phone);
+    expect(s.contacts.whatsapp).toBe(DEFAULT_SETTINGS.whatsapp);
+    expect(JSON.stringify(s)).not.toMatch(/javascript:|data:|evil/);
+  });
+
+  it("начальные значения сами проходят эти правила", () => {
+    expect(isInstagramUrl(DEFAULT_SETTINGS.instagram)).toBe(true);
+    expect(isInstagramUrl(DEFAULT_SETTINGS.womenInstagram)).toBe(true);
+    expect(isPhone(DEFAULT_SETTINGS.phone)).toBe(true);
+    expect(isPhone(`+${DEFAULT_SETTINGS.whatsapp}`)).toBe(true);
+  });
+
+  it("первый экран скрыть нельзя: среди Блоков его нет", () => {
+    expect(BLOCKS).not.toContain("hero");
+    const s = toSiteContent("ru", DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS);
+    expect(Object.keys(s.show)).toEqual([...BLOCKS]);
+    expect("hero" in s.show).toBe(false);
   });
 
   it("скрытый Блок — только он, остальные показаны", () => {

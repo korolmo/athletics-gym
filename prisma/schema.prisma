@@ -139,16 +139,16 @@ model SiteSettings {
   addressKk      String?
   hoursRu        String
   hoursKk        String?
-  /// Телефон: «+» и цифры, например +77714846344
+  /// Телефон: +7 и десять цифр, например +77714846344
   phone          String
-  /// Номер WhatsApp: только цифры, как в ссылке wa.me
+  /// Номер WhatsApp: одиннадцать цифр, начиная с 7, — как в ссылке wa.me
   whatsapp       String
+  /// Ссылки на Instagram — только вида https://instagram.com/имя
   instagram      String
   /// Рейтинг 2ГИС: оценка в десятых (50 = 5,0) и число оценок — Владелец вводит вручную
   ratingTenths   Int
   ratingCount    Int
-  /// Блоки главной: показывать ли на сайте
-  showHero       Boolean  @default(true)
+  /// Блоки главной: показывать ли на сайте (первый экран не скрывается)
   showAbout      Boolean  @default(true)
   showDirections Boolean  @default(true)
   showWomen      Boolean  @default(true)

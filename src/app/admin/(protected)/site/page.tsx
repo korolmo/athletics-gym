@@ -7,7 +7,7 @@ import {
   isSettingsForm,
   type BlockId,
 } from "@/lib/domain/site-settings";
-import { BLOCK_LABEL_RU } from "@/lib/presentation/site-settings-labels";
+import { BLOCK_LABEL_RU, SETTINGS_FORM_LABEL_RU } from "@/lib/presentation/site-settings-labels";
 import { plural } from "@/lib/presentation/tariff-labels";
 import { PencilIcon } from "@/components/icons";
 import { toggleBlock } from "./actions";
@@ -16,7 +16,6 @@ export const dynamic = "force-dynamic";
 
 /** Что в Блоке меняется в этом разделе; у остальных здесь только показ. */
 const BLOCK_NOTE: Record<BlockId, string> = {
-  hero: "Девиз и подзаголовок",
   about: "Четыре карточки",
   directions: "Только показ на сайте",
   women: "Текст и Instagram",
@@ -49,6 +48,16 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
       <section>
         <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Блоки главной</h2>
         <ul className="space-y-2">
+          {/* Первый экран есть всегда: его можно править, но нельзя скрыть */}
+          <li className="flex items-center gap-3 rounded-2xl bg-card p-4">
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold leading-snug">{SETTINGS_FORM_LABEL_RU.hero}</div>
+              <div className="mt-0.5 text-sm text-muted">Девиз и подзаголовок. Показывается всегда</div>
+            </div>
+            <Link href="/admin/site/hero" aria-label={`Редактировать: ${SETTINGS_FORM_LABEL_RU.hero}`} className={pencil}>
+              <PencilIcon />
+            </Link>
+          </li>
           {BLOCKS.map((block) => {
             const shown = settings[SHOW_COLUMN[block]];
             const name = BLOCK_LABEL_RU[block];

@@ -77,7 +77,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <>
       <Header {...props} />
       <main className="w-full bg-background pt-16 md:pt-20">
-        {s.show.hero && <Hero {...props} />}
+        <Hero {...props} />
         {s.show.about && <About {...props} />}
         {s.show.directions && <Directions {...props} />}
         {s.show.women && <Women {...props} />}

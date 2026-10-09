@@ -4,6 +4,8 @@
 
 import type { AboutCardData, SiteSettingsData } from "./site-settings";
 
+// Импорт только типов: сам site-settings.ts берёт отсюда запасные значения для ссылок.
+
 export const DEFAULT_SETTINGS: SiteSettingsData = {
   heroTitleRu: "КҮШ. ШЫДАМДЫЛЫҚ. НӘТИЖЕ.",
   // Девиз зала — на казахском в обеих версиях сайта
@@ -23,7 +25,6 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   instagram: "https://instagram.com/athletics_gym_qyzylorda",
   ratingTenths: 50,
   ratingCount: 405,
-  showHero: true,
   showAbout: true,
   showDirections: true,
   showWomen: true,

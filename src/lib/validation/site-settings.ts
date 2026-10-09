@@ -62,7 +62,7 @@ export const womenSchema = z.object({
 });
 export type WomenInput = z.output<typeof womenSchema>;
 
-const PHONE_HINT = "нужен номер с кодом, например +7 771 484 63 44";
+const PHONE_HINT = "нужен казахстанский номер, например +7 771 484 63 44";
 
 /** Контакты: адрес, часы работы, телефон, номер WhatsApp, Instagram зала. */
 export const contactsSchema = z.object({
@@ -70,12 +70,12 @@ export const contactsSchema = z.object({
   addressKk: kkText("Адрес", LIMITS.address),
   hoursRu: ruText("Часы работы", LIMITS.hours),
   hoursKk: kkText("Часы работы", LIMITS.hours),
-  /** В базе — «+» и цифры */
+  /** В базе — +7 и десять цифр */
   phone: z.string().transform((raw, ctx) => {
     const digits = normalizePhoneDigits(raw);
     return digits ? `+${digits}` : fail(ctx, `Телефон: ${PHONE_HINT}`);
   }),
-  /** В базе — только цифры, как в ссылке wa.me */
+  /** В базе — одиннадцать цифр, начиная с 7, как в ссылке wa.me */
   whatsapp: z.string().transform((raw, ctx) => normalizePhoneDigits(raw) ?? fail(ctx, `Номер WhatsApp: ${PHONE_HINT}`)),
   instagram: instagram("Instagram зала"),
 });

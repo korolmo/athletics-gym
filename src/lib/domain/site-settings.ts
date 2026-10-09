@@ -1,9 +1,10 @@
 // Настройки сайта: модель и правила — чистые функции, без базы и запроса.
 
 import { pick, type Locale } from "@/lib/i18n";
+import { DEFAULT_SETTINGS } from "./site-settings.defaults";
 
-/** Блоки главной, которые Владелец может скрыть, — в порядке страницы. */
-export const BLOCKS = ["hero", "about", "directions", "women", "prices", "gallery", "trainers", "contacts"] as const;
+/** Блоки главной, которые Владелец может скрыть, — в порядке страницы. Первый экран не скрывается и Блоком не считается. */
+export const BLOCKS = ["about", "directions", "women", "prices", "gallery", "trainers", "contacts"] as const;
 export type BlockId = (typeof BLOCKS)[number];
 
 export function isBlock(value: string): value is BlockId {
@@ -12,7 +13,6 @@ export function isBlock(value: string): value is BlockId {
 
 /** Колонка «показывать на сайте» для каждого Блока. */
 export const SHOW_COLUMN = {
-  hero: "showHero",
   about: "showAbout",
   directions: "showDirections",
   women: "showWomen",
@@ -85,7 +85,17 @@ export type SiteContent = {
   show: Record<BlockId, boolean>;
 };
 
+/**
+ * Вторая линия защиты: в ссылки сайта (href) попадает только то, что проходит те же правила, что и форма.
+ * Если в базе оказалось что-то другое (правили мимо админки) — берём начальное значение, а не подставляем как есть.
+ */
+function safeInstagram(url: string, fallback: string): string {
+  return isInstagramUrl(url) ? url : fallback;
+}
+
 export function toSiteContent(locale: Locale, s: SiteSettingsData, cards: AboutCardData[]): SiteContent {
+  const phone = isPhone(s.phone) ? s.phone : DEFAULT_SETTINGS.phone;
+  const whatsapp = isPhone(`+${s.whatsapp}`) ? s.whatsapp : DEFAULT_SETTINGS.whatsapp;
   return {
     hero: {
       title: pick(locale, s.heroTitleRu, s.heroTitleKk),
@@ -98,15 +108,18 @@ export function toSiteContent(locale: Locale, s: SiteSettingsData, cards: AboutC
         title: pick(locale, c.titleRu, c.titleKk),
         text: pick(locale, c.textRu, c.textKk),
       })),
-    women: { text: pick(locale, s.womenTextRu, s.womenTextKk), instagram: s.womenInstagram },
+    women: {
+      text: pick(locale, s.womenTextRu, s.womenTextKk),
+      instagram: safeInstagram(s.womenInstagram, DEFAULT_SETTINGS.womenInstagram),
+    },
     contacts: {
       address: pick(locale, s.addressRu, s.addressKk),
       hours: pick(locale, s.hoursRu, s.hoursKk),
-      phoneTel: s.phone,
-      phoneDisplay: formatPhone(s.phone),
-      whatsapp: s.whatsapp,
-      whatsappDisplay: formatPhone(`+${s.whatsapp}`),
-      instagram: s.instagram,
+      phoneTel: phone,
+      phoneDisplay: formatPhone(phone),
+      whatsapp,
+      whatsappDisplay: formatPhone(`+${whatsapp}`),
+      instagram: safeInstagram(s.instagram, DEFAULT_SETTINGS.instagram),
     },
     rating: { value: formatRating(s.ratingTenths), count: s.ratingCount },
     show: Object.fromEntries(BLOCKS.map((b) => [b, s[SHOW_COLUMN[b]]])) as Record<BlockId, boolean>,
@@ -115,20 +128,29 @@ export function toSiteContent(locale: Locale, s: SiteSettingsData, cards: AboutC
 
 // ——— Телефон ———
 
-/**
- * Телефон из формы → цифры с кодом страны, без «+»; null — если это не номер.
- * Понимает привычные записи: «+7 771 484 63 44», «8 (771) 484-63-44», «7714846344».
- */
-export function normalizePhoneDigits(raw: string): string | null {
-  if (!/^[\d\s()+\-.]*$/.test(raw)) return null;
-  let digits = raw.replace(/\D/g, "");
-  // Казахстан: 8 XXX … — то же, что +7 XXX …; десять цифр — номер без кода страны
-  if (digits.length === 11 && digits.startsWith("8")) digits = `7${digits.slice(1)}`;
-  if (digits.length === 10) digits = `7${digits}`;
-  return digits.length >= 11 && digits.length <= 15 ? digits : null;
+/** Телефон в базе и в ссылках — только так: +7 и десять цифр. */
+export function isPhone(value: string): boolean {
+  return /^\+7\d{10}$/.test(value);
 }
 
-/** «+77714846344» → «+7 771 484 63 44»; номер другой страны показываем как есть. */
+/**
+ * Телефон из формы → одиннадцать цифр, начиная с 7 (без «+»); null — если это не казахстанский номер.
+ * Понимает привычные записи: «+7 771 484 63 44», «8 (771) 484-63-44», «7714846344».
+ * Ничего, кроме цифр, пробелов, скобок, дефисов и «+» в начале, в поле быть не может.
+ */
+export function normalizePhoneDigits(raw: string): string | null {
+  if (!/^\+?[\d\s()-]*$/.test(raw)) return null;
+  let digits = raw.replace(/\D/g, "");
+  // Без «+» в начале: 8 XXX … — то же, что +7 XXX …, а десять цифр — номер без кода страны.
+  // С «+» номер должен быть полным: иначе «+7» с пропущенной цифрой сошёл бы за номер без кода.
+  if (!raw.trim().startsWith("+")) {
+    if (digits.length === 11 && digits.startsWith("8")) digits = `7${digits.slice(1)}`;
+    if (digits.length === 10) digits = `7${digits}`;
+  }
+  return isPhone(`+${digits}`) ? digits : null;
+}
+
+/** «+77714846344» → «+7 771 484 63 44». */
 export function formatPhone(phone: string): string {
   const m = /^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/.exec(phone);
   return m ? `+7 ${m[1]} ${m[2]} ${m[3]} ${m[4]}` : phone;
@@ -136,15 +158,22 @@ export function formatPhone(phone: string): string {
 
 // ——— Instagram ———
 
+/** Ссылка на Instagram в базе и на сайте — только так: https, instagram.com и имя профиля. */
+export function isInstagramUrl(value: string): boolean {
+  return /^https:\/\/instagram\.com\/[A-Za-z0-9._]{1,30}$/.test(value);
+}
+
 /**
- * Ссылка на Instagram из формы: принимает полный адрес, «instagram.com/имя», «@имя» и просто «имя».
- * Возвращает адрес вида https://instagram.com/имя или null, если это не профиль Instagram.
+ * Ссылка на Instagram из формы: принимает адрес профиля на instagram.com, «@имя» и просто «имя».
+ * Введённый адрес в базу не попадает: из него берётся только имя профиля, а ссылка собирается заново —
+ * всегда https://instagram.com/имя. Другие сайты и схемы (javascript:, data: и т. п.) → null.
  */
 export function normalizeInstagram(raw: string): string | null {
   const value = raw.trim();
-  const fromUrl = /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/([^/?#\s]+)\/?(?:[?#].*)?$/i.exec(value);
+  const fromUrl = /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/([A-Za-z0-9._]+)\/?(?:[?#]\S*)?$/i.exec(value);
   const handle = fromUrl ? fromUrl[1] : value.replace(/^@/, "");
-  return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? `https://instagram.com/${handle}` : null;
+  const url = `https://instagram.com/${handle}`;
+  return isInstagramUrl(url) ? url : null;
 }
 
 /** «https://instagram.com/имя» → «@имя» — для подсказок в админке. */

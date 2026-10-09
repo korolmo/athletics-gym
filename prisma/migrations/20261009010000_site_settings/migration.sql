@@ -20,7 +20,6 @@ CREATE TABLE "SiteSettings" (
     "instagram" TEXT NOT NULL,
     "ratingTenths" INTEGER NOT NULL,
     "ratingCount" INTEGER NOT NULL,
-    "showHero" BOOLEAN NOT NULL DEFAULT true,
     "showAbout" BOOLEAN NOT NULL DEFAULT true,
     "showDirections" BOOLEAN NOT NULL DEFAULT true,
     "showWomen" BOOLEAN NOT NULL DEFAULT true,
@@ -48,6 +47,7 @@ CREATE TABLE "AboutCard" (
 
 -- Начальные значения — тексты, которые до этапа 1 лежали в словарях и в коде
 -- (src/lib/domain/site-settings.defaults.ts; совпадение проверяет тест). Все Блоки показаны.
+-- Первый экран не скрывается, поэтому колонки «показывать» у него нет.
 INSERT INTO "SiteSettings" ("id", "heroTitleRu", "heroTitleKk", "heroSubtitleRu", "heroSubtitleKk", "womenTextRu", "womenTextKk", "womenInstagram", "addressRu", "addressKk", "hoursRu", "hoursKk", "phone", "whatsapp", "instagram", "ratingTenths", "ratingCount", "updatedAt")
 VALUES (
     'site',
