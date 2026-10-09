@@ -6,6 +6,7 @@ export { Women } from "./Women";
 export { Prices } from "./Prices";
 export { Gallery } from "./Gallery";
 export { Trainers } from "./Trainers";
+export { Reviews } from "./Reviews";
 export { Contacts } from "./Contacts";
 export { Footer } from "./Footer";
 export { MobileBar } from "./MobileBar";

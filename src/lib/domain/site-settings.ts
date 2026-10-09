@@ -4,7 +4,7 @@ import { pick, type Locale } from "@/lib/i18n";
 import { DEFAULT_SETTINGS } from "./site-settings.defaults";
 
 /** Блоки главной, которые Владелец может скрыть, — в порядке страницы. Первый экран не скрывается и Блоком не считается. */
-export const BLOCKS = ["about", "directions", "women", "prices", "gallery", "trainers", "contacts"] as const;
+export const BLOCKS = ["about", "directions", "women", "prices", "gallery", "trainers", "reviews", "contacts"] as const;
 export type BlockId = (typeof BLOCKS)[number];
 
 export function isBlock(value: string): value is BlockId {
@@ -19,6 +19,7 @@ export const SHOW_COLUMN = {
   prices: "showPrices",
   gallery: "showGallery",
   trainers: "showTrainers",
+  reviews: "showReviews",
   contacts: "showContacts",
 } as const satisfies Record<BlockId, string>;
 

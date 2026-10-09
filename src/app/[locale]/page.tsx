@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
 import { getPriceListAndTrainers, getSitePhotos, getSiteSettings } from "@/lib/services/site";
+import { listPublishedReviews } from "@/lib/services/reviews";
+import { isSafeSourceUrl } from "@/lib/domain/review";
+import { issueFormToken } from "@/lib/reviews/form-token";
 import { mediaUrl } from "@/lib/storage/client";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
@@ -13,6 +16,7 @@ import {
   Hero,
   MobileBar,
   Prices,
+  Reviews,
   Trainers,
   Women,
 } from "@/components/site/sections";
@@ -55,10 +59,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
 
-  const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos] = await Promise.all([
+  const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos, publishedReviews] = await Promise.all([
     getPriceListAndTrainers(),
     getSiteSettings(),
     getSitePhotos(),
+    listPublishedReviews(),
   ]);
   // Настройки сайта на языке страницы: тексты, контакты и какие Блоки показывать
   const s = toSiteContent(locale, settings, cards);
@@ -75,6 +80,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   }));
 
   const props = { locale, t, s };
+  // Отзывы: текст — как написан, на обоих языках; дата — на языке страницы
+  const reviewDate = new Intl.DateTimeFormat(locale === "kk" ? "kk-KZ" : "ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  const reviews = publishedReviews.map((r) => ({
+    id: r.id,
+    authorName: r.authorName,
+    text: r.text,
+    rating: Math.min(5, Math.max(1, r.rating)),
+    source: r.source,
+    sourceUrl: isSafeSourceUrl(r.sourceUrl) ? r.sourceUrl : null,
+    date: reviewDate.format(r.reviewedAt),
+  }));
   const gallery = photos.gallery.map((g) => ({
     id: g.id,
     url: g.url,
@@ -92,6 +108,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         {s.show.prices && <Prices {...props} tariffs={tariffs} trainers={trainers} posters={photos.posters} />}
         {s.show.gallery && <Gallery {...props} photos={gallery} />}
         {s.show.trainers && <Trainers {...props} trainers={trainers} />}
+        {/* Без опубликованных Отзывов блока нет: придуманных и демо-отзывов не показываем */}
+        {s.show.reviews && reviews.length > 0 && (
+          <Reviews {...props} reviews={reviews} formToken={issueFormToken(process.env.AUTH_SECRET)} />
+        )}
         {s.show.contacts && <Contacts {...props} />}
       </main>
       <Footer {...props} />
