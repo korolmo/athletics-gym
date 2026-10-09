@@ -208,12 +208,14 @@ export async function toggleGalleryPhoto(id: string): Promise<void> {
 /** Сдвигает фото на одно место вверх или вниз; порядок всех фото записывается заново, без пропусков и повторов. */
 export async function moveGalleryPhoto(id: string, direction: "up" | "down"): Promise<void> {
   await requireOwner();
-  const photos = await db.galleryPhoto.findMany({ orderBy: galleryOrder, select: { id: true } });
+  const photos = await db.galleryPhoto.findMany({ orderBy: galleryOrder, select: { id: true, sortOrder: true } });
   const from = photos.findIndex((p) => p.id === id);
   const to = direction === "up" ? from - 1 : from + 1;
   if (from < 0 || to < 0 || to >= photos.length) return;
   [photos[from], photos[to]] = [photos[to], photos[from]];
-  await db.$transaction(photos.map((p, i) => db.galleryPhoto.update({ where: { id: p.id }, data: { sortOrder: i } })));
+  // Пишем только те строки, у которых место изменилось: обычно это две
+  const changed = photos.flatMap((p, i) => (p.sortOrder === i ? [] : [{ id: p.id, sortOrder: i }]));
+  await db.$transaction(changed.map((p) => db.galleryPhoto.update({ where: { id: p.id }, data: { sortOrder: p.sortOrder } })));
 }
 
 /** Удаляет фото Галереи: запись — из базы, файл — из хранилища. */
