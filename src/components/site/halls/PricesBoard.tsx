@@ -24,11 +24,17 @@ export function PricesBoard({
   t,
   tariffs,
   trainers,
+  whatsapp,
+  trainersShown,
 }: {
   t: Dictionary;
   /** Позиции прайса Залов (без Тарифов Тренеров) */
   tariffs: TariffView[];
   trainers: TrainerView[];
+  /** Номер WhatsApp зала из Настроек сайта */
+  whatsapp: string;
+  /** Показан ли на сайте блок Тренеров: если нет, про персональные тренировки спрашивают в WhatsApp */
+  trainersShown: boolean;
 }) {
   const hall = useHall();
   const p = t.prices;
@@ -90,7 +96,7 @@ export function PricesBoard({
               {/* Строка списка есть всегда — даже пустая, иначе кнопка съедет в чужую строку сетки */}
               <div data-slot="list">{list.length > 0 && <TariffRows p={p} items={list} accent={accent} />}</div>
               <div className="self-end pt-6">
-                {personal ? (
+                {personal && trainersShown ? (
                   <a data-slot="action" href="#trainers" className={actionTrainers}>
                     {p.toTrainers}
                     <ArrowForwardSym className="h-5 w-5 shrink-0" />
@@ -98,7 +104,7 @@ export function PricesBoard({
                 ) : (
                   <a
                     data-slot="action"
-                    href={whatsappUrl(t.wa.price)}
+                    href={whatsappUrl(whatsapp, personal ? t.wa.personal : t.wa.price)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={actionWhatsApp}

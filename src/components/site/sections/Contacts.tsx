@@ -6,11 +6,14 @@ import type { SectionProps } from "@/components/site/sections/types";
 import { logo } from "@/lib/brand";
 
 // Контакты
-export function Contacts({ t }: SectionProps) {
+export function Contacts({ t, s }: SectionProps) {
+  const c = s.contacts;
+  // Подпись «WhatsApp» под телефоном — только если это один и тот же номер
+  const phoneNote = c.phoneTel === `+${c.whatsapp}` ? t.cta.whatsapp : "";
   const rows = [
-    { Icon: LocationOnSym, title: t.contacts.address, text: t.contacts.city, href: undefined },
-    { Icon: ScheduleSym, title: t.contacts.hours, text: t.about.items[3].text, href: undefined },
-    { Icon: CallSym, title: site.phoneDisplay, text: t.cta.whatsapp, href: `tel:${site.phoneTel}` },
+    { Icon: LocationOnSym, title: c.address, text: t.contacts.city, href: undefined },
+    { Icon: ScheduleSym, title: c.hours, text: s.about[3].text, href: undefined },
+    { Icon: CallSym, title: c.phoneDisplay, text: phoneNote, href: `tel:${c.phoneTel}` },
   ];
   return (
     <section id="contacts" className={`w-full ${sectionY}`}>
@@ -42,7 +45,7 @@ export function Contacts({ t }: SectionProps) {
             </div>
             <div className="pt-8">
               <a
-                href={whatsappUrl(t.wa.trial)}
+                href={whatsappUrl(c.whatsapp, t.wa.trial)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-green text-[14px] uppercase text-white shadow-md transition-all hover:brightness-105"
@@ -66,7 +69,7 @@ export function Contacts({ t }: SectionProps) {
               <div>
                 <div className="text-[13px] uppercase leading-5 text-text-primary">{site.name}</div>
                 <div className="text-[11px] leading-4 text-primary-container">
-                  {t.contacts.address} · 2ГИС ★ {site.rating}
+                  {c.address} · 2ГИС ★ {s.rating.value}
                 </div>
               </div>
             </div>

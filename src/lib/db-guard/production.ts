@@ -40,7 +40,7 @@ export function decideSeed(env: { DATABASE_URL?: string; DIRECT_URL?: string }, 
     allowed: false,
     reason:
       `Отказ: строка подключения указывает на боевую базу (${PRODUCTION_DB.region}, проект ${PRODUCTION_DB.projectRef}).\n` +
-      `Seed удаляет все Залы, Тарифы и Тренеров и заводит их заново из прайса.\n` +
+      `Seed удаляет все Залы, Тарифы и Тренеров, заводит их заново из прайса и возвращает Настройки сайта к начальным.\n` +
       `Если это действительно нужно: npm run seed:force-production (передаёт ${FORCE_PRODUCTION_FLAG}).`,
   };
 }

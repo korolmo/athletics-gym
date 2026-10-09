@@ -1,12 +1,12 @@
 import Image from "next/image";
-import { site, whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/site";
 import { ChatSym, CheckCircleSym, LockSym, PhotoCameraSym } from "@/components/symbols";
 import { container, label, h2 } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
 import { logoWomen } from "@/lib/brand";
 
 // Женский зал
-export function Women({ t }: SectionProps) {
+export function Women({ t, s }: SectionProps) {
   return (
     <section id="women" className="w-full py-4">
       <div className={container}>
@@ -15,10 +15,10 @@ export function Women({ t }: SectionProps) {
             <div className="flex flex-col items-start gap-4 lg:col-span-8 lg:self-start">
               <div className={`${label} inline-flex items-center gap-2 rounded-sm bg-primary-container/10 px-3 py-1 text-primary-container`}>
                 <LockSym className="h-4 w-4 shrink-0" />
-                {t.about.items[1].text}
+                {s.about[1].text}
               </div>
               <h2 className={h2}>{t.women.title}</h2>
-              <p className="max-w-[640px] text-body-lg text-text-muted">{t.women.text}</p>
+              <p className="max-w-[640px] text-body-lg text-text-muted">{s.women.text}</p>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2 text-body-md text-text-primary">
                 {[t.prices.trialNote, t.prices.payment].map((x) => (
                   <div key={x} className="flex items-center gap-2">
@@ -29,7 +29,7 @@ export function Women({ t }: SectionProps) {
               </div>
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <a
-                  href={site.instagramWomen}
+                  href={s.women.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-12 items-center gap-2 rounded-xl bg-surface-container px-6 text-[14px] text-text-primary shadow-xs transition-colors hover:text-primary-container"
@@ -38,7 +38,7 @@ export function Women({ t }: SectionProps) {
                   <span>{t.women.link}</span>
                 </a>
                 <a
-                  href={whatsappUrl(t.wa.trial)}
+                  href={whatsappUrl(s.contacts.whatsapp, t.wa.trial)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-12 items-center gap-2 rounded-xl bg-whatsapp-green px-6 text-[14px] text-white shadow-md transition-all hover:brightness-105"

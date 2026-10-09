@@ -6,13 +6,18 @@ import {
   MonitorWeightSym,
   SportsMmaSym,
 } from "@/components/symbols";
+import { whatsappUrl } from "@/lib/site";
 import { container, label, sectionY } from "@/components/ui/styles";
 import { SectionHead } from "@/components/ui/SectionHead";
 import type { SectionProps } from "@/components/site/sections/types";
 
 // Направления: с чем помогут Тренеры (групповых занятий в зале нет)
-export function Directions({ t }: SectionProps) {
+export function Directions({ t, s }: SectionProps) {
   const icons = [ExerciseSym, MonitorWeightSym, AccessibilityNewSym, FitnessCenterSym, SportsMmaSym];
+  // Карточки ведут к блоку Тренеров; если Владелец его скрыл — в WhatsApp зала
+  const toTrainers = s.show.trainers
+    ? { href: "#trainers" }
+    : { href: whatsappUrl(s.contacts.whatsapp, t.wa.personal), target: "_blank", rel: "noopener noreferrer" };
   return (
     <section id="directions" className={`w-full ${sectionY}`}>
       <div className={container}>
@@ -20,13 +25,15 @@ export function Directions({ t }: SectionProps) {
           eyebrow={t.eyebrow.directions}
           title={t.directions.title}
           aside={
-            <a
-              href="#trainers"
-              className={`${label} inline-flex items-center gap-1.5 text-text-muted transition-colors hover:text-primary-container`}
-            >
-              {t.directions.toTrainers}
-              <ArrowForwardSym className="h-4 w-4 text-primary-container" />
-            </a>
+            s.show.trainers && (
+              <a
+                href="#trainers"
+                className={`${label} inline-flex items-center gap-1.5 text-text-muted transition-colors hover:text-primary-container`}
+              >
+                {t.directions.toTrainers}
+                <ArrowForwardSym className="h-4 w-4 text-primary-container" />
+              </a>
+            )
           }
         />
         {/* Карточка — две строки общей сетки (subgrid): иконка с номером и заголовок;
@@ -37,7 +44,7 @@ export function Directions({ t }: SectionProps) {
             return (
               <a
                 key={title}
-                href="#trainers"
+                {...toTrainers}
                 data-card
                 className="group row-span-2 grid grid-rows-subgrid gap-y-0 rounded-2xl bg-surface-card p-5 shadow-md transition-transform hover:-translate-y-0.5 lg:p-6"
               >

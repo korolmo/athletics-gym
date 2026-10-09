@@ -19,7 +19,16 @@ const posterPosition: Record<string, string> = {
 };
 
 /** Тренеры выбранного Зала: плакат в рамке 3:4 (по нажатию — целиком), Тарифы и запись в WhatsApp. */
-export function TrainersBoard({ t, trainers }: { t: Dictionary; trainers: TrainerView[] }) {
+export function TrainersBoard({
+  t,
+  trainers,
+  whatsapp,
+}: {
+  t: Dictionary;
+  trainers: TrainerView[];
+  /** Номер WhatsApp зала из Настроек сайта */
+  whatsapp: string;
+}) {
   const hall = useHall();
   const [zoomed, setZoomed] = useState<TrainerView | null>(null);
   const list = trainers.filter((x) => x.hallId === hall);
@@ -100,7 +109,7 @@ export function TrainersBoard({ t, trainers }: { t: Dictionary; trainers: Traine
               <div className="self-end px-6 pb-6 pt-6">
                 <a
                   data-slot="action"
-                  href={whatsappUrl(t.wa.trainer.replace("{name}", tr.name))}
+                  href={whatsappUrl(whatsapp, t.wa.trainer.replace("{name}", tr.name))}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-green text-[14px] uppercase text-white shadow-md transition-all hover:brightness-105"

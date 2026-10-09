@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Supabase: приложение ходит через пулер (порт 6543), миграции — через session pooler (порт 5432)
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
@@ -106,4 +106,66 @@ model LoginAttempt {
   createdAt DateTime @default(now())
 
   @@index([ipHash, createdAt])
+}
+
+/// Аккаунт Владельца — единственная запись (id = "owner").
+/// Создаётся при первом входе из ADMIN_LOGIN / ADMIN_PASSWORD, дальше пароль живёт только здесь.
+model Owner {
+  id             String   @id @default("owner")
+  login          String   @unique
+  /// bcrypt
+  passwordHash   String
+  /// Версия сессии: смена пароля и «Выйти на всех устройствах» увеличивают её — старые куки перестают подходить
+  sessionVersion Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// Настройки сайта — единственная запись (id = "site"): тексты и контакты, которые Владелец меняет сам.
+/// RU обязателен, KZ необязателен: пусто → на /kk показываем RU.
+model SiteSettings {
+  id             String   @id @default("site")
+  /// Первый экран: девиз и подзаголовок
+  heroTitleRu    String
+  heroTitleKk    String?
+  heroSubtitleRu String
+  heroSubtitleKk String?
+  /// Женский зал
+  womenTextRu    String
+  womenTextKk    String?
+  womenInstagram String
+  /// Контакты
+  addressRu      String
+  addressKk      String?
+  hoursRu        String
+  hoursKk        String?
+  /// Телефон: +7 и десять цифр, например +77714846344
+  phone          String
+  /// Номер WhatsApp: одиннадцать цифр, начиная с 7, — как в ссылке wa.me
+  whatsapp       String
+  /// Ссылки на Instagram — только вида https://instagram.com/имя
+  instagram      String
+  /// Рейтинг 2ГИС: оценка в десятых (50 = 5,0) и число оценок — Владелец вводит вручную
+  ratingTenths   Int
+  ratingCount    Int
+  /// Блоки главной: показывать ли на сайте (первый экран не скрывается)
+  showAbout      Boolean  @default(true)
+  showDirections Boolean  @default(true)
+  showWomen      Boolean  @default(true)
+  showPrices     Boolean  @default(true)
+  showGallery    Boolean  @default(true)
+  showTrainers   Boolean  @default(true)
+  showContacts   Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+}
+
+/// Карточка блока «О зале»: их всегда четыре, место (1–4) задаёт иконку и порядок.
+model AboutCard {
+  position Int     @id
+  kickerRu String
+  kickerKk String?
+  titleRu  String
+  titleKk  String?
+  textRu   String
+  textKk   String?
 }

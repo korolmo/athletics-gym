@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getPriceListAndTrainers } from "@/lib/services/site";
+import { getPriceListAndTrainers, getSiteSettings } from "@/lib/services/site";
+import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
 import {
   About,
@@ -53,7 +54,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
 
-  const { hallTariffs, trainers: trainerRows } = await getPriceListAndTrainers();
+  const [{ hallTariffs, trainers: trainerRows }, { settings, cards }] = await Promise.all([
+    getPriceListAndTrainers(),
+    getSiteSettings(),
+  ]);
+  // Настройки сайта на языке страницы: тексты, контакты и какие Блоки показывать
+  const s = toSiteContent(locale, settings, cards);
 
   const tariffs = hallTariffs.map((x) => toTariffView(locale, x));
   const trainers: TrainerView[] = trainerRows.map((tr) => ({
@@ -65,20 +71,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     tariffs: tr.tariffs.map((x) => toTariffView(locale, x)),
   }));
 
-  const props = { locale, t };
+  const props = { locale, t, s };
 
   return (
     <>
       <Header {...props} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} />
-        <About {...props} />
-        <Directions {...props} />
-        <Women {...props} />
-        <Prices {...props} tariffs={tariffs} trainers={trainers} />
-        <Gallery {...props} />
-        <Trainers {...props} trainers={trainers} />
-        <Contacts {...props} />
+        {s.show.about && <About {...props} />}
+        {s.show.directions && <Directions {...props} />}
+        {s.show.women && <Women {...props} />}
+        {s.show.prices && <Prices {...props} tariffs={tariffs} trainers={trainers} />}
+        {s.show.gallery && <Gallery {...props} />}
+        {s.show.trainers && <Trainers {...props} trainers={trainers} />}
+        {s.show.contacts && <Contacts {...props} />}
       </main>
       <Footer {...props} />
       <MobileBar {...props} />

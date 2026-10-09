@@ -1,5 +1,6 @@
 import { PrismaClient, type Access, type Audience, type TariffCategory } from "@prisma/client";
 import { decideSeed } from "../src/lib/db-guard/production";
+import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
 
 // Реальный прайс и Тренеры от Владельца (7 октября 2026):
 // docs/owner/prices-2026-10.md и docs/owner/trainers-2026-10.md
@@ -167,8 +168,18 @@ async function main() {
     });
   }
 
+  // Настройки сайта и карточки «О зале» — к начальным значениям. Аккаунт Владельца seed не трогает.
+  await db.siteSettings.upsert({
+    where: { id: "site" },
+    update: DEFAULT_SETTINGS,
+    create: { id: "site", ...DEFAULT_SETTINGS },
+  });
+  for (const { position, ...card } of DEFAULT_ABOUT_CARDS) {
+    await db.aboutCard.upsert({ where: { position }, update: card, create: { position, ...card } });
+  }
+
   const [tariffCount, trainerCount] = await Promise.all([db.tariff.count(), db.trainer.count()]);
-  console.log(`Готово: 2 Зала, ${trainerCount} Тренеров, ${tariffCount} Тарифов.`);
+  console.log(`Готово: 2 Зала, ${trainerCount} Тренеров, ${tariffCount} Тарифов, Настройки сайта — начальные.`);
 }
 
 main()

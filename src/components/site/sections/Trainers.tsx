@@ -5,12 +5,12 @@ import type { TrainerView } from "@/components/site/halls/types";
 import { TrainersBoard } from "@/components/site/halls/TrainersBoard";
 
 // Тренеры
-export function Trainers({ t, trainers }: SectionProps & { trainers: TrainerView[] }) {
+export function Trainers({ t, s, trainers }: SectionProps & { trainers: TrainerView[] }) {
   return (
     <section id="trainers" className={`w-full ${sectionY}`}>
       <div className={container}>
         <SectionHead eyebrow={t.eyebrow.trainers} title={t.trainers.title} />
-        <TrainersBoard t={t} trainers={trainers} />
+        <TrainersBoard t={t} trainers={trainers} whatsapp={s.contacts.whatsapp} />
       </div>
     </section>
   );
