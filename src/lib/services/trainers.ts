@@ -5,6 +5,7 @@ import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import type { HallId } from "@/lib/domain/tariff";
 import { sortOrderOnCreate, sortOrderOnUpdate } from "@/lib/domain/trainer";
 import type { TrainerInput } from "@/lib/validation/trainer";
+import { removeObjects } from "@/lib/storage/client";
 import type { ServiceResult } from "./result";
 
 // Тренеры в админке: правила домена и доступ к базе.
@@ -66,12 +67,16 @@ export async function saveTrainer(input: TrainerInput): Promise<ServiceResult<{ 
   return { ok: true, id: created.id };
 }
 
-/** Удаляет Тренера вместе с его Тарифами (каскад в схеме). Возвращает Зал, где он был. */
+/** Удаляет Тренера вместе с его Тарифами (каскад в схеме) и загруженным Плакатом. Возвращает Зал, где он был. */
 export async function deleteTrainer(id: string): Promise<{ hallId: string } | null> {
   await requireOwner();
   const trainer = id ? await db.trainer.findUnique({ where: { id } }) : null;
   if (!trainer) return null;
   await db.trainer.deleteMany({ where: { id } });
+  // Загруженный Плакат Тренера удаляем и из хранилища; если не вышло — файл подберёт уборка
+  if (trainer.uploadedPhoto) {
+    await removeObjects([trainer.uploadedPhoto]).catch((e) => console.error("Хранилище фото: плакат удалённого Тренера остался.", e));
+  }
   return { hallId: trainer.hallId };
 }
 

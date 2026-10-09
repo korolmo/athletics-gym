@@ -22,4 +22,6 @@ export const LIMITS = {
   address: 160,
   hours: 80,
   ratingCount: 1_000_000,
+  /** Подпись фото Галереи */
+  caption: 80,
 } as const;

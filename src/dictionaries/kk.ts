@@ -86,6 +86,7 @@ export const kk: Dictionary = {
     perSession: "бір жаттығу үшін",
     toTrainers: "Жаттықтырушыны таңдау",
     empty: "Бұл залдың тарифтерін WhatsApp-та нақтылаңыз",
+    poster: "Прайс фотосы",
   },
   trainers: {
     title: "Жаттықтырушылар",
@@ -121,6 +122,7 @@ export const kk: Dictionary = {
   },
   gallery: {
     title: "Зал ішінен",
+    more: "Тағы фотолар",
     demo: "ДЕМО",
   },
   lang: { ru: "RU", kk: "KZ" },

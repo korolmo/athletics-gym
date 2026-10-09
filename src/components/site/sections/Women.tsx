@@ -6,7 +6,7 @@ import type { SectionProps } from "@/components/site/sections/types";
 import { logoWomen } from "@/lib/brand";
 
 // Женский зал
-export function Women({ t, s }: SectionProps) {
+export function Women({ t, s, photo }: SectionProps & { /** Фото Женского зала; пусто — логотип */ photo: string | null }) {
   return (
     <section id="women" className="w-full py-4">
       <div className={container}>
@@ -49,6 +49,17 @@ export function Women({ t, s }: SectionProps) {
               </div>
             </div>
             <div className="flex items-center justify-center lg:col-span-4">
+              {photo ? (
+                <div className="relative aspect-[4/5] w-full max-w-[320px] overflow-hidden rounded-2xl bg-surface-dim shadow-lg">
+                  <Image
+                    src={photo}
+                    alt={t.women.title}
+                    fill
+                    sizes="(min-width: 1024px) 320px, (min-width: 420px) 320px, 80vw"
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
               <div className="relative flex h-56 w-56 items-center justify-center rounded-full bg-surface-dim p-4 shadow-inner">
                 <Image
                   src={logoWomen}
@@ -61,6 +72,7 @@ export function Women({ t, s }: SectionProps) {
                   {t.women.title}
                 </div>
               </div>
+              )}
             </div>
           </div>
         </div>

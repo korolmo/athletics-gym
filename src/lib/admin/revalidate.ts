@@ -7,4 +7,5 @@ export function revalidateSite(): void {
   revalidatePath("/admin/tariffs");
   revalidatePath("/admin/trainers");
   revalidatePath("/admin/site");
+  revalidatePath("/admin/photos");
 }

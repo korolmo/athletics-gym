@@ -18,13 +18,16 @@
     "db:status:prod": "dotenv -e .env.preview -- prisma migrate status",
     "seed": "prisma db seed",
     "seed:force-production": "prisma db seed -- --force-production",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "storage:setup": "dotenv -e .env -- tsx scripts/storage-setup.ts",
+    "storage:setup:prod": "dotenv -e .env.preview -- tsx scripts/storage-setup.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@supabase/supabase-js": "^2.117.3",
     "bcryptjs": "^3.0.3",
     "next": "^15.3.0",
     "react": "^19.1.0",

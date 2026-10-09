@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import { whatsappUrl } from "@/lib/site";
 import { CATEGORY_ORDER, type Category } from "@/lib/domain/tariff";
-import { ArrowForwardSym, ChatSym } from "@/components/symbols";
+import { ArrowForwardSym, ChatSym, ZoomInSym } from "@/components/symbols";
+import { PosterDialog } from "@/components/site/halls/PosterDialog";
 import { label } from "@/components/ui/styles";
 import type { TariffView, TrainerView } from "@/components/site/halls/types";
 import { useHall } from "@/components/site/halls/hall-store";
@@ -26,6 +28,7 @@ export function PricesBoard({
   trainers,
   whatsapp,
   trainersShown,
+  posters,
 }: {
   t: Dictionary;
   /** Позиции прайса Залов (без Тарифов Тренеров) */
@@ -35,17 +38,39 @@ export function PricesBoard({
   whatsapp: string;
   /** Показан ли на сайте блок Тренеров: если нет, про персональные тренировки спрашивают в WhatsApp */
   trainersShown: boolean;
+  /** Плакаты прайса по Залам: фото прайса, как он висит в зале */
+  posters: Record<string, string | null>;
 }) {
   const hall = useHall();
+  const [posterOpen, setPosterOpen] = useState(false);
+  const poster = posters[hall] ?? null;
   const p = t.prices;
   const own = tariffs.filter((x) => x.hallId === hall);
   const ofTrainers = trainers.filter((x) => x.hallId === hall).flatMap((x) => x.tariffs);
 
   return (
     <>
-      <div className="mb-8 flex justify-center">
+      <div className="mb-8 flex flex-col items-center gap-4">
         <HallSwitch halls={t.halls} name={p.title} />
+        {poster && (
+          <button
+            type="button"
+            onClick={() => setPosterOpen(true)}
+            className={`${label} inline-flex min-h-11 items-center gap-1.5 text-text-muted transition-colors hover:text-primary-container`}
+          >
+            <ZoomInSym className="h-4 w-4 text-primary-container" />
+            {p.poster} · {t.halls[hall]}
+          </button>
+        )}
       </div>
+      {poster && posterOpen && (
+        <PosterDialog
+          src={poster}
+          title={`${p.poster} · ${t.halls[hall]}`}
+          closeLabel={t.trainers.close}
+          onClose={() => setPosterOpen(false)}
+        />
+      )}
       {/* Карточка занимает пять строк общей сетки (subgrid): номер и бейдж, заголовок, цена «от …»,
           список, кнопка. Поэтому в ряду всё стоит на одной линии, а кнопки — на одной высоте внизу. */}
       <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
