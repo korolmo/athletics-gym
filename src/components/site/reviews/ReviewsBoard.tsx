@@ -77,11 +77,14 @@ export function ReviewsBoard({
   locale,
   reviews,
   formToken,
+  rating,
 }: {
   t: Dictionary;
   locale: Locale;
   reviews: ReviewView[];
   formToken: string;
+  /** Рейтинг 2ГИС: когда опубликованных Отзывов нет, он стоит в одной строке с кнопкой «Оставить отзыв» */
+  rating?: React.ReactNode;
 }) {
   const [all, setAll] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -89,6 +92,34 @@ export function ReviewsBoard({
   const hidden = reviews.length - shown.length;
   const button =
     "flex h-12 items-center justify-center rounded-xl px-6 text-[14px] uppercase shadow-xs transition-all";
+
+  const leave = !formOpen && (
+    <button
+      type="button"
+      onClick={() => setFormOpen(true)}
+      className={`${button} bg-primary-container font-bold text-on-primary hover:brightness-95`}
+    >
+      {t.reviews.leave}
+    </button>
+  );
+  const form = formOpen && (
+    <div id="review-form" className="mx-auto mt-6 max-w-[760px]">
+      <ReviewForm t={t} locale={locale} formToken={formToken} onCancel={() => setFormOpen(false)} />
+    </div>
+  );
+
+  // Опубликованных Отзывов нет: пустую секцию не показываем — только рейтинг 2ГИС и приглашение оставить Отзыв
+  if (reviews.length === 0) {
+    return (
+      <>
+        <div className="flex flex-col items-stretch justify-between gap-4 rounded-2xl bg-surface-card p-6 shadow-xs sm:flex-row sm:items-center">
+          {rating}
+          {leave}
+        </div>
+        {form}
+      </>
+    );
+  }
 
   return (
     <>
@@ -104,22 +135,10 @@ export function ReviewsBoard({
             {t.reviews.more} · {hidden}
           </button>
         )}
-        {!formOpen && (
-          <button
-            type="button"
-            onClick={() => setFormOpen(true)}
-            className={`${button} bg-primary-container font-bold text-on-primary hover:brightness-95`}
-          >
-            {t.reviews.leave}
-          </button>
-        )}
+        {leave}
       </div>
 
-      {formOpen && (
-        <div id="review-form" className="mx-auto mt-6 max-w-[760px]">
-          <ReviewForm t={t} locale={locale} formToken={formToken} onCancel={() => setFormOpen(false)} />
-        </div>
-      )}
+      {form}
     </>
   );
 }

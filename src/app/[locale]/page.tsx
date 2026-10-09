@@ -108,8 +108,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         {s.show.prices && <Prices {...props} tariffs={tariffs} trainers={trainers} posters={photos.posters} />}
         {s.show.gallery && <Gallery {...props} photos={gallery} />}
         {s.show.trainers && <Trainers {...props} trainers={trainers} />}
-        {/* Без опубликованных Отзывов блока нет: придуманных и демо-отзывов не показываем */}
-        {s.show.reviews && reviews.length > 0 && (
+        {/* Придуманных и демо-отзывов нет: пока опубликованных нет, от Блока остаются рейтинг 2ГИС и «Оставить отзыв» */}
+        {s.show.reviews && (
           <Reviews {...props} reviews={reviews} formToken={issueFormToken(process.env.AUTH_SECRET)} />
         )}
         {s.show.contacts && <Contacts {...props} />}

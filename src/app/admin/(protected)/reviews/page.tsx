@@ -59,7 +59,7 @@ export default async function ReviewsPage({
         <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
           {status
             ? `Отзывов в статусе «${REVIEW_STATUS_LABEL_RU[status]}» нет.`
-            : "Отзывов пока нет. Добавьте настоящий отзыв клиента — из 2ГИС, Instagram или сказанный лично. Пока нет ни одного опубликованного, блок «Отзывы» на сайте не показывается."}
+            : "Отзывов пока нет. Добавьте настоящий отзыв клиента — из 2ГИС, Instagram или сказанный лично. Пока нет ни одного опубликованного, на сайте вместо отзывов стоят рейтинг 2ГИС и кнопка «Оставить отзыв»."}
         </p>
       ) : (
         <ul className="space-y-3">
