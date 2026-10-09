@@ -7,7 +7,8 @@ const isPreview = process.env.VERCEL_ENV === "preview";
 function storageOrigin() {
   try {
     const url = new URL(process.env.SUPABASE_URL ?? "");
-    return url.protocol === "https:" ? url : null;
+    // То же правило, что в src/lib/domain/photo.ts (storageOrigin)
+    return url.protocol === "https:" && /^[a-z0-9.-]+$/.test(url.hostname) ? url : null;
   } catch {
     return null;
   }

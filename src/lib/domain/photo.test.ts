@@ -15,6 +15,7 @@ import {
   parsePhotoTarget,
   pathMatchesKind,
   photoUrl,
+  storageOrigin,
 } from "./photo";
 
 const UUID = "3f2b8c1e-9a4d-4e7b-8c21-0a1b2c3d4e5f";
@@ -173,6 +174,30 @@ describe("ссылка на Фото", () => {
     expect(photoUrl(base, "javascript:alert(1)")).toBeNull();
     expect(photoUrl(base, "/trainers/aisha.jpg")).toBeNull();
     expect(photoUrl(base, `gallery/../../secret/${UUID}.webp`)).toBeNull();
+  });
+});
+
+describe("адрес хранилища из переменной окружения", () => {
+  it("правильный https-адрес проекта", () => {
+    expect(storageOrigin("https://abc.supabase.co")).toBe("https://abc.supabase.co");
+    expect(storageOrigin("https://abc.supabase.co/")).toBe("https://abc.supabase.co");
+  });
+
+  it.each([
+    ["не задан", undefined],
+    ["пусто", ""],
+    ["с кавычками и точкой с запятой", '"https://abc.supabase.co";'],
+    ["с точкой с запятой", "https://abc.supabase.co;"],
+    ["без https", "http://abc.supabase.co"],
+    ["без схемы", "abc.supabase.co"],
+    ["другая схема", "javascript:alert(1)"],
+  ])("%s — хранилища нет", (_name, raw) => {
+    expect(storageOrigin(raw)).toBeNull();
+  });
+
+  it("адрес с опечаткой не превращается в битую ссылку на сайте — показываем картинку из public/", () => {
+    expect(photoUrl('"https://abc.supabase.co";', `gallery/${UUID}.webp`)).toBeNull();
+    expect(photoUrl("http://abc.supabase.co", `gallery/${UUID}.webp`)).toBeNull();
   });
 });
 

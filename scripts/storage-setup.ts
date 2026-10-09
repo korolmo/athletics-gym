@@ -3,13 +3,19 @@
 // Повторный запуск безопасен: файлы в бакете не трогает, только сверяет настройки.
 
 import { createClient } from "@supabase/supabase-js";
-import { ALLOWED_TYPES, MAX_FILE_BYTES, MEDIA_BUCKET } from "../src/lib/domain/photo";
+import { ALLOWED_TYPES, MAX_FILE_BYTES, MEDIA_BUCKET, storageOrigin } from "../src/lib/domain/photo";
 
 async function main() {
-  const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
+  if (!process.env.SUPABASE_URL || !key) {
     console.error("Не заданы SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в файле окружения.");
+    process.exitCode = 1;
+    return;
+  }
+  const url = storageOrigin(process.env.SUPABASE_URL);
+  if (!url) {
+    // Значение не печатаем: рядом в файле лежит ключ
+    console.error("SUPABASE_URL записан с ошибкой: нужна строка вида SUPABASE_URL=\"https://<проект>.supabase.co\" — без пробелов вокруг «=» и без точки с запятой.");
     process.exitCode = 1;
     return;
   }

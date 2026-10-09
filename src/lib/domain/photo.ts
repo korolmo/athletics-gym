@@ -95,12 +95,29 @@ export function pathMatchesKind(path: string, kind: PhotoKind): boolean {
 }
 
 /**
- * Прямая ссылка на Фото в публичном бакете. Пусто, если пути нет, он не наш или адрес хранилища не задан, —
- * тогда сайт показывает картинку из public/.
+ * Адрес хранилища из SUPABASE_URL: только правильный https-адрес, иначе null.
+ * Опечатка в переменной (кавычки, точка с запятой, http) не должна превращаться в битые ссылки на сайте:
+ * next.config.mjs по тому же правилу решает, разрешать ли хранилище для next/image и в CSP.
+ */
+export function storageOrigin(storageUrl: string | undefined): string | null {
+  if (!storageUrl) return null;
+  try {
+    const url = new URL(storageUrl);
+    // Имя узла — только буквы, цифры, точки и дефисы: «…supabase.co;» тоже разбирается как адрес, но это опечатка
+    return url.protocol === "https:" && /^[a-z0-9.-]+$/.test(url.hostname) ? url.origin : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Прямая ссылка на Фото в публичном бакете. Пусто, если пути нет, он не наш или адрес хранилища
+ * не задан либо задан с ошибкой, — тогда сайт показывает картинку из public/.
  */
 export function photoUrl(storageUrl: string | undefined, path: string | null | undefined): string | null {
-  if (!storageUrl || !path || !isPhotoPath(path)) return null;
-  return `${storageUrl.replace(/\/+$/, "")}/storage/v1/object/public/${MEDIA_BUCKET}/${path}`;
+  const origin = storageOrigin(storageUrl);
+  if (!origin || !path || !isPhotoPath(path)) return null;
+  return `${origin}/storage/v1/object/public/${MEDIA_BUCKET}/${path}`;
 }
 
 /** Файл старше часа, на который нет ссылки из базы, — брошенная загрузка: её можно удалить. */

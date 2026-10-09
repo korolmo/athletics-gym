@@ -1,20 +1,20 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { MEDIA_BUCKET, PHOTO_KINDS, photoUrl } from "@/lib/domain/photo";
+import { MEDIA_BUCKET, PHOTO_KINDS, photoUrl, storageOrigin } from "@/lib/domain/photo";
 
 // Supabase Storage. Работает только на сервере: ключ service_role даёт полный доступ к хранилищу
 // и в браузер не попадает (переменные без NEXT_PUBLIC). Браузер получает только подписанную ссылку на одну загрузку.
 
 export class StorageNotConfigured extends Error {
   constructor() {
-    super("Хранилище фото не настроено: задайте SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY");
+    super("Хранилище фото не настроено: SUPABASE_URL (https-адрес проекта) и SUPABASE_SERVICE_ROLE_KEY не заданы или заданы с ошибкой");
   }
 }
 
 let cached: SupabaseClient | null = null;
 
 function client(): SupabaseClient {
-  const url = process.env.SUPABASE_URL;
+  const url = storageOrigin(process.env.SUPABASE_URL);
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new StorageNotConfigured();
   cached ??= createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -22,7 +22,7 @@ function client(): SupabaseClient {
 }
 
 export function isStorageConfigured(): boolean {
-  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return Boolean(storageOrigin(process.env.SUPABASE_URL) && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 /** Прямая ссылка на Фото; пусто — пути нет или хранилище не настроено (сайт покажет картинку из public/). */
