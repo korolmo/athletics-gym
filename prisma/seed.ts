@@ -140,14 +140,15 @@ async function main() {
 
   await db.tariff.deleteMany();
   await db.trainer.deleteMany();
-  await db.hall.deleteMany();
 
-  await db.hall.createMany({
-    data: [
-      { id: "general", nameRu: "Общий зал", nameKk: "Жалпы зал", sortOrder: 0 },
-      { id: "women", nameRu: "Женский зал", nameKk: "Әйелдер залы", sortOrder: 1 },
-    ],
-  });
+  // Залы не удаляем, а обновляем: у Зала может быть загруженный Плакат прайса.
+  // Загруженные Плакаты Тренеров пропадают вместе с Тренерами — их файлы уберёт уборка хранилища.
+  for (const hall of [
+    { id: "general", nameRu: "Общий зал", nameKk: "Жалпы зал", sortOrder: 0 },
+    { id: "women", nameRu: "Женский зал", nameKk: "Әйелдер залы", sortOrder: 1 },
+  ]) {
+    await db.hall.upsert({ where: { id: hall.id }, update: hall, create: hall });
+  }
 
   for (const hall of ["general", "women"] as const) {
     await db.tariff.createMany({

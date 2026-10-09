@@ -42,12 +42,14 @@ enum Audience {
 /// Зал — помещение со своим прайсом: general (Общий зал) или women (Женский зал)
 model Hall {
   /// "general" | "women"
-  id        String    @id
-  nameRu    String
-  nameKk    String?
-  sortOrder Int       @default(0)
-  tariffs   Tariff[]
-  trainers  Trainer[]
+  id          String    @id
+  nameRu      String
+  nameKk      String?
+  sortOrder   Int       @default(0)
+  /// Плакат прайса: путь к Фото в хранилище; пусто — плаката на сайте нет
+  pricePoster String?
+  tariffs     Tariff[]
+  trainers    Trainer[]
 }
 
 /// Тариф — позиция прайса Зала или Тренера (для персональных тренировок)
@@ -89,6 +91,8 @@ model Trainer {
   hallId        String
   /// Путь к карточке-плакату; до этапа 2 — файл из public/trainers/
   photo         String?
+  /// Плакат Тренера, загруженный Владельцем: путь к Фото в хранилище. Если задан — показываем его, а не photo
+  uploadedPhoto String?
   descriptionRu String?
   descriptionKk String?
   sortOrder     Int      @default(0)
@@ -130,10 +134,14 @@ model SiteSettings {
   heroTitleKk    String?
   heroSubtitleRu String
   heroSubtitleKk String?
+  /// Фон первого экрана: путь к Фото в хранилище; пусто — картинка из public/
+  heroPhoto      String?
   /// Женский зал
   womenTextRu    String
   womenTextKk    String?
   womenInstagram String
+  /// Фото Женского зала: путь в хранилище; пусто — показываем логотип Женского зала
+  womenPhoto     String?
   /// Контакты
   addressRu      String
   addressKk      String?
@@ -168,4 +176,18 @@ model AboutCard {
   titleKk  String?
   textRu   String
   textKk   String?
+}
+
+/// Фото Галереи: загружает и упорядочивает Владелец. В базе — только путь к файлу в хранилище.
+model GalleryPhoto {
+  id        String   @id @default(cuid())
+  /// Путь к файлу в хранилище (бакет media), например gallery/<uuid>.webp
+  path      String   @unique
+  captionRu String?
+  captionKk String?
+  isVisible Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([sortOrder])
 }

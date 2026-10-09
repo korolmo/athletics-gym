@@ -5,9 +5,11 @@ import { DemoBadge } from "@/components/ui/DemoBadge";
 import { SectionHead } from "@/components/ui/SectionHead";
 import type { SectionProps } from "@/components/site/sections/types";
 import { logo } from "@/lib/brand";
+import { GalleryGrid, type GalleryView } from "@/components/site/halls/GalleryGrid";
 
-// Галерея (фото из макета — сгенерированы, поэтому с пометкой «ДЕМО»)
-export function Gallery({ t, s }: SectionProps) {
+// Галерея: фото, которые загрузил Владелец. Пока их нет — две картинки из макета (сгенерированы, поэтому с пометкой «ДЕМО»)
+export function Gallery({ t, s, photos }: SectionProps & { photos: GalleryView[] }) {
+  const own = photos.length > 0;
   const tiles = [
     { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw", item: s.about[2] },
     { src: "/stitch/gallery-weights-crop.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw", item: s.about[0] },
@@ -18,7 +20,7 @@ export function Gallery({ t, s }: SectionProps) {
         <SectionHead
           eyebrow={t.eyebrow.gallery}
           title={t.gallery.title}
-          badge={<DemoBadge label={t.gallery.demo} />}
+          badge={own ? undefined : <DemoBadge label={t.gallery.demo} />}
           aside={
             <div className="flex items-center gap-3">
               <Image src={logo} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
@@ -29,6 +31,9 @@ export function Gallery({ t, s }: SectionProps) {
             </div>
           }
         />
+        {own ? (
+          <GalleryGrid photos={photos} more={t.gallery.more} />
+        ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
           {tiles.map((tile) => (
             <div key={tile.src} className={`group relative h-[240px] overflow-hidden rounded-2xl md:h-[340px] ${tile.span}`}>
@@ -47,6 +52,7 @@ export function Gallery({ t, s }: SectionProps) {
             </div>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

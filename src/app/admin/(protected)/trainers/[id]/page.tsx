@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTrainerWithTariffs } from "@/lib/services/trainers";
@@ -6,6 +5,8 @@ import { isHall } from "@/lib/domain/tariff";
 import { PlusIcon } from "@/components/icons";
 import { TariffRow } from "../../tariffs/TariffRow";
 import { DeleteTrainerButton, TrainerForm } from "../TrainerForm";
+import { PhotoSlot } from "../../photos/PhotoSlot";
+import { isStorageConfigured, mediaUrl } from "@/lib/storage/client";
 
 export const dynamic = "force-dynamic";
 
@@ -31,15 +32,17 @@ export default async function EditTrainerPage({
         </div>
       )}
 
-      {tr.photo && (
-        <div className="mb-6 flex items-start gap-4 rounded-2xl bg-card p-4">
-          <Image src={tr.photo} alt={tr.name} width={120} height={170} className="h-auto w-[120px] shrink-0 rounded-lg" />
-          <p className="text-sm text-muted">
-            Фото — карточка-плакат целиком. Заменить фото можно будет на следующем этапе; сейчас это файл{" "}
-            <span className="break-all text-fg">{tr.photo}</span>.
-          </p>
-        </div>
-      )}
+      <div className="mb-6">
+        <PhotoSlot
+          target={`trainer:${tr.id}`}
+          title="Плакат тренера"
+          note="Карточка-плакат: на сайте заполняет рамку 3:4 и прижата к верху, по нажатию открывается целиком."
+          url={mediaUrl(tr.uploadedPhoto)}
+          fallback={tr.photo}
+          shape="tall"
+          disabled={!isStorageConfigured()}
+        />
+      </div>
 
       <TrainerForm
         initial={{

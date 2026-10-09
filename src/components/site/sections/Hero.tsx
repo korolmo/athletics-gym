@@ -8,7 +8,7 @@ import type { SectionProps } from "@/components/site/sections/types";
 import { logoWomen } from "@/lib/brand";
 
 // Полоса с адресом и первый экран
-export function Hero({ t, s }: SectionProps) {
+export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруженный Владельцем; пусто — картинка по умолчанию */ photo: string | null }) {
   const motto = splitMotto(s.hero.title);
   // Карточки «О зале» 3 и 4 (кондиционеры и режим) повторяются на первом экране
   const stats = [
@@ -118,7 +118,7 @@ export function Hero({ t, s }: SectionProps) {
           <div className="relative lg:col-span-5">
             <div className="relative h-[360px] w-full overflow-hidden rounded-2xl bg-surface-card shadow-2xl md:h-[520px]">
               <Image
-                src="/stitch/hero.jpg"
+                src={photo ?? "/stitch/hero.jpg"}
                 alt=""
                 fill
                 sizes="(min-width: 1024px) 500px, 100vw"

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getPriceListAndTrainers, getSiteSettings } from "@/lib/services/site";
+import { getPriceListAndTrainers, getSitePhotos, getSiteSettings } from "@/lib/services/site";
+import { mediaUrl } from "@/lib/storage/client";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
 import {
@@ -54,9 +55,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
 
-  const [{ hallTariffs, trainers: trainerRows }, { settings, cards }] = await Promise.all([
+  const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos] = await Promise.all([
     getPriceListAndTrainers(),
     getSiteSettings(),
+    getSitePhotos(),
   ]);
   // Настройки сайта на языке страницы: тексты, контакты и какие Блоки показывать
   const s = toSiteContent(locale, settings, cards);
@@ -66,23 +68,29 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     id: tr.id,
     name: tr.name,
     hallId: tr.hallId,
-    photo: tr.photo,
+    // Плакат, загруженный Владельцем; пока его нет — прежний файл из public/trainers
+    photo: mediaUrl(tr.uploadedPhoto) ?? tr.photo,
     description: tr.descriptionRu ? pick(locale, tr.descriptionRu, tr.descriptionKk) : null,
     tariffs: tr.tariffs.map((x) => toTariffView(locale, x)),
   }));
 
   const props = { locale, t, s };
+  const gallery = photos.gallery.map((g) => ({
+    id: g.id,
+    url: g.url,
+    caption: g.captionRu ? pick(locale, g.captionRu, g.captionKk) : null,
+  }));
 
   return (
     <>
       <Header {...props} />
       <main className="w-full bg-background pt-16 md:pt-20">
-        <Hero {...props} />
+        <Hero {...props} photo={photos.hero} />
         {s.show.about && <About {...props} />}
         {s.show.directions && <Directions {...props} />}
-        {s.show.women && <Women {...props} />}
-        {s.show.prices && <Prices {...props} tariffs={tariffs} trainers={trainers} />}
-        {s.show.gallery && <Gallery {...props} />}
+        {s.show.women && <Women {...props} photo={photos.women} />}
+        {s.show.prices && <Prices {...props} tariffs={tariffs} trainers={trainers} posters={photos.posters} />}
+        {s.show.gallery && <Gallery {...props} photos={gallery} />}
         {s.show.trainers && <Trainers {...props} trainers={trainers} />}
         {s.show.contacts && <Contacts {...props} />}
       </main>

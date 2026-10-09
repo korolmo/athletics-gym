@@ -6,7 +6,18 @@ import type { TariffView, TrainerView } from "@/components/site/halls/types";
 import { PricesBoard } from "@/components/site/halls/PricesBoard";
 
 // Цены
-export function Prices({ t, s, tariffs, trainers }: SectionProps & { tariffs: TariffView[]; trainers: TrainerView[] }) {
+export function Prices({
+  t,
+  s,
+  tariffs,
+  trainers,
+  posters,
+}: SectionProps & {
+  tariffs: TariffView[];
+  trainers: TrainerView[];
+  /** Плакаты прайса по Залам; пусто — у Зала плаката нет */
+  posters: Record<string, string | null>;
+}) {
   return (
     <section id="prices" className={`w-full ${sectionY}`}>
       <div className={container}>
@@ -22,6 +33,7 @@ export function Prices({ t, s, tariffs, trainers }: SectionProps & { tariffs: Ta
           trainers={trainers}
           whatsapp={s.contacts.whatsapp}
           trainersShown={s.show.trainers}
+          posters={posters}
         />
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-2xl bg-surface-card p-6 shadow-xs md:flex-row">

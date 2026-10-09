@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { ABOUT_CARD_COUNT, type AboutCardData, type SiteSettingsData } from "@/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
+import { mediaUrl } from "@/lib/storage/client";
 
 /** В базе одна запись Настроек сайта. */
 export const SETTINGS_ID = "site";
@@ -36,5 +37,26 @@ export async function getSiteSettings(): Promise<{ settings: SiteSettingsData; c
   return {
     settings: settings ?? DEFAULT_SETTINGS,
     cards: cards.length === ABOUT_CARD_COUNT ? cards : DEFAULT_ABOUT_CARDS,
+  };
+}
+
+/**
+ * Фото, загруженные Владельцем, — готовыми ссылками. Пусто (null) значит «не загружено»:
+ * секция показывает картинку из public/, как до этапа 2.
+ */
+export async function getSitePhotos() {
+  const [settings, halls, gallery] = await Promise.all([
+    db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } }),
+    db.hall.findMany({ select: { id: true, pricePoster: true } }),
+    db.galleryPhoto.findMany({ where: { isVisible: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
+  ]);
+  return {
+    hero: mediaUrl(settings?.heroPhoto),
+    women: mediaUrl(settings?.womenPhoto),
+    posters: Object.fromEntries(halls.map((h) => [h.id, mediaUrl(h.pricePoster)])) as Record<string, string | null>,
+    gallery: gallery.flatMap((g) => {
+      const url = mediaUrl(g.path);
+      return url ? [{ id: g.id, url, captionRu: g.captionRu, captionKk: g.captionKk }] : [];
+    }),
   };
 }

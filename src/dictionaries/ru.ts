@@ -92,6 +92,8 @@ export const ru = {
     perSession: "за занятие",
     toTrainers: "Выбрать тренера",
     empty: "Тарифы этого зала уточняйте в WhatsApp",
+    // Кнопка, открывающая Плакат прайса Зала
+    poster: "Фото прайса",
   },
   trainers: {
     title: "Тренеры",
@@ -129,6 +131,7 @@ export const ru = {
   },
   gallery: {
     title: "Зал изнутри",
+    more: "Ещё фото",
     demo: "ДЕМО",
   },
   lang: { ru: "RU", kk: "KZ" },
