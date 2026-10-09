@@ -7,14 +7,11 @@ import type { SectionProps } from "@/components/site/sections/types";
 import { logo } from "@/lib/brand";
 
 // Шапка
-export function Header({ locale, t }: SectionProps) {
-  const links: [string, string][] = [
-    ["#about", t.nav.about],
-    ["#directions", t.nav.directions],
-    ["#prices", t.nav.prices],
-    ["#trainers", t.nav.trainers],
-    ["#contacts", t.nav.contacts],
-  ];
+export function Header({ locale, t, s }: SectionProps) {
+  // Ссылки только на те Блоки, которые Владелец оставил на сайте
+  const links = (["about", "directions", "prices", "trainers", "contacts"] as const)
+    .filter((block) => s.show[block])
+    .map((block): [string, string] => [`#${block}`, t.nav[block]]);
   return (
     <header className="fixed inset-x-0 top-0 z-50 w-full bg-background/85 shadow-header backdrop-blur-xl">
       <div className={`${container} flex h-16 items-center justify-between gap-3 md:h-20 md:gap-6`}>
@@ -53,7 +50,7 @@ export function Header({ locale, t }: SectionProps) {
             ))}
           </div>
           <a
-            href={whatsappUrl(t.wa.trial)}
+            href={whatsappUrl(s.contacts.whatsapp, t.wa.trial)}
             target="_blank"
             rel="noopener noreferrer"
             className={`${label} hidden items-center justify-center rounded-sm bg-primary-container px-6 py-2 text-on-primary transition-all hover:brightness-95 active:translate-y-px md:inline-flex lg:hidden xl:inline-flex`}

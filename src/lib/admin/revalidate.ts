@@ -6,4 +6,5 @@ export function revalidateSite(): void {
   revalidatePath("/kk");
   revalidatePath("/admin/tariffs");
   revalidatePath("/admin/trainers");
+  revalidatePath("/admin/site");
 }

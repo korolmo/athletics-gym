@@ -4,7 +4,7 @@ import { SectionHead } from "@/components/ui/SectionHead";
 import type { SectionProps } from "@/components/site/sections/types";
 
 // О зале
-export function About({ t }: SectionProps) {
+export function About({ t, s }: SectionProps) {
   const icons = [ExerciseSym, FemaleSym, AirSym, EventAvailableSym];
   return (
     <section id="about" className={`w-full bg-surface-container-low ${sectionY}`}>
@@ -17,11 +17,11 @@ export function About({ t }: SectionProps) {
         {/* Карточка занимает три строки общей сетки (subgrid): иконка с номером, заголовок, описание —
             поэтому в ряду заголовки и описания начинаются на одной линии при любой длине текста */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {t.about.items.map((item, i) => {
+          {s.about.map((item, i) => {
             const Icon = icons[i] ?? ExerciseSym;
             return (
               <div
-                key={item.title}
+                key={i}
                 data-card
                 className="group row-span-3 grid grid-rows-subgrid gap-y-0 rounded-2xl bg-surface-card p-6 shadow-md transition-transform hover:-translate-y-0.5"
               >
@@ -30,7 +30,7 @@ export function About({ t }: SectionProps) {
                     <Icon className="h-6 w-6" />
                   </span>
                   <span className={`${label} text-right text-text-muted`}>
-                    {String(i + 1).padStart(2, "0")} {"//"} {t.about.kickers[i]}
+                    {String(i + 1).padStart(2, "0")} {"//"} {item.kicker}
                   </span>
                 </div>
                 <h3 data-slot="title" className="mt-12 text-headline-sm uppercase text-text-primary lg:mt-24">

@@ -11,4 +11,15 @@ export const LIMITS = {
   visitsPerMonth: 100,
   durationMonths: 60,
   sortOrder: 9999,
+  /** Настройки сайта: девиз и подзаголовок первого экрана */
+  motto: 80,
+  subtitle: 300,
+  /** Карточка «О зале»: подпись, заголовок, текст */
+  cardKicker: 30,
+  cardTitle: 60,
+  cardText: 200,
+  womenText: 600,
+  address: 160,
+  hours: 80,
+  ratingCount: 1_000_000,
 } as const;

@@ -7,10 +7,10 @@ import type { SectionProps } from "@/components/site/sections/types";
 import { logo } from "@/lib/brand";
 
 // Галерея (фото из макета — сгенерированы, поэтому с пометкой «ДЕМО»)
-export function Gallery({ t }: SectionProps) {
+export function Gallery({ t, s }: SectionProps) {
   const tiles = [
-    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw", item: t.about.items[2] },
-    { src: "/stitch/gallery-weights-crop.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw", item: t.about.items[0] },
+    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw", item: s.about[2] },
+    { src: "/stitch/gallery-weights-crop.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw", item: s.about[0] },
   ];
   return (
     <section id="gallery" className={`w-full bg-surface-container-low ${sectionY}`}>
