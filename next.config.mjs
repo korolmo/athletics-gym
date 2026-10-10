@@ -49,9 +49,17 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
 ];
 
+const OG_IMAGE_FILES = ["./src/assets/fonts/*.ttf", "./public/logo.png"];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   devIndicators: false,
+  // Картинка-превью ссылок читает шрифты и логотип с диска. Сборка Vercel кладёт в серверную функцию только те файлы,
+  // которые нашла сама; эти она не находит — без явного списка маршрут отвечает ошибкой 500.
+  outputFileTracingIncludes: {
+    "/[locale]/opengraph-image": OG_IMAGE_FILES,
+    "/[locale]/twitter-image": OG_IMAGE_FILES,
+  },
   images: {
     // next/image берёт из хранилища только публичные файлы бакета media
     remotePatterns: storage
