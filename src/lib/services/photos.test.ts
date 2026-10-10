@@ -52,6 +52,14 @@ const { state, db, storage, requireOwner } = vi.hoisted(() => {
         Object.assign(trainer, data);
       }),
     },
+    direction: {
+      count: vi.fn(async () => 0),
+      findUnique: vi.fn(async () => null),
+      findMany: vi.fn(async () => []),
+      update: vi.fn(async () => {
+        throw notFound();
+      }),
+    },
     galleryPhoto: {
       aggregate: vi.fn(async () => ({
         _max: { sortOrder: state.gallery.length ? Math.max(...state.gallery.map((g) => g.sortOrder)) : null },
@@ -396,7 +404,7 @@ describe("права: без сессии Владельца — отказ", ()
     await expect(call()).rejects.toBe(NO_SESSION);
 
     expect(JSON.stringify([state.settings, state.halls, state.trainers, state.gallery, [...state.files.keys()]])).toBe(before);
-    for (const model of [db.siteSettings, db.hall, db.trainer, db.galleryPhoto]) {
+    for (const model of [db.siteSettings, db.hall, db.trainer, db.galleryPhoto, db.direction]) {
       for (const fn of Object.values(model)) expect(fn).not.toHaveBeenCalled();
     }
     for (const fn of [storage.signUpload, storage.objectExists, storage.removeObjects, storage.listObjects]) {

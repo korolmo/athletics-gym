@@ -19,7 +19,7 @@ export const MAX_SOURCE_BYTES = 40 * 1024 * 1024;
 const EXTENSION: Record<AllowedType, string> = { "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png" };
 
 /** Куда Владелец загружает Фото. Папка в бакете совпадает с названием. */
-export const PHOTO_KINDS = ["hero", "women", "gallery", "trainer", "hall"] as const;
+export const PHOTO_KINDS = ["hero", "women", "gallery", "trainer", "hall", "direction"] as const;
 export type PhotoKind = (typeof PHOTO_KINDS)[number];
 
 /**
@@ -31,14 +31,15 @@ export type PhotoTarget =
   | { kind: "women" }
   | { kind: "gallery" }
   | { kind: "trainer"; id: string }
+  | { kind: "direction"; id: string }
   | { kind: "hall"; id: HallId };
 
-/** Место из формы: «hero», «women», «gallery», «trainer:<id>», «hall:<general|women>». */
+/** Место из формы: «hero», «women», «gallery», «trainer:<id>», «direction:<id>», «hall:<general|women>». */
 export function parsePhotoTarget(raw: string): PhotoTarget | null {
   const [kind, id, ...rest] = raw.split(":");
   if (rest.length > 0) return null;
   if (kind === "hero" || kind === "women" || kind === "gallery") return id === undefined ? { kind } : null;
-  if (kind === "trainer") return id && /^[a-z0-9]{1,40}$/i.test(id) ? { kind, id } : null;
+  if (kind === "trainer" || kind === "direction") return id && /^[a-z0-9_]{1,40}$/i.test(id) ? { kind, id } : null;
   if (kind === "hall") return (HALLS as readonly string[]).includes(id ?? "") ? { kind, id: id as HallId } : null;
   return null;
 }
@@ -82,7 +83,7 @@ export function newPhotoPath(kind: PhotoKind, type: AllowedType, uuid: string): 
   return `${kind}/${uuid}.${EXTENSION[type]}`;
 }
 
-const PATH = /^(hero|women|gallery|trainer|hall)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(webp|jpg|png)$/;
+const PATH = /^(hero|women|gallery|trainer|hall|direction)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(webp|jpg|png)$/;
 
 /** Наш ли это путь: папка из списка, имя — uuid, расширение — из разрешённых. Ничего другого в базу и в хранилище не идёт. */
 export function isPhotoPath(path: string): boolean {

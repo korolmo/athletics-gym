@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 /** Что в Блоке меняется в этом разделе; у остальных здесь только показ. */
 const BLOCK_NOTE: Record<BlockId, string> = {
   about: "Четыре карточки",
-  directions: "Только показ на сайте",
+  directions: "Направления меняются в разделе «Направления»",
   women: "Текст и Instagram",
   prices: "Цены меняются в разделе «Тарифы»",
   gallery: "Только показ на сайте",

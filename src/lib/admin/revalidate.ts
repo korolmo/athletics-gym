@@ -9,4 +9,5 @@ export function revalidateSite(): void {
   revalidatePath("/admin/site");
   revalidatePath("/admin/photos");
   revalidatePath("/admin/reviews");
+  revalidatePath("/admin/directions");
 }

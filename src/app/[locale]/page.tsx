@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getPriceListAndTrainers, getSitePhotos, getSiteSettings } from "@/lib/services/site";
 import { listPublishedReviews } from "@/lib/services/reviews";
+import { listVisibleDirections } from "@/lib/services/directions";
+import { toDirectionViews } from "@/lib/domain/direction";
 import { isSafeSourceUrl } from "@/lib/domain/review";
 import { issueFormToken } from "@/lib/reviews/form-token";
 import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
@@ -63,11 +65,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
 
-  const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos, publishedReviews] = await Promise.all([
+  const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos, publishedReviews, directionRows] = await Promise.all([
     getPriceListAndTrainers(),
     getSiteSettings(),
     getSitePhotos(),
     listPublishedReviews(),
+    listVisibleDirections(),
   ]);
   // Настройки сайта на языке страницы: тексты, контакты и какие Блоки показывать
   const s = toSiteContent(locale, settings, cards);
@@ -84,6 +87,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   }));
 
   const props = { locale, t, s };
+  const directions = toDirectionViews(locale, directionRows, mediaUrl);
   // Разметка зала для поисковиков — из Настроек сайта; рейтинг 2ГИС и Отзывы в неё не входят (см. buildGymJsonLd)
   const jsonLd = buildGymJsonLd({
     siteUrl: readSeoEnv().siteUrl,
@@ -117,11 +121,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <ContactTracker locale={locale} />
-      <Header {...props} />
+      <Header {...props} hasDirections={directions.length > 0} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} photo={photos.hero} />
         {s.show.about && <About {...props} />}
-        {s.show.directions && <Directions {...props} />}
+        {/* Без видимых Направлений блока нет */}
+        {s.show.directions && directions.length > 0 && <Directions {...props} directions={directions} />}
         {s.show.women && <Women {...props} photo={photos.women} />}
         {s.show.prices && <Prices {...props} tariffs={tariffs} trainers={trainers} posters={photos.posters} />}
         {s.show.gallery && <Gallery {...props} photos={gallery} />}

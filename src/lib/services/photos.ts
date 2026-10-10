@@ -46,6 +46,7 @@ async function removeQuietly(paths: (string | null | undefined)[]): Promise<void
 async function targetExists(target: PhotoTarget): Promise<boolean> {
   if (target.kind === "trainer") return (await db.trainer.count({ where: { id: target.id } })) > 0;
   if (target.kind === "hall") return (await db.hall.count({ where: { id: target.id } })) > 0;
+  if (target.kind === "direction") return (await db.direction.count({ where: { id: target.id } })) > 0;
   return true;
 }
 
@@ -92,6 +93,11 @@ async function saveToTarget(target: PhotoTarget, path: string): Promise<string |
       const before = await db.hall.findUnique({ where: { id: target.id }, select: { pricePoster: true } });
       await db.hall.update({ where: { id: target.id }, data: { pricePoster: path } });
       return before?.pricePoster ?? null;
+    }
+    case "direction": {
+      const before = await db.direction.findUnique({ where: { id: target.id }, select: { photo: true } });
+      await db.direction.update({ where: { id: target.id }, data: { photo: path } });
+      return before?.photo ?? null;
     }
     case "gallery": {
       // Новое фото встаёт в конец Галереи
@@ -158,6 +164,9 @@ export async function removePhoto(targetRaw: string): Promise<ServiceResult<obje
     } else if (target.kind === "trainer") {
       previous = (await db.trainer.findUnique({ where: { id: target.id }, select: { uploadedPhoto: true } }))?.uploadedPhoto ?? null;
       if (previous) await db.trainer.update({ where: { id: target.id }, data: { uploadedPhoto: null } });
+    } else if (target.kind === "direction") {
+      previous = (await db.direction.findUnique({ where: { id: target.id }, select: { photo: true } }))?.photo ?? null;
+      if (previous) await db.direction.update({ where: { id: target.id }, data: { photo: null } });
     } else {
       previous = (await db.hall.findUnique({ where: { id: target.id }, select: { pricePoster: true } }))?.pricePoster ?? null;
       if (previous) await db.hall.update({ where: { id: target.id }, data: { pricePoster: null } });
@@ -246,11 +255,12 @@ export async function getSinglePhotos() {
 
 /** Все пути к Фото, на которые ссылается база. */
 async function referencedPaths(): Promise<Set<string>> {
-  const [settings, halls, trainers, gallery] = await Promise.all([
+  const [settings, halls, trainers, gallery, directions] = await Promise.all([
     db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } }),
     db.hall.findMany({ select: { pricePoster: true } }),
     db.trainer.findMany({ where: { uploadedPhoto: { not: null } }, select: { uploadedPhoto: true } }),
     db.galleryPhoto.findMany({ select: { path: true } }),
+    db.direction.findMany({ where: { photo: { not: null } }, select: { photo: true } }),
   ]);
   const all = [
     settings?.heroPhoto,
@@ -258,6 +268,7 @@ async function referencedPaths(): Promise<Set<string>> {
     ...halls.map((h) => h.pricePoster),
     ...trainers.map((t) => t.uploadedPhoto),
     ...gallery.map((g) => g.path),
+    ...directions.map((d) => d.photo),
   ];
   return new Set(all.filter((p): p is string => Boolean(p)));
 }
