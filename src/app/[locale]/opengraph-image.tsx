@@ -15,6 +15,8 @@ export const contentType = "image/png";
 // Адрес меняет Владелец — картинку собираем по запросу, а не при сборке
 export const dynamic = "force-dynamic";
 
+// Эти файлы должны попасть в серверную функцию: список — outputFileTracingIncludes в next.config.mjs.
+// Добавили сюда файл — добавьте его и туда, иначе на Vercel маршрут ответит ошибкой, хотя локально всё работает.
 const asset = (path: string) => readFile(join(process.cwd(), path));
 
 export default async function OpengraphImage({ params }: { params: Promise<{ locale: string }> | { locale: string } }) {
