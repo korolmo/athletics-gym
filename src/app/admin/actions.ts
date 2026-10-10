@@ -45,7 +45,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   if (!attempt.ok) return { error: attempt.error };
 
   await createSession(attempt.sessionVersion);
-  redirect("/admin/tariffs");
+  redirect("/admin");
 }
 
 export async function logout(): Promise<void> {

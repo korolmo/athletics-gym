@@ -34,7 +34,12 @@ const csp = [
   "object-src 'none'",
 ].join("; ");
 
+// Превью и любые не-production деплои работают на базе разработки: в поиск они попадать не должны.
+// Заголовок закрывает от индексации всё, включая картинки и файлы, у которых нет своего meta robots.
+const isProductionDeploy = process.env.VERCEL_ENV === "production";
+
 const securityHeaders = [
+  ...(isProductionDeploy ? [] : [{ key: "X-Robots-Tag", value: "noindex, nofollow" }]),
   { key: "Content-Security-Policy", value: csp },
   // Для старых браузеров, которые не понимают frame-ancestors
   { key: "X-Frame-Options", value: "DENY" },

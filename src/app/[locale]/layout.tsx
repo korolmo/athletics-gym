@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { siteFontVars } from "@/lib/fonts";
 import { getDictionary, isLocale, locales } from "@/lib/i18n";
-import { site } from "@/lib/site";
+import { buildMetadata, readSeoEnv } from "@/lib/seo";
 import { logoIconUrl } from "@/lib/brand";
 
 export function generateStaticParams() {
@@ -18,14 +18,8 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = getDictionary(locale);
-  return {
-    metadataBase: new URL(site.url),
-    title: t.meta.title,
-    description: t.meta.description,
-    alternates: { languages: { ru: "/ru", kk: "/kk" } },
-    icons: { icon: logoIconUrl },
-    openGraph: { title: t.meta.title, description: t.meta.description, images: [logoIconUrl] },
-  };
+  // title и description — на языке страницы; canonical, hreflang, Open Graph и robots — по адресу и окружению деплоя
+  return buildMetadata(locale, t.seo, readSeoEnv(), logoIconUrl);
 }
 
 export default async function LocaleLayout({

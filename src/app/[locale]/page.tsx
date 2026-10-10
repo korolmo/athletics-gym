@@ -3,6 +3,10 @@ import { getPriceListAndTrainers, getSitePhotos, getSiteSettings } from "@/lib/s
 import { listPublishedReviews } from "@/lib/services/reviews";
 import { isSafeSourceUrl } from "@/lib/domain/review";
 import { issueFormToken } from "@/lib/reviews/form-token";
+import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
+import { site } from "@/lib/site";
+import { logoIconUrl } from "@/lib/brand";
+import { ContactTracker } from "@/components/site/ContactTracker";
 import { mediaUrl } from "@/lib/storage/client";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
@@ -80,6 +84,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   }));
 
   const props = { locale, t, s };
+  // Разметка зала для поисковиков — из Настроек сайта; рейтинг 2ГИС и Отзывы в неё не входят (см. buildGymJsonLd)
+  const jsonLd = buildGymJsonLd({
+    siteUrl: readSeoEnv().siteUrl,
+    locale,
+    name: site.name,
+    description: t.seo.description,
+    city: t.contacts.city,
+    coords: site.coords,
+    logoPath: logoIconUrl.split("?")[0],
+    extraLinks: [site.twoGis],
+    content: s,
+  });
   // Отзывы: текст — как написан, на обоих языках; дата — на языке страницы
   const reviewDate = new Intl.DateTimeFormat(locale === "kk" ? "kk-KZ" : "ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const reviews = publishedReviews.map((r) => ({
@@ -99,6 +115,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
+      <ContactTracker locale={locale} />
       <Header {...props} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} photo={photos.hero} />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const items = [
+  { href: "/admin", label: "Обращения" },
   { href: "/admin/tariffs", label: "Тарифы" },
   { href: "/admin/trainers", label: "Тренеры" },
   { href: "/admin/photos", label: "Фото" },
@@ -17,7 +18,8 @@ export function AdminNav({ newReviews = 0 }: { /** Сколько Отзывов
   return (
     <nav className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 pb-2 text-sm [&>a]:shrink-0 [&>a]:whitespace-nowrap">
       {items.map((item) => {
-        const active = pathname.startsWith(item.href);
+        // «/admin» — главная: активна только на самой себе, иначе была бы подсвечена всегда
+        const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
