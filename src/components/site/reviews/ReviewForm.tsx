@@ -30,7 +30,7 @@ export function ReviewForm({
 
   if (state.status === "sent") {
     return (
-      <p role="status" className="rounded-2xl bg-surface-card p-6 text-center text-body-lg text-text-primary shadow-md">
+      <p role="status" className="rounded-2xl bg-surface-card p-6 text-body-lg text-text-primary shadow-xs">
         {f.thanks}
       </p>
     );

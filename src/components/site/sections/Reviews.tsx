@@ -9,12 +9,17 @@ import { ReviewsBoard, type ReviewView } from "@/components/site/reviews/Reviews
 // Отзывы: только настоящие и только опубликованные Владельцем; рядом — рейтинг зала в 2ГИС.
 // Пока опубликованных нет, пустую секцию не показываем: остаются рейтинг 2ГИС и кнопка «Оставить отзыв».
 export function Reviews({ locale, t, s, reviews, formToken }: SectionProps & { reviews: ReviewView[]; formToken: string }) {
+  const empty = reviews.length === 0;
   const rating = (
     <a
       href={site.twoGisReviews}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 rounded-xl bg-surface-card px-4 py-3 shadow-xs transition-colors hover:text-primary-container"
+      // В заголовке Блока рейтинг — отдельная плашка. Без Отзывов он лежит внутри карточки с кнопкой:
+      // своих отступов и фона у него там нет, чтобы текст начинался с того же края, что в форме и в «Спасибо»
+      className={`flex items-center gap-3 transition-colors hover:text-primary-container ${
+        empty ? "" : "rounded-xl bg-surface-card px-4 py-3 shadow-xs"
+      }`}
     >
       <span className="text-headline-md text-text-primary">
         <span className="text-star">★</span> {s.rating.value}
@@ -29,7 +34,7 @@ export function Reviews({ locale, t, s, reviews, formToken }: SectionProps & { r
     </a>
   );
 
-  if (reviews.length === 0) {
+  if (empty) {
     return (
       <section id="reviews" className="w-full py-4">
         <div className={container}>

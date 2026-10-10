@@ -103,7 +103,8 @@ export function ReviewsBoard({
     </button>
   );
   const form = formOpen && (
-    <div id="review-form" className="mx-auto mt-6 max-w-[760px]">
+    // Форма и сообщение «Спасибо» — во всю ширину Блока, как карточка рейтинга и сетка Отзывов над ними
+    <div id="review-form" className="mt-6">
       <ReviewForm t={t} locale={locale} formToken={formToken} onCancel={() => setFormOpen(false)} />
     </div>
   );
