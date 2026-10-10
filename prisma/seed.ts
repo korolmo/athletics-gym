@@ -1,6 +1,7 @@
 import { PrismaClient, type Access, type Audience, type TariffCategory } from "@prisma/client";
 import { decideSeed } from "../src/lib/db-guard/production";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
+import { DEFAULT_DIRECTIONS } from "../src/lib/domain/direction.defaults";
 
 // Реальный прайс и Тренеры от Владельца (7 октября 2026):
 // docs/owner/prices-2026-10.md и docs/owner/trainers-2026-10.md
@@ -177,6 +178,11 @@ async function main() {
   });
   for (const { position, ...card } of DEFAULT_ABOUT_CARDS) {
     await db.aboutCard.upsert({ where: { position }, update: card, create: { position, ...card } });
+  }
+
+  // Направления Владелец ведёт сам: seed заводит начальные, только если их нет вовсе
+  if ((await db.direction.count()) === 0) {
+    await db.direction.createMany({ data: DEFAULT_DIRECTIONS.map((d, i) => ({ ...d, sortOrder: i })) });
   }
 
   const [tariffCount, trainerCount] = await Promise.all([db.tariff.count(), db.trainer.count()]);

@@ -7,6 +7,7 @@ const items = [
   { href: "/admin", label: "Обращения" },
   { href: "/admin/tariffs", label: "Тарифы" },
   { href: "/admin/trainers", label: "Тренеры" },
+  { href: "/admin/directions", label: "Направления" },
   { href: "/admin/photos", label: "Фото" },
   { href: "/admin/reviews", label: "Отзывы" },
   { href: "/admin/site", label: "Сайт" },

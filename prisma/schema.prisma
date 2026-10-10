@@ -259,3 +259,22 @@ model ContactClick {
 
   @@index([createdAt])
 }
+
+/// Направление — с чем помогают Тренеры зала. Список ведёт Владелец.
+model Direction {
+  id            String   @id @default(cuid())
+  titleRu       String
+  titleKk       String?
+  /// Короткое описание, до 200 символов
+  descriptionRu String?
+  descriptionKk String?
+  /// Иконка из набора — ключ из src/lib/domain/direction.ts
+  icon          String   @default("exercise")
+  /// Своё Фото вместо иконки: путь к файлу в хранилище
+  photo         String?
+  isVisible     Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([sortOrder])
+}

@@ -7,10 +7,10 @@ import type { SectionProps } from "@/components/site/sections/types";
 import { logo } from "@/lib/brand";
 
 // Шапка
-export function Header({ locale, t, s }: SectionProps) {
+export function Header({ locale, t, s, hasDirections = true }: SectionProps & { /** Есть ли на странице блок Направлений */ hasDirections?: boolean }) {
   // Ссылки только на те Блоки, которые Владелец оставил на сайте
   const links = (["about", "directions", "prices", "trainers", "contacts"] as const)
-    .filter((block) => s.show[block])
+    .filter((block) => s.show[block] && (block !== "directions" || hasDirections))
     .map((block): [string, string] => [`#${block}`, t.nav[block]]);
   return (
     <header className="fixed inset-x-0 top-0 z-50 w-full bg-background/85 shadow-header backdrop-blur-xl">
