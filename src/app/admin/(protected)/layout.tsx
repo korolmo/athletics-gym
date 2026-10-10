@@ -5,10 +5,13 @@ import { isAuthed } from "@/lib/auth";
 import { logout } from "../actions";
 import { AdminNav } from "./AdminNav";
 import { logo } from "@/lib/brand";
+import { countNewReviews } from "@/lib/services/reviews";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   // Только для интерфейса: сессию проверяют middleware и requireOwner() перед каждым чтением и записью данных
   if (!(await isAuthed())) redirect("/admin/login");
+  // Счётчик в меню — не повод ронять всю админку, если запрос не удался
+  const newReviews = await countNewReviews().catch(() => 0);
 
   return (
     <div className="min-h-dvh">
@@ -29,7 +32,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
             </form>
           </div>
         </div>
-        <AdminNav />
+        <AdminNav newReviews={newReviews} />
       </header>
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-6">{children}</div>
     </div>

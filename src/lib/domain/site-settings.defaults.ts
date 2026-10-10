@@ -31,6 +31,7 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   showPrices: true,
   showGallery: true,
   showTrainers: true,
+  showReviews: true,
   showContacts: true,
 };
 

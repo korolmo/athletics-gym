@@ -8,6 +8,7 @@ export const BLOCK_LABEL_RU: Record<BlockId, string> = {
   prices: "Цены",
   gallery: "Галерея",
   trainers: "Тренеры",
+  reviews: "Отзывы",
   contacts: "Контакты",
 };
 

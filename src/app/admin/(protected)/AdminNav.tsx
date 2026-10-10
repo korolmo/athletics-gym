@@ -7,14 +7,15 @@ const items = [
   { href: "/admin/tariffs", label: "Тарифы" },
   { href: "/admin/trainers", label: "Тренеры" },
   { href: "/admin/photos", label: "Фото" },
+  { href: "/admin/reviews", label: "Отзывы" },
   { href: "/admin/site", label: "Сайт" },
   { href: "/admin/account", label: "Аккаунт" },
 ];
 
-export function AdminNav() {
+export function AdminNav({ newReviews = 0 }: { /** Сколько Отзывов ждут решения Владельца */ newReviews?: number }) {
   const pathname = usePathname();
   return (
-    <nav className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 pb-2 text-sm">
+    <nav className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 pb-2 text-sm [&>a]:shrink-0 [&>a]:whitespace-nowrap">
       {items.map((item) => {
         const active = pathname.startsWith(item.href);
         return (
@@ -29,6 +30,16 @@ export function AdminNav() {
             }
           >
             {item.label}
+            {item.href === "/admin/reviews" && newReviews > 0 && (
+              <span
+                aria-label={`новых: ${newReviews}`}
+                className={`ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold ${
+                  active ? "bg-accent-ink text-accent" : "bg-accent text-accent-ink"
+                }`}
+              >
+                {newReviews}
+              </span>
+            )}
           </Link>
         );
       })}

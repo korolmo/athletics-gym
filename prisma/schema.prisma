@@ -50,6 +50,7 @@ model Hall {
   pricePoster String?
   tariffs     Tariff[]
   trainers    Trainer[]
+  reviews     Review[]
 }
 
 /// Тариф — позиция прайса Зала или Тренера (для персональных тренировок)
@@ -164,6 +165,7 @@ model SiteSettings {
   showGallery    Boolean  @default(true)
   showTrainers   Boolean  @default(true)
   showContacts   Boolean  @default(true)
+  showReviews    Boolean  @default(true)
   updatedAt      DateTime @updatedAt
 }
 
@@ -190,4 +192,55 @@ model GalleryPhoto {
   createdAt DateTime @default(now())
 
   @@index([sortOrder])
+}
+
+/// Источник Отзыва: где он был оставлен
+enum ReviewSource {
+  /// Форма на сайте
+  SITE
+  TWOGIS
+  INSTAGRAM
+  GOOGLE
+  OTHER
+}
+
+/// Статус Отзыва: на сайте видны только опубликованные
+enum ReviewStatus {
+  /// Оставлен Посетителем, ждёт решения Владельца
+  NEW
+  PUBLISHED
+  HIDDEN
+}
+
+/// Отзыв — реальное мнение клиента о зале. Придуманных Отзывов и демо-данных здесь нет.
+model Review {
+  id          String       @id @default(cuid())
+  authorName  String
+  /// Как написан: без перевода и без правок, показывается на обоих языках сайта
+  text        String
+  /// Оценка от 1 до 5
+  rating      Int
+  hall        Hall?        @relation(fields: [hallId], references: [id], onDelete: SetNull)
+  hallId      String?
+  source      ReviewSource
+  /// Ссылка на оригинал Отзыва — только https
+  sourceUrl   String?
+  /// Дата Отзыва: когда он был написан (у Отзывов с сайта — день отправки)
+  reviewedAt  DateTime
+  status      ReviewStatus @default(NEW)
+  /// Оставлен Посетителем через форму сайта: его текст Владелец не правит — только публикует, скрывает или удаляет
+  fromVisitor Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+
+  @@index([status, reviewedAt])
+}
+
+/// Принятая отправка Отзыва с сайта. Нужна для лимита отправок с одного адреса;
+/// IP хранится только в виде хэша, как в LoginAttempt.
+model ReviewSubmission {
+  id        String   @id @default(cuid())
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  @@index([ipHash, createdAt])
 }
