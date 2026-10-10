@@ -1,8 +1,7 @@
-// То, что Владелец не меняет: название, адрес сайта, ссылки 2ГИС и точка на карте.
+// То, что Владелец не меняет: название, ссылки 2ГИС и точка на карте. Адрес сайта — в переменной SITE_URL (src/lib/seo.ts).
 // Телефон, WhatsApp, Instagram, адрес, часы и рейтинг — в Настройках сайта (раздел «Сайт» админки).
 export const site = {
   name: "Athletic's Gym",
-  url: "https://athletics-gym.vercel.app",
   twoGis: "https://2gis.kz/kyzylorda/firm/70000001069365221",
   twoGisReviews: "https://2gis.kz/kyzylorda/firm/70000001069365221/tab/reviews",
   twoGisRoute:

@@ -7,7 +7,7 @@ export function MobileBar({ t, s }: SectionProps) {
   const trial = whatsappUrl(s.contacts.whatsapp, t.wa.trial);
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-surface-border bg-background/85 p-3 backdrop-blur-md md:hidden">
+      <div data-contact-source="mobile-bar" className="fixed inset-x-0 bottom-0 z-50 border-t border-surface-border bg-background/85 p-3 backdrop-blur-md md:hidden">
         <div className="flex gap-3">
           <a
             href={trial}
@@ -34,6 +34,7 @@ export function MobileBar({ t, s }: SectionProps) {
         rel="noopener noreferrer"
         title={`WhatsApp: ${s.contacts.whatsappDisplay}`}
         aria-label="WhatsApp"
+        data-contact-source="floating"
         className="group fixed bottom-6 right-6 z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-whatsapp-green text-white shadow-wa transition-all hover:scale-110 active:scale-95 md:flex"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" className="h-7 w-7 fill-current">

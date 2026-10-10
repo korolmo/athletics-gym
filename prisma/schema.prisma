@@ -244,3 +244,18 @@ model ReviewSubmission {
 
   @@index([ipHash, createdAt])
 }
+
+/// Обращение — нажатие Посетителя на кнопку связи с залом. Персональных данных нет:
+/// только Канал, место на сайте, язык страницы и время. IP и cookies не храним.
+model ContactClick {
+  id        String   @id @default(cuid())
+  /// Канал обращения: whatsapp | phone | instagram
+  channel   String
+  /// Источник обращения — место на сайте: hero, prices, trainer, contacts, mobile-bar и т. д.
+  source    String
+  /// Язык страницы: ru | kk
+  locale    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

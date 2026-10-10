@@ -20,7 +20,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
   const ratingBadge = ratingCountText({ count: t.hero.rating, words: t.rating.words }, s.rating.count);
   return (
     <>
-      <section className="hidden w-full border-b border-surface-border bg-surface-container-lowest/90 px-gutter py-2 text-body-sm text-text-muted backdrop-blur-md md:block">
+      <section data-contact-source="hero" className="hidden w-full border-b border-surface-border bg-surface-container-lowest/90 px-gutter py-2 text-body-sm text-text-muted backdrop-blur-md md:block">
         <div className="mx-auto flex max-w-site items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <span className={`${label} inline-flex items-center gap-1.5 text-primary-container`}>
