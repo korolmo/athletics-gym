@@ -10,6 +10,7 @@ import {
   normalizeInstagram,
   normalizePhoneDigits,
   parseRating,
+  mottoWords,
   splitMotto,
   toSiteContent,
 } from "./site-settings";
@@ -168,12 +169,27 @@ describe("рейтинг 2ГИС", () => {
 describe("девиз", () => {
   it("второе предложение выделяется", () => {
     expect(splitMotto("КҮШ. ШЫДАМДЫЛЫҚ. НӘТИЖЕ.")).toEqual({ before: "КҮШ.", accent: "ШЫДАМДЫЛЫҚ.", after: "НӘТИЖЕ." });
+    expect(splitMotto("СИЛА. ВЫНОСЛИВОСТЬ. РЕЗУЛЬТАТ.")).toEqual({ before: "СИЛА.", accent: "ВЫНОСЛИВОСТЬ.", after: "РЕЗУЛЬТАТ." });
+    expect(splitMotto(DEFAULT_SETTINGS.heroTitleRu).accent).toBe("ВЫНОСЛИВОСТЬ.");
     expect(splitMotto("Сила! Выносливость. Результат. Всегда.")).toEqual({
       before: "Сила!",
       accent: "Выносливость.",
       after: "Результат. Всегда.",
     });
     expect(splitMotto("Сила. Результат")).toEqual({ before: "Сила.", accent: "Результат", after: "" });
+  });
+
+  it("слова девиза по порядку: выделены слова второго предложения — по ним идёт появление по очереди", () => {
+    expect(mottoWords("СИЛА. ВЫНОСЛИВОСТЬ. РЕЗУЛЬТАТ.")).toEqual([
+      { word: "СИЛА.", accent: false, lineStart: false },
+      { word: "ВЫНОСЛИВОСТЬ.", accent: true, lineStart: true },
+      { word: "РЕЗУЛЬТАТ.", accent: false, lineStart: true },
+    ]);
+    // Новая строка на телефоне — только перед выделенной частью и перед текстом после неё
+    expect(mottoWords("Твой зал. В центре города. Всегда рядом. Ждём.").filter((w) => w.lineStart).map((w) => w.word)).toEqual(["В", "Всегда"]);
+    expect(mottoWords("Твой зал. В центре города. Всегда рядом.").map((w) => (w.accent ? w.word.toUpperCase() : w.word)).join(" ")).toBe("Твой зал. В ЦЕНТРЕ ГОРОДА. Всегда рядом.");
+    expect(mottoWords("Одна фраза без точки")).toEqual(["Одна", "фраза", "без", "точки"].map((word) => ({ word, accent: false, lineStart: false })));
+    expect(mottoWords("   ")).toEqual([]);
   });
 
   it("одно предложение — без выделения, текст не теряется", () => {
@@ -200,8 +216,11 @@ describe("Настройки сайта на языке страницы", () =>
   it("казахская версия: есть перевод — показываем его, пусто — русский", () => {
     const s = toSiteContent("kk", DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS);
     expect(s.hero.subtitle).toBe(DEFAULT_SETTINGS.heroSubtitleKk);
-    // У девиза казахского варианта нет — он и так на казахском
-    expect(s.hero.title).toBe(DEFAULT_SETTINGS.heroTitleRu);
+    // Девиз: на /ru — русский, на /kk — казахский
+    expect(s.hero.title).toBe("КҮШ. ШЫДАМДЫЛЫҚ. НӘТИЖЕ.");
+    expect(toSiteContent("ru", DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS).hero.title).toBe("СИЛА. ВЫНОСЛИВОСТЬ. РЕЗУЛЬТАТ.");
+    // Казахского девиза нет — показываем русский
+    expect(toSiteContent("kk", { ...DEFAULT_SETTINGS, heroTitleKk: null }, DEFAULT_ABOUT_CARDS).hero.title).toBe(DEFAULT_SETTINGS.heroTitleRu);
 
     const blank = toSiteContent("kk", { ...DEFAULT_SETTINGS, addressKk: "   " }, [
       { ...DEFAULT_ABOUT_CARDS[0], titleKk: null },
@@ -258,9 +277,11 @@ describe("начальные значения и миграция для бое�
   const sql = fs.readFileSync("prisma/migrations/20261009010000_site_settings/migration.sql", "utf8");
   const quoted = (v: string | number) => (typeof v === "number" ? String(v) : `'${v.replace(/'/g, "''")}'`);
 
-  it("миграция кладёт в базу те же Настройки сайта, что и seed", () => {
+  it("миграция кладёт в базу те же Настройки сайта, что и seed (кроме девиза: его начальное значение сменили на этапе 7)", () => {
     for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
       if (value === null || typeof value === "boolean") continue;
+      // Миграция уже применена к боевой базе и не переписывается: девиз там прежний, меняет его Владелец
+      if (key === "heroTitleRu" || key === "heroTitleKk") continue;
       expect(sql, key).toContain(quoted(value));
     }
   });

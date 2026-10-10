@@ -33,7 +33,13 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
   return (
     <html lang={locale} className={siteFontVars}>
-      <body className="bg-background font-site text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">{children}</body>
+      <body className="bg-background font-site text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">
+        {/* Без скриптов нижнюю панель на телефоне некому выдвинуть — показываем её сразу */}
+        <noscript>
+          <style>{'[data-contact-source="mobile-bar"]{transform:none!important;animation:none!important}'}</style>
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }

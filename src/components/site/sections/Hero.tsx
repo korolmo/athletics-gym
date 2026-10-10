@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { site, whatsappUrl } from "@/lib/site";
-import { splitMotto } from "@/lib/domain/site-settings";
+import { mottoWords } from "@/lib/domain/site-settings";
+import { CountNumber, CountText } from "@/components/site/Count";
 import { ratingCountText } from "@/lib/presentation/rating";
 import { AirSym, CallSym, FitnessCenterSym, LocationOnSym, ScheduleSym } from "@/components/symbols";
 import { container, label } from "@/components/ui/styles";
@@ -9,7 +10,7 @@ import { logoWomen } from "@/lib/brand";
 
 // Полоса с адресом и первый экран
 export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруженный Владельцем; пусто — картинка по умолчанию */ photo: string | null }) {
-  const motto = splitMotto(s.hero.title);
+  const motto = mottoWords(s.hero.title);
   // Карточки «О зале» 3 и 4 (кондиционеры и режим) повторяются на первом экране
   const stats = [
     { Icon: ScheduleSym, title: s.about[3].title, text: s.about[3].text },
@@ -59,30 +60,40 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-surface-card px-3.5 py-1.5 shadow-xs"
             >
-              <span className="text-[13px] text-primary-container">★ {s.rating.value}</span>
+              <span className="text-[13px] text-primary-container">
+                ★ <CountNumber value={Number(s.rating.value.replace(",", "."))} decimals={1} />
+              </span>
               <span className="text-surface-border">/</span>
-              <span className={`${label} tracking-wider text-text-primary`}>{ratingBadge}</span>
+              <span className={`${label} tracking-wider text-text-primary`}>
+                <CountText text={ratingBadge} n={s.rating.count} />
+              </span>
             </a>
 
             <div className="mt-2 flex flex-col gap-1">
               <span className={`${label} tracking-widest text-primary-container`}>{t.hero.kicker}</span>
               <h1 className="text-display-hero-mobile uppercase leading-[1.02] tracking-tight text-text-primary md:text-display-hero md:leading-[1.02] md:tracking-tight">
-                {motto.before}
-                {motto.accent && (
-                  <>
-                    {" "}
-                    <span className="bg-linear-to-r from-primary-container to-surface-tint bg-clip-text text-transparent">
-                      {motto.accent}
+                {/* Слова появляются по очереди снизу; второе предложение — жёлтое, с лёгким «ударом».
+                    На телефоне каждая часть девиза — с новой строки: число строк одно и то же с любым шрифтом */}
+                {motto.map((w, i) => (
+                  <span key={i}>
+                    {i > 0 && " "}
+                    {w.lineStart && <br className="md:hidden" />}
+                    <span
+                      style={{ "--i": i } as React.CSSProperties}
+                      className={`motto-word ${
+                        w.accent ? "motto-accent bg-linear-to-r from-primary-container to-surface-tint bg-clip-text text-transparent" : ""
+                      }`}
+                    >
+                      {w.word}
                     </span>
-                  </>
-                )}
-                {motto.after && <> {motto.after}</>}
+                  </span>
+                ))}
               </h1>
             </div>
 
             <p className="max-w-[580px] pt-1 text-body-lg leading-relaxed text-text-muted lg:min-h-[82px]">{s.hero.subtitle}</p>
 
-            <div className="flex w-full flex-wrap items-center gap-4 pt-3 sm:w-auto lg:flex-col lg:items-start">
+            <div className="hero-late flex w-full flex-wrap items-center gap-4 pt-3 sm:w-auto lg:flex-col lg:items-start">
               <a
                 href={whatsappUrl(s.contacts.whatsapp, t.wa.trial)}
                 target="_blank"
@@ -122,7 +133,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
                 alt=""
                 fill
                 sizes="(min-width: 1024px) 500px, 100vw"
-                className="object-cover"
+                className="hero-zoom object-cover"
                 priority
               />
               <div className="absolute inset-0 bg-linear-to-t from-background via-surface-dim/40 to-transparent" />

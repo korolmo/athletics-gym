@@ -9,6 +9,7 @@ import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
 import { site } from "@/lib/site";
 import { logoIconUrl } from "@/lib/brand";
 import { ContactTracker } from "@/components/site/ContactTracker";
+import { Motion } from "@/components/site/Motion";
 import { mediaUrl } from "@/lib/storage/client";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
@@ -20,6 +21,7 @@ import {
   Gallery,
   Header,
   Hero,
+  Marquee,
   MobileBar,
   Prices,
   Reviews,
@@ -121,9 +123,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <ContactTracker locale={locale} />
+      <Motion />
       <Header {...props} hasDirections={directions.length > 0} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} photo={photos.hero} />
+        <Marquee words={t.marquee} />
         {s.show.about && <About {...props} />}
         {/* Без видимых Направлений блока нет */}
         {s.show.directions && directions.length > 0 && <Directions {...props} directions={directions} />}

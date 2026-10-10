@@ -13,7 +13,9 @@ export function Header({ locale, t, s, hasDirections = true }: SectionProps & { 
     .filter((block) => s.show[block] && (block !== "directions" || hasDirections))
     .map((block): [string, string] => [`#${block}`, t.nav[block]]);
   return (
-    <header className="fixed inset-x-0 top-0 z-50 w-full bg-background/85 shadow-header backdrop-blur-xl">
+    <header data-site-header className="fixed inset-x-0 top-0 z-50 w-full">
+      {/* Тёмная подложка с размытием — отдельным слоем: в самом верху страницы скрипт движения её гасит (opacity) */}
+      <div data-header-bg aria-hidden="true" className="absolute inset-0 -z-10 bg-background/85 shadow-header backdrop-blur-xl" />
       <div className={`${container} flex h-16 items-center justify-between gap-3 md:h-20 md:gap-6`}>
         <a href="#top" className="flex min-w-0 items-center gap-2 md:gap-4">
           <Image src={logo} alt={site.name} width={32} height={32} className="h-8 w-8 shrink-0 object-contain" priority />

@@ -5,6 +5,7 @@ import { container, label, sectionY } from "@/components/ui/styles";
 import { SectionHead } from "@/components/ui/SectionHead";
 import type { SectionProps } from "@/components/site/sections/types";
 import { ReviewsBoard, type ReviewView } from "@/components/site/reviews/ReviewsBoard";
+import { CountNumber, CountText } from "@/components/site/Count";
 
 // Отзывы: только настоящие и только опубликованные Владельцем; рядом — рейтинг зала в 2ГИС.
 // Пока опубликованных нет, пустую секцию не показываем: остаются рейтинг 2ГИС и кнопка «Оставить отзыв».
@@ -22,10 +23,12 @@ export function Reviews({ locale, t, s, reviews, formToken }: SectionProps & { r
       }`}
     >
       <span className="text-headline-md text-text-primary">
-        <span className="text-star">★</span> {s.rating.value}
+        <span className="text-star">★</span> <CountNumber value={Number(s.rating.value.replace(",", "."))} decimals={1} />
       </span>
       <span className="flex flex-col">
-        <span className={`${label} text-text-primary`}>{ratingCountText(t.rating, s.rating.count)}</span>
+        <span className={`${label} text-text-primary`}>
+          <CountText text={ratingCountText(t.rating, s.rating.count)} n={s.rating.count} />
+        </span>
         <span className="inline-flex items-center gap-1 text-body-sm text-text-muted">
           {t.rating.read}
           <OpenInNewSym className="h-3.5 w-3.5" />

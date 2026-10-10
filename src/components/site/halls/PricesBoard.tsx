@@ -73,7 +73,7 @@ export function PricesBoard({
       )}
       {/* Карточка занимает пять строк общей сетки (subgrid): номер и бейдж, заголовок, цена «от …»,
           список, кнопка. Поэтому в ряду всё стоит на одной линии, а кнопки — на одной высоте внизу. */}
-      <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div key={hall} className="hall-fade grid w-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {CATEGORY_ORDER.map((cat: Category, i) => {
           const list = own.filter((x) => x.category === cat);
           const personal = cat === "PERSONAL";

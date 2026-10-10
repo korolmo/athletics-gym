@@ -57,7 +57,7 @@ export function TrainersBoard({
         // В ряду всё стоит на одной линии; строка описания общая: место под ним остаётся и у тех, у кого его нет,
         // а если описания нет ни у кого в ряду — строка схлопывается в ноль. Поэтому зазор между строками сетки
         // нулевой (иначе пустая строка не станет ниже зазора), а расстояние между рядами карточек — их нижний отступ.
-        <div className="-mb-6 grid grid-cols-1 gap-x-6 gap-y-0 md:grid-cols-2 lg:grid-cols-3">
+        <div key={hall} className="hall-fade -mb-6 grid grid-cols-1 gap-x-6 gap-y-0 md:grid-cols-2 lg:grid-cols-3">
           {list.map((tr) => (
             <article
               key={tr.id}

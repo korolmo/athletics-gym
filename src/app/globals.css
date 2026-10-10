@@ -104,3 +104,156 @@ section[id] {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ——— Движение (этап 7) ———
+   Только transform, opacity и их родственники (translate, scale): раскладка от анимаций не меняется.
+   Всё под prefers-reduced-motion: no-preference — тем, кто просил меньше движения, сайт показывается сразу и неподвижно.
+   Без JavaScript контент виден сразу: скрытые до появления состояния включает только скрипт,
+   а нижнюю панель на телефоне возвращает на место стиль из <noscript> в layout.tsx. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Первый экран: слова девиза по очереди снизу, жёлтое — с лёгким «ударом»; вся сцена — не дольше 0.8 с */
+  .motto-word {
+    display: inline-block;
+    animation: motto-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 120ms);
+  }
+  .motto-accent {
+    animation-name: motto-hit;
+  }
+  .hero-late {
+    animation: motto-in 0.4s ease-out 0.4s both;
+  }
+  .hero-zoom {
+    animation: hero-zoom 12s ease-out both;
+  }
+  @keyframes motto-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.4em);
+    }
+  }
+  @keyframes motto-hit {
+    0% {
+      opacity: 0;
+      transform: translateY(0.4em) scale(1.08);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+  }
+  @keyframes hero-zoom {
+    to {
+      transform: scale(1.06);
+    }
+  }
+
+  /* Бегущая строка: две одинаковые половины, сдвиг ровно на одну — шва нет; при наведении стоит */
+  .marquee-track {
+    animation: marquee 11s linear infinite;
+  }
+  /* С планшета половина строки длиннее (восемь повторов вместо трёх) — и идёт дольше, скорость та же */
+  @media (min-width: 48rem) {
+    .marquee-track {
+      animation-duration: 28s;
+    }
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* Появление при прокрутке: пометку ставит скрипт и только тому, что ещё ниже экрана */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  /* Двойной селектор — чтобы правило наведения ниже (transition у карточек) не отменило проявление */
+  [data-reveal][data-reveal="in"] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.5s ease,
+      transform 0.5s ease;
+    transition-delay: calc(var(--reveal-i, 0) * 70ms);
+  }
+
+  /* Смена Зала в «Ценах» и «Тренерах»: карточки проявляются */
+  .hall-fade {
+    animation: hall-fade 0.3s ease both;
+  }
+  @keyframes hall-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Шапка: в самом верху страницы прозрачная, после 40 px прокрутки — тёмная с размытием */
+  [data-header-bg] {
+    transition: opacity 0.25s ease;
+  }
+
+  /* Телефон: нижняя панель выезжает после первого экрана и один раз «кивает» */
+  [data-contact-source="mobile-bar"] {
+    transform: translateY(110%);
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  [data-contact-source="mobile-bar"][data-shown] {
+    transform: none;
+  }
+  /* Скрипт движения не запустился — панель с главной кнопкой всё равно появляется сама */
+  html:not([data-motion]) [data-contact-source="mobile-bar"] {
+    animation: bar-safety 0.35s ease 4s forwards;
+  }
+  .bar-nod > div {
+    animation: bar-nod 0.6s ease 1;
+  }
+  @keyframes bar-safety {
+    to {
+      transform: none;
+    }
+  }
+  @keyframes bar-nod {
+    30% {
+      transform: translateY(-6px);
+    }
+    60% {
+      transform: translateY(2px);
+    }
+  }
+}
+[data-site-header][data-top] [data-header-bg] {
+  opacity: 0;
+}
+
+/* Наведение мышью: карточка приподнимается на 4 px и получает жёлтую рамку со свечением; фото чуть крупнее внутри рамки */
+[data-slot="frame"] {
+  overflow: hidden;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  [data-card],
+  #reviews article {
+    transition: translate 0.2s ease;
+  }
+  [data-card]:hover,
+  #reviews article:hover {
+    translate: 0 -4px;
+    box-shadow:
+      0 0 0 1px var(--color-primary-container),
+      0 14px 34px -14px rgb(245 230 66 / 0.4);
+  }
+  [data-slot="frame"] img,
+  #gallery figure img,
+  #gallery .group img {
+    transition: scale 0.5s ease;
+  }
+  [data-card]:hover [data-slot="frame"] img,
+  #gallery figure:hover img,
+  #gallery .group:hover img {
+    scale: 1.04;
+  }
+}
