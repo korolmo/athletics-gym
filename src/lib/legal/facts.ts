@@ -22,11 +22,6 @@ export const LEGAL_FACTS = {
   localeCookieYears: LOCALE_COOKIE_MAX_AGE_SEC / (365 * DAY_SEC),
   sessionCookie: SESSION_COOKIE,
   sessionCookieDays: SESSION_MAX_AGE_SEC / DAY_SEC,
-  /**
-   * Срок ответа на обращение человека о его данных, в рабочих днях: статья 25 Закона РК
-   * «О персональных данных и их защите». Число не из кода — его сверяет юрист.
-   */
-  responseWorkDays: 3,
 } as const;
 
 /** 1 → «one», 2–4 → «few», 5+ → «many»: «1 год», «2 года», «7 дней». */

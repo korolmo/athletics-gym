@@ -214,6 +214,21 @@ describe("политика говорит то же, что делает код"
     }
   });
 
+  it("место хранения по умолчанию названо прямо, а о хостинг-провайдерах сказано и в разделе о передаче данных", () => {
+    expect(DEFAULT_DATA_LOCATION.ru).toBe("на серверах Vercel и Supabase в Германии (ЕС)");
+    const section = (id: string, locale: Locale) => legalDocText({ ...build("privacy", locale), sections: build("privacy", locale).sections.filter((s) => s.id === id) }, "");
+    expect(section("storage", "ru")).toContain("Данные хранятся на серверах Vercel и Supabase в Германии (ЕС).");
+    expect(section("sharing", "ru")).toContain("хранят данные по нашему поручению");
+    expect(section("sharing", "kk")).toContain("біздің тапсырмамыз бойынша");
+    for (const locale of locales) expect(hrefs(build("privacy", locale))).toContain("#storage");
+  });
+
+  it("срок ответа на обращение — по закону, без своего числа дней", () => {
+    expect(privacy).toContain("Ответим в сроки, установленные законодательством Республики Казахстан.");
+    expect(privacy).not.toMatch(/рабочих дн|рабочего дня/);
+    expect(text(build("privacy", "kk"))).not.toMatch(/жұмыс күні/);
+  });
+
   it("и нет того, чего сайт не делает", () => {
     for (const absent of [/регистрац(ия|ии) на сайте (есть|обязательна)/i, /Google Analytics|Яндекс\.?Метрик|Facebook Pixel/i, /рассылк/i, /оплат[аы] (картой|онлайн)/i, /паспорт|ИИН посетителя/i]) {
       expect(privacy).not.toMatch(absent);
