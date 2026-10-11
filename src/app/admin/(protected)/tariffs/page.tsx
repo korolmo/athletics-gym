@@ -66,7 +66,7 @@ export default async function TariffsPage({
           <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
             Цены на персональные тренировки — у каждого тренера свои ({trainerTariffCount} в этом зале). Они правятся в
             разделе{" "}
-            <Link href={`/admin/trainers?hall=${hall}`} className="text-accent hover:underline">
+            <Link href={`/admin/trainers?hall=${hall}`} className="text-accent underline underline-offset-2">
               Тренеры
             </Link>
             .

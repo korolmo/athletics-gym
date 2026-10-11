@@ -52,7 +52,7 @@ export function Prices({
             href={whatsappUrl(s.contacts.whatsapp, t.wa.price)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-whatsapp-green px-6 text-[13px] uppercase text-white shadow-md transition-all hover:brightness-105 sm:w-auto"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-whatsapp-green px-6 text-[13px] uppercase text-on-whatsapp shadow-md transition-all hover:brightness-105 sm:w-auto"
           >
             <span>{t.cta.askPrice}</span>
           </a>

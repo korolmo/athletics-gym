@@ -41,7 +41,7 @@ export function Women({ t, s, photo }: SectionProps & { /** Фото Женск�
                   href={whatsappUrl(s.contacts.whatsapp, t.wa.trial)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-12 items-center gap-2 rounded-xl bg-whatsapp-green px-6 text-[14px] text-white shadow-md transition-all hover:brightness-105"
+                  className="flex h-12 items-center gap-2 rounded-xl bg-whatsapp-green px-6 text-[14px] text-on-whatsapp shadow-md transition-all hover:brightness-105"
                 >
                   <ChatSym className="h-[18px] w-[18px]" />
                   <span>{t.cta.trial}</span>

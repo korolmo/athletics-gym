@@ -1,30 +1,40 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import type { Locale } from "@/lib/i18n";
 import { REVIEW_LIMITS } from "@/lib/domain/review";
 import { HALLS } from "@/lib/domain/tariff";
-import { submitReview, type ReviewFormState } from "@/app/[locale]/actions";
+import { openReviewForm, submitReview, type ReviewFormState } from "@/app/[locale]/actions";
 
 const field =
-  "w-full rounded-xl bg-surface-container px-4 py-3 text-body-md text-text-primary outline-none ring-1 ring-surface-border transition placeholder:text-text-muted/60 focus:ring-2 focus:ring-primary-container";
+  "w-full rounded-xl bg-surface-container px-4 py-3 text-body-md text-text-primary outline-none ring-1 ring-surface-border transition placeholder:text-text-muted focus:ring-2 focus:ring-primary-container";
 const labelCls = "mb-1.5 block text-body-sm text-text-muted";
 
 /** Форма «Оставить отзыв»: имя, оценка, текст и Зал по желанию. Телефон и почту не спрашиваем. */
 export function ReviewForm({
   t,
   locale,
-  formToken,
   onCancel,
 }: {
   t: Dictionary;
   locale: Locale;
-  /** Подписанная метка времени выдачи страницы — для проверки «не быстрее трёх секунд» */
-  formToken: string;
   onCancel: () => void;
 }) {
   const [state, action, pending] = useActionState<ReviewFormState, FormData>(submitReview, { status: "idle" });
+  // Подписанная метка времени открытия формы — для проверки «не быстрее трёх секунд». Её выдаёт сервер, когда форма
+  // открылась; пока метки нет, отправить нельзя. Не выдал — говорим, что отправка сейчас недоступна
+  const [formToken, setFormToken] = useState<string | null>("");
+  useEffect(() => {
+    let live = true;
+    openReviewForm().then(
+      (token) => live && setFormToken(token),
+      () => live && setFormToken(null),
+    );
+    return () => {
+      live = false;
+    };
+  }, []);
   const f = t.reviews.form;
   const typed = state.status === "error" ? state.values : undefined;
 
@@ -42,7 +52,7 @@ export function ReviewForm({
       <p className="mt-1 text-body-sm text-text-muted">{f.note}</p>
 
       <input type="hidden" name="locale" value={locale} />
-      <input type="hidden" name="formToken" value={formToken} />
+      <input type="hidden" name="formToken" value={formToken ?? ""} />
       {/* Поле-ловушка: людям не видно и с клавиатуры недоступно; заполняют его только роботы */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
@@ -82,7 +92,7 @@ export function ReviewForm({
             Звёзды идут справа налево, чтобы одним CSS подсветить выбранную и все «младшие» */}
         <div className="flex flex-row-reverse justify-end gap-1">
           {[5, 4, 3, 2, 1].map((n) => (
-            <label key={n} className="peer cursor-pointer text-surface-border has-[:checked]:text-star peer-has-[:checked]:text-star">
+            <label key={n} className="peer cursor-pointer text-text-muted/70 has-[:checked]:text-star peer-has-[:checked]:text-star">
               <input
                 type="radio"
                 name="rating"
@@ -114,9 +124,9 @@ export function ReviewForm({
         <span className="mt-1 block text-[12px] leading-4 text-text-muted">{f.textHint}</span>
       </label>
 
-      {state.status === "error" && (
+      {(state.status === "error" || formToken === null) && (
         <p role="alert" className="mt-4 rounded-xl bg-red-500/10 px-4 py-3 text-body-sm text-red-300">
-          {t.reviews.errors[state.error]}
+          {t.reviews.errors[state.status === "error" ? state.error : "unavailable"]}
         </p>
       )}
 
@@ -130,7 +140,7 @@ export function ReviewForm({
         </button>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !formToken}
           className="flex h-12 items-center justify-center rounded-xl bg-primary-container px-6 text-[14px] font-bold uppercase text-on-primary shadow-md transition-all hover:brightness-95 disabled:opacity-60"
         >
           {pending ? f.sending : f.submit}

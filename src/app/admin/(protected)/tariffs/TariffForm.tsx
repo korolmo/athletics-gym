@@ -33,7 +33,7 @@ export type TariffInput = {
 };
 
 const field =
-  "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted/60 focus:border-accent";
+  "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
 const labelCls = "mb-1.5 block text-sm text-muted";
 const hint = "mt-1 block text-xs text-muted";
 

@@ -7,7 +7,7 @@ import { EyeIcon } from "@/components/icons";
 import { logo } from "@/lib/brand";
 
 const input =
-  "w-full rounded-xl border border-line bg-card px-4 py-3.5 text-base outline-none transition placeholder:text-muted/60 focus:border-accent";
+  "w-full rounded-xl border border-line bg-card px-4 py-3.5 text-base outline-none transition placeholder:text-muted focus:border-accent";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);

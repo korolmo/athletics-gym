@@ -1,5 +1,6 @@
 export { Header } from "./Header";
 export { Hero } from "./Hero";
+export { Marquee } from "./Marquee";
 export { About } from "./About";
 export { Directions } from "./Directions";
 export { Women } from "./Women";

@@ -9,7 +9,7 @@ export function TariffRow({ t }: { t: TariffShape & { id: string; isVisible: boo
   const tags = tariffTagsRu(t);
   const name = tariffLabelRu(t);
   return (
-    <li className={`flex items-center gap-3 rounded-2xl bg-card p-4 ${t.isVisible ? "" : "opacity-60"}`}>
+    <li className={`flex items-center gap-3 rounded-2xl bg-card p-4 ${t.isVisible ? "" : "opacity-80"}`}>
       <div className="min-w-0 flex-1">
         <div className="font-semibold leading-snug">{name}</div>
         {tags.length > 0 && <div className="mt-0.5 text-sm text-muted">{tags.join(" · ")}</div>}

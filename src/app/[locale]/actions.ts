@@ -1,7 +1,7 @@
 "use server";
 
 import { currentIpHash } from "@/lib/auth/login-limit";
-import { readFormToken } from "@/lib/reviews/form-token";
+import { issueFormToken, readFormToken } from "@/lib/reviews/form-token";
 import { parseVisitorReview, type VisitorReviewError } from "@/lib/validation/review";
 import { checkVisitorSubmission, createVisitorReview } from "@/lib/services/reviews";
 
@@ -15,6 +15,14 @@ export type ReviewFormState =
   | { status: "sent" }
   /** При ошибке возвращаем введённое, чтобы Посетителю не пришлось набирать отзыв заново */
   | { status: "error"; error: ReviewError; values: Record<string, string> };
+
+/**
+ * Метка времени для формы «Оставить отзыв». Форма просит её в момент открытия: страница лежит в кэше,
+ * и метка, запечённая в неё, была бы одной на всех и устаревала бы. Отсчёт «не быстрее трёх секунд» идёт от открытия формы.
+ */
+export async function openReviewForm(): Promise<string> {
+  return issueFormToken(process.env.AUTH_SECRET);
+}
 
 export async function submitReview(_prev: ReviewFormState, fd: FormData): Promise<ReviewFormState> {
   const field = (name: string) => String(fd.get(name) ?? "");

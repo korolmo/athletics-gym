@@ -4,11 +4,11 @@ import { listPublishedReviews } from "@/lib/services/reviews";
 import { listVisibleDirections } from "@/lib/services/directions";
 import { toDirectionViews } from "@/lib/domain/direction";
 import { isSafeSourceUrl } from "@/lib/domain/review";
-import { issueFormToken } from "@/lib/reviews/form-token";
 import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
 import { site } from "@/lib/site";
 import { logoIconUrl } from "@/lib/brand";
 import { ContactTracker } from "@/components/site/ContactTracker";
+import { Motion } from "@/components/site/Motion";
 import { mediaUrl } from "@/lib/storage/client";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
@@ -20,6 +20,7 @@ import {
   Gallery,
   Header,
   Hero,
+  Marquee,
   MobileBar,
   Prices,
   Reviews,
@@ -28,8 +29,11 @@ import {
 } from "@/components/site/sections";
 import type { TariffView, TrainerView } from "@/components/site/halls/types";
 
-// Данные меняет Владелец — всегда читаем свежие из базы
-export const dynamic = "force-dynamic";
+// Страница статическая: собирается при первом запросе и лежит в кэше. Данные меняет Владелец —
+// каждое сохранение в админке сбрасывает кэш обоих языков (revalidateSite), поэтому правка видна сразу.
+// Час — запасной срок на случай, если сброс не дошёл. Всё, что зависит от запроса (метка формы отзыва,
+// счётчик Обращений), идёт отдельными запросами и в страницу не запекается.
+export const revalidate = 3600;
 
 type TariffRow = {
   id: string;
@@ -121,9 +125,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <ContactTracker locale={locale} />
+      <Motion />
       <Header {...props} hasDirections={directions.length > 0} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} photo={photos.hero} />
+        <Marquee words={t.marquee} />
         {s.show.about && <About {...props} />}
         {/* Без видимых Направлений блока нет */}
         {s.show.directions && directions.length > 0 && <Directions {...props} directions={directions} />}
@@ -132,9 +138,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         {s.show.gallery && <Gallery {...props} photos={gallery} />}
         {s.show.trainers && <Trainers {...props} trainers={trainers} />}
         {/* Придуманных и демо-отзывов нет: пока опубликованных нет, от Блока остаются рейтинг 2ГИС и «Оставить отзыв» */}
-        {s.show.reviews && (
-          <Reviews {...props} reviews={reviews} formToken={issueFormToken(process.env.AUTH_SECRET)} />
-        )}
+        {s.show.reviews && <Reviews {...props} reviews={reviews} />}
         {s.show.contacts && <Contacts {...props} />}
       </main>
       <Footer {...props} />

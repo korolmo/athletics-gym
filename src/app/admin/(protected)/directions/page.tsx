@@ -41,7 +41,7 @@ export default async function DirectionsPage({ searchParams }: { searchParams: P
           {directions.map((d, i) => {
             const Icon = DIRECTION_ICON[isDirectionIcon(d.icon) ? d.icon : DIRECTION_ICONS[0]];
             return (
-              <li key={d.id} className={`rounded-2xl bg-card p-3 ${d.isVisible ? "" : "opacity-60"}`}>
+              <li key={d.id} className={`rounded-2xl bg-card p-3 ${d.isVisible ? "" : "opacity-80"}`}>
                 <div className="flex items-center gap-3">
                   <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-bg text-accent">
                     {d.photoUrl ? <Image src={d.photoUrl} alt="" fill sizes="48px" className="object-cover" /> : <Icon className="h-6 w-6" />}

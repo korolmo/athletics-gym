@@ -203,6 +203,21 @@ export function formatRating(tenths: number): string {
 // ——— Девиз ———
 
 /**
+ * Слова девиза по порядку — для появления по очереди; у слов второго предложения пометка «выделить».
+ * `lineStart` — слово открывает выделенную часть или текст после неё: на телефоне с него начинается новая строка,
+ * поэтому число строк не зависит от того, успел ли загрузиться шрифт (иначе девиз «прыгает» при подмене шрифта).
+ */
+export function mottoWords(title: string): { word: string; accent: boolean; lineStart: boolean }[] {
+  const { before, accent, after } = splitMotto(title);
+  const words = (text: string, isAccent: boolean, isNewPart: boolean) =>
+    text
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word, i) => ({ word, accent: isAccent, lineStart: isNewPart && i === 0 }));
+  return [...words(before, false, false), ...words(accent, true, true), ...words(after, false, true)];
+}
+
+/**
  * Девиз на первом экране: второе предложение выделено цветом («КҮШ. ШЫДАМДЫЛЫҚ. НӘТИЖЕ.»).
  * Если предложение одно — выделять нечего, весь девиз идёт обычным цветом.
  */
