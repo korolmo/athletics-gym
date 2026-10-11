@@ -60,13 +60,15 @@ export function Women({ t, s, photo }: SectionProps & { /** Фото Женск�
                   />
                 </div>
               ) : (
-              <div className="relative flex h-56 w-56 items-center justify-center rounded-full bg-surface-dim p-4 shadow-inner">
+              // Логотип Женского зала без подложки: тонкое жёлтое кольцо с отступом и мягкое свечение позади
+              <div className="relative flex h-[204px] w-[204px] items-center justify-center rounded-full ring-2 ring-primary-container/40 lg:h-[244px] lg:w-[244px]">
+                <span aria-hidden="true" className="women-glow absolute inset-0 rounded-full bg-primary-container/20 blur-[50px]" />
                 <Image
                   src={logoWomen}
                   alt={t.women.title}
-                  width={176}
-                  height={176}
-                  className="h-44 w-44 rounded-full object-contain shadow-lg"
+                  width={220}
+                  height={220}
+                  className="relative h-[180px] w-[180px] rounded-full object-contain lg:h-[220px] lg:w-[220px]"
                 />
                 <div className={`${label} absolute -bottom-2 rounded-full bg-primary-container px-3 py-1 text-on-primary shadow-md`}>
                   {t.women.title}
