@@ -63,7 +63,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
             const shown = settings[SHOW_COLUMN[block]];
             const name = BLOCK_LABEL_RU[block];
             return (
-              <li key={block} className={`flex items-center gap-3 rounded-2xl bg-card p-4 ${shown ? "" : "opacity-60"}`}>
+              <li key={block} className={`flex items-center gap-3 rounded-2xl bg-card p-4 ${shown ? "" : "opacity-80"}`}>
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold leading-snug">{name}</div>
                   <div className="mt-0.5 text-sm text-muted">{shown ? BLOCK_NOTE[block] : "Скрыт с сайта"}</div>

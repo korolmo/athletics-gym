@@ -42,7 +42,7 @@ export default async function TrainersPage({
           {trainers.map((tr) => {
             const min = tr.tariffs.length ? Math.min(...tr.tariffs.map((t) => t.price)) : null;
             return (
-              <li key={tr.id} className={`flex items-center gap-3 rounded-2xl bg-card p-3 ${tr.isVisible ? "" : "opacity-60"}`}>
+              <li key={tr.id} className={`flex items-center gap-3 rounded-2xl bg-card p-3 ${tr.isVisible ? "" : "opacity-80"}`}>
                 {tr.photo ? (
                   <Image
                     src={tr.photo}

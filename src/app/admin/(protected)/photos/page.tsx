@@ -89,7 +89,7 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
         <h2 className={h2}>Плакаты тренеров</h2>
         <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
           Плакат тренера меняется на его странице в разделе{" "}
-          <Link href="/admin/trainers" className="text-accent hover:underline">
+          <Link href="/admin/trainers" className="text-accent underline underline-offset-2">
             Тренеры
           </Link>
           .
@@ -114,7 +114,7 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
             {gallery.map((p, i) => {
               const name = p.captionRu ?? "Без подписи";
               return (
-                <li key={p.id} className={`rounded-2xl bg-card p-3 ${p.isVisible ? "" : "opacity-60"}`}>
+                <li key={p.id} className={`rounded-2xl bg-card p-3 ${p.isVisible ? "" : "opacity-80"}`}>
                   <div className="flex items-center gap-3">
                     <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-bg">
                       {p.url && <Image src={p.url} alt="" fill sizes="80px" className="object-cover" />}

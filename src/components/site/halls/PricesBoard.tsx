@@ -18,7 +18,7 @@ import { FromPrice } from "@/components/site/halls/FromPrice";
 // и остальные кнопки WhatsApp на сайте; «Выбрать тренера» — жёлтая, потому что ведёт не в WhatsApp, а к блоку Тренеров.
 const actionBase =
   "flex h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-[14px] uppercase shadow-md transition-all";
-const actionWhatsApp = `${actionBase} bg-whatsapp-green text-white hover:brightness-105`;
+const actionWhatsApp = `${actionBase} bg-whatsapp-green text-on-whatsapp hover:brightness-105`;
 const actionTrainers = `${actionBase} bg-primary-container text-on-primary hover:brightness-95 active:translate-y-px`;
 
 /** Карточки цен по Категориям для выбранного Зала. */

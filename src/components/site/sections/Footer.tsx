@@ -44,7 +44,7 @@ export function Footer({ t, s }: SectionProps) {
               2ГИС
             </a>
           </p>
-          <p className={`${label} tracking-widest text-text-muted/60`}>{s.hero.title}</p>
+          <p className={`${label} tracking-widest text-text-muted`}>{s.hero.title}</p>
         </div>
       </div>
     </footer>

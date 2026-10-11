@@ -1,12 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import type { Locale } from "@/lib/i18n";
 import { REVIEWS_FIRST, REVIEW_COLLAPSE_AT, type ReviewSource } from "@/lib/domain/review";
 import { OpenInNewSym } from "@/components/symbols";
 import { label } from "@/components/ui/styles";
-import { ReviewForm } from "@/components/site/reviews/ReviewForm";
+
+// Форма нужна единицам из Посетителей — её код подгружается по нажатию «Оставить отзыв», а не вместе со страницей
+const ReviewForm = dynamic(() => import("@/components/site/reviews/ReviewForm").then((m) => m.ReviewForm));
 
 export type ReviewView = {
   id: string;
@@ -76,13 +79,11 @@ export function ReviewsBoard({
   t,
   locale,
   reviews,
-  formToken,
   rating,
 }: {
   t: Dictionary;
   locale: Locale;
   reviews: ReviewView[];
-  formToken: string;
   /** Рейтинг 2ГИС: когда опубликованных Отзывов нет, он стоит в одной строке с кнопкой «Оставить отзыв» */
   rating?: React.ReactNode;
 }) {
@@ -105,7 +106,7 @@ export function ReviewsBoard({
   const form = formOpen && (
     // Форма и сообщение «Спасибо» — во всю ширину Блока, как карточка рейтинга и сетка Отзывов над ними
     <div id="review-form" className="mt-6">
-      <ReviewForm t={t} locale={locale} formToken={formToken} onCancel={() => setFormOpen(false)} />
+      <ReviewForm t={t} locale={locale} onCancel={() => setFormOpen(false)} />
     </div>
   );
 

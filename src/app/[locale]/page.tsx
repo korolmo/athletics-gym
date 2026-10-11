@@ -4,7 +4,6 @@ import { listPublishedReviews } from "@/lib/services/reviews";
 import { listVisibleDirections } from "@/lib/services/directions";
 import { toDirectionViews } from "@/lib/domain/direction";
 import { isSafeSourceUrl } from "@/lib/domain/review";
-import { issueFormToken } from "@/lib/reviews/form-token";
 import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
 import { site } from "@/lib/site";
 import { logoIconUrl } from "@/lib/brand";
@@ -30,8 +29,11 @@ import {
 } from "@/components/site/sections";
 import type { TariffView, TrainerView } from "@/components/site/halls/types";
 
-// Данные меняет Владелец — всегда читаем свежие из базы
-export const dynamic = "force-dynamic";
+// Страница статическая: собирается при первом запросе и лежит в кэше. Данные меняет Владелец —
+// каждое сохранение в админке сбрасывает кэш обоих языков (revalidateSite), поэтому правка видна сразу.
+// Час — запасной срок на случай, если сброс не дошёл. Всё, что зависит от запроса (метка формы отзыва,
+// счётчик Обращений), идёт отдельными запросами и в страницу не запекается.
+export const revalidate = 3600;
 
 type TariffRow = {
   id: string;
@@ -136,9 +138,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         {s.show.gallery && <Gallery {...props} photos={gallery} />}
         {s.show.trainers && <Trainers {...props} trainers={trainers} />}
         {/* Придуманных и демо-отзывов нет: пока опубликованных нет, от Блока остаются рейтинг 2ГИС и «Оставить отзыв» */}
-        {s.show.reviews && (
-          <Reviews {...props} reviews={reviews} formToken={issueFormToken(process.env.AUTH_SECRET)} />
-        )}
+        {s.show.reviews && <Reviews {...props} reviews={reviews} />}
         {s.show.contacts && <Contacts {...props} />}
       </main>
       <Footer {...props} />

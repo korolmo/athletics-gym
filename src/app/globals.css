@@ -39,6 +39,8 @@
   --color-text-primary: #f4f4f5;
   --color-text-muted: #a1a1aa;
   --color-whatsapp-green: #25d366;
+  /* Текст и значок на зелёном WhatsApp: тёмный — 9,7:1; белый давал 1,98:1 */
+  --color-on-whatsapp: #0e0e10;
   --color-star: #f5a623;
 
   --spacing-gutter: 1.5rem;

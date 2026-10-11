@@ -48,7 +48,7 @@ export function Contacts({ t, s }: SectionProps) {
                 href={whatsappUrl(c.whatsapp, t.wa.trial)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-green text-[14px] uppercase text-white shadow-md transition-all hover:brightness-105"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp-green text-[14px] uppercase text-on-whatsapp shadow-md transition-all hover:brightness-105"
               >
                 <ChatSym className="h-5 w-5" />
                 <span>{t.cta.whatsapp}</span>

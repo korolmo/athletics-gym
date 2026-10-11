@@ -64,7 +64,7 @@ export default async function ReviewsPage({
       ) : (
         <ul className="space-y-3">
           {reviews.map((r) => (
-            <li key={r.id} className={`rounded-2xl bg-card p-4 ${r.status === "HIDDEN" ? "opacity-70" : ""}`}>
+            <li key={r.id} className={`rounded-2xl bg-card p-4 ${r.status === "HIDDEN" ? "opacity-80" : ""}`}>
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold leading-snug [overflow-wrap:anywhere]">{r.authorName}</div>

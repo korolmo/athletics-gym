@@ -9,7 +9,7 @@ import { CountNumber, CountText } from "@/components/site/Count";
 
 // Отзывы: только настоящие и только опубликованные Владельцем; рядом — рейтинг зала в 2ГИС.
 // Пока опубликованных нет, пустую секцию не показываем: остаются рейтинг 2ГИС и кнопка «Оставить отзыв».
-export function Reviews({ locale, t, s, reviews, formToken }: SectionProps & { reviews: ReviewView[]; formToken: string }) {
+export function Reviews({ locale, t, s, reviews }: SectionProps & { reviews: ReviewView[] }) {
   const empty = reviews.length === 0;
   const rating = (
     <a
@@ -41,7 +41,7 @@ export function Reviews({ locale, t, s, reviews, formToken }: SectionProps & { r
     return (
       <section id="reviews" className="w-full py-4">
         <div className={container}>
-          <ReviewsBoard t={t} locale={locale} reviews={reviews} formToken={formToken} rating={rating} />
+          <ReviewsBoard t={t} locale={locale} reviews={reviews} rating={rating} />
         </div>
       </section>
     );
@@ -55,7 +55,7 @@ export function Reviews({ locale, t, s, reviews, formToken }: SectionProps & { r
           title={t.rating.title}
           aside={rating}
         />
-        <ReviewsBoard t={t} locale={locale} reviews={reviews} formToken={formToken} />
+        <ReviewsBoard t={t} locale={locale} reviews={reviews} />
       </div>
     </section>
   );
