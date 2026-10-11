@@ -5,13 +5,17 @@ import type { Dictionary } from "@/dictionaries/ru";
 import type { Locale } from "@/lib/i18n";
 import { REVIEW_LIMITS } from "@/lib/domain/review";
 import { HALLS } from "@/lib/domain/tariff";
+import { legalPath } from "@/lib/legal/meta";
 import { openReviewForm, submitReview, type ReviewFormState } from "@/app/[locale]/actions";
 
 const field =
   "w-full rounded-xl bg-surface-container px-4 py-3 text-body-md text-text-primary outline-none ring-1 ring-surface-border transition placeholder:text-text-muted focus:ring-2 focus:ring-primary-container";
 const labelCls = "mb-1.5 block text-body-sm text-text-muted";
 
-/** Форма «Оставить отзыв»: имя, оценка, текст и Зал по желанию. Телефон и почту не спрашиваем. */
+/**
+ * Форма «Оставить отзыв»: имя, оценка, текст и Зал по желанию. Телефон и почту не спрашиваем.
+ * Перед кнопкой — Согласие на обработку данных: без галочки форму не отправит браузер и не примет сервер.
+ */
 export function ReviewForm({
   t,
   locale,
@@ -122,6 +126,23 @@ export function ReviewForm({
           className={field}
         />
         <span className="mt-1 block text-[12px] leading-4 text-text-muted">{f.textHint}</span>
+      </label>
+
+      <label className="mt-4 flex items-start gap-3 text-body-sm text-text-muted">
+        <input
+          type="checkbox"
+          name="consent"
+          required
+          defaultChecked={typed?.consent === "on"}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-primary-container"
+        />
+        <span>
+          {f.consentBefore}
+          <a href={legalPath(locale, "privacy")} target="_blank" rel="noopener" className="text-primary-container underline underline-offset-2">
+            {f.consentLink}
+          </a>
+          {f.consentAfter}
+        </span>
       </label>
 
       {(state.status === "error" || formToken === null) && (

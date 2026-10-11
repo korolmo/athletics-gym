@@ -20,4 +20,5 @@ export const SETTINGS_FORM_LABEL_RU: Record<SettingsFormId, string> = {
   women: BLOCK_LABEL_RU.women,
   contacts: BLOCK_LABEL_RU.contacts,
   rating: "Рейтинг 2ГИС",
+  legal: "Реквизиты",
 };

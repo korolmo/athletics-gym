@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import {
+  SUBMISSION_KEEP_MS,
   SUBMISSION_WINDOW_MS,
   checkSubmission,
   todayInGym,
@@ -10,15 +11,13 @@ import {
   type ReviewStatus,
   type SubmissionCheck,
 } from "@/lib/domain/review";
+import { LEGAL_UPDATED } from "@/lib/legal/meta";
 import type { OwnerReviewInput, VisitorReviewInput } from "@/lib/validation/review";
 import type { ServiceResult } from "./result";
 
 // Отзывы. Две границы доступа:
 // — сайт: чтение только опубликованных и приём Отзыва от Посетителя (без сессии, под антиспамом);
 // — админка: всё остальное, каждая функция сама проверяет сессию Владельца.
-
-/** Записи об отправках старше двух суток для лимита не нужны. */
-const KEEP_SUBMISSIONS_MS = 2 * SUBMISSION_WINDOW_MS;
 
 // ——— Сайт ———
 
@@ -51,14 +50,27 @@ export async function checkVisitorSubmission(
 /**
  * Записывает Отзыв Посетителя: статус «Новый», на сайте не виден до решения Владельца.
  * Вызывается только после checkVisitorSubmission с вердиктом «accept» и проверки текста.
+ * Без Согласия на обработку данных Отзыв не записывается; вместе с ним сохраняются время Согласия
+ * и дата редакции Политики конфиденциальности, с которой Посетитель согласился.
  */
 export async function createVisitorReview(input: VisitorReviewInput, ipHash: string, now: Date = new Date()): Promise<void> {
+  const { consent, ...review } = input;
+  if (consent !== true) throw new Error("Отзыв без согласия на обработку данных не принимается.");
   await db.$transaction([
     db.review.create({
-      data: { ...input, source: "SITE", sourceUrl: null, reviewedAt: todayInGym(now), status: "NEW", fromVisitor: true },
+      data: {
+        ...review,
+        source: "SITE",
+        sourceUrl: null,
+        reviewedAt: todayInGym(now),
+        status: "NEW",
+        fromVisitor: true,
+        consentAt: now,
+        consentPolicyDate: LEGAL_UPDATED.privacy,
+      },
     }),
     db.reviewSubmission.create({ data: { ipHash } }),
-    db.reviewSubmission.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - KEEP_SUBMISSIONS_MS) } } }),
+    db.reviewSubmission.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - SUBMISSION_KEEP_MS) } } }),
   ]);
 }
 

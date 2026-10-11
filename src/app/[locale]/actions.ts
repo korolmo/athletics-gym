@@ -26,7 +26,7 @@ export async function openReviewForm(): Promise<string> {
 
 export async function submitReview(_prev: ReviewFormState, fd: FormData): Promise<ReviewFormState> {
   const field = (name: string) => String(fd.get(name) ?? "");
-  const values = { authorName: field("authorName"), rating: field("rating"), text: field("text"), hallId: field("hallId") };
+  const values = { authorName: field("authorName"), rating: field("rating"), text: field("text"), hallId: field("hallId"), consent: field("consent") };
   const fail = (error: ReviewError): ReviewFormState => ({ status: "error", error, values });
 
   try {

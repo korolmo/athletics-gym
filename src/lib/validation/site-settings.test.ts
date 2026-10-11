@@ -6,6 +6,7 @@ import {
   parseAboutForm,
   parseContactsForm,
   parseHeroForm,
+  parseLegalForm,
   parseMarqueeForm,
   parseRatingForm,
   parseWomenForm,
@@ -186,6 +187,63 @@ describe("контакты из формы", () => {
   it("пустой Instagram или адрес — ошибка", () => {
     expect(error(parseContactsForm(form({ ...contacts, instagram: "" })))).toBe("Укажите Instagram зала");
     expect(error(parseContactsForm(form({ ...contacts, addressRu: "" })))).toBe("Заполните поле «Адрес» на русском");
+  });
+});
+
+describe("реквизиты из формы", () => {
+  const legal = {
+    legalName: " ИП Иванов Иван Иванович ",
+    legalBin: "880101300123",
+    legalAddress: "г. Кызылорда, ул. Султана Бейбарса, 2а",
+    privacyEmail: "info@athletics-gym.kz",
+    dataLocationRu: "",
+    dataLocationKk: "",
+  };
+
+  it("заполненные реквизиты сохраняются как есть, пробелы по краям убираются; место хранения пусто → null", () => {
+    expect(parseLegalForm(form(legal))).toEqual({
+      ok: true,
+      data: { ...legal, legalName: "ИП Иванов Иван Иванович", dataLocationRu: null, dataLocationKk: null },
+    });
+  });
+
+  it("все поля необязательны: пустая форма — это «реквизитов нет»", () => {
+    const empty = Object.fromEntries(Object.keys(legal).map((k) => [k, ""]));
+    expect(parseLegalForm(form(empty))).toEqual({
+      ok: true,
+      data: { legalName: null, legalBin: null, legalAddress: null, privacyEmail: null, dataLocationRu: null, dataLocationKk: null },
+    });
+  });
+
+  it("ИИН/БИН: пробелы и дефисы убираются, в базе — 12 цифр", () => {
+    expect(parseLegalForm(form({ ...legal, legalBin: "880101 300 123" }))).toMatchObject({ ok: true, data: { legalBin: "880101300123" } });
+    expect(parseLegalForm(form({ ...legal, legalBin: "880101-300-123" }))).toMatchObject({ ok: true, data: { legalBin: "880101300123" } });
+  });
+
+  it.each(["88010130012", "8801013001234", "88010130012a", "БИН 880101300123", "+880101300123", "12 цифр"])(
+    "ИИН/БИН «%s» — ошибка: нужно ровно 12 цифр",
+    (legalBin) => {
+      expect(error(parseLegalForm(form({ ...legal, legalBin })))).toBe("ИИН/БИН — ровно 12 цифр");
+    },
+  );
+
+  it.each(["info", "info@", "@athletics-gym.kz", "info@athletics-gym", "info @athletics-gym.kz", "info@athletics-gym.kz, a@b.kz", "mailto:info@a.kz", "<info@a.kz>", "инфо@зал.kz"])(
+    "email «%s» — ошибка",
+    (privacyEmail) => {
+      expect(error(parseLegalForm(form({ ...legal, privacyEmail })))).toMatch(/^Email/);
+    },
+  );
+
+  it("слишком длинный email и слишком длинное название — ошибка", () => {
+    expect(error(parseLegalForm(form({ ...legal, privacyEmail: `${"a".repeat(LIMITS.email)}@a.kz` })))).toMatch(/Email — не длиннее/);
+    expect(error(parseLegalForm(form({ ...legal, legalName: "я".repeat(LIMITS.legalName + 1) })))).toMatch(/Название ИП/);
+  });
+
+  it("место хранения данных: русский текст и перевод; перевод без русского — ошибка", () => {
+    const moved = { ...legal, dataLocationRu: "на серверах в Республике Казахстан", dataLocationKk: "Қазақстан Республикасындағы серверлерде" };
+    expect(parseLegalForm(form(moved))).toMatchObject({ ok: true, data: { dataLocationRu: moved.dataLocationRu, dataLocationKk: moved.dataLocationKk } });
+    expect(parseLegalForm(form({ ...moved, dataLocationKk: "" }))).toMatchObject({ ok: true, data: { dataLocationKk: null } });
+    expect(error(parseLegalForm(form({ ...moved, dataLocationRu: "" })))).toMatch(/заполните текст на русском/);
   });
 });
 

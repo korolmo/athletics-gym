@@ -57,19 +57,20 @@ describe("ссылки в отзыве", () => {
 });
 
 describe("отзыв Посетителя из формы сайта", () => {
-  const ok = { authorName: " Айгерим ", rating: "5", text: "  Отличный зал, хожу второй год.  ", hallId: "" };
+  // consent — галочка Согласия на обработку данных: отмеченный чекбокс приходит как «on»
+  const ok = { authorName: " Айгерим ", rating: "5", text: "  Отличный зал, хожу второй год.  ", hallId: "", consent: "on" };
 
   it("имя, оценка, текст; Зал по желанию; пробелы по краям убираются", () => {
     expect(parseVisitorReview(form(ok))).toEqual({
       ok: true,
-      data: { authorName: "Айгерим", rating: 5, text: "Отличный зал, хожу второй год.", hallId: null },
+      data: { authorName: "Айгерим", rating: 5, text: "Отличный зал, хожу второй год.", hallId: null, consent: true },
     });
     expect(parseVisitorReview(form({ ...ok, hallId: "women" }))).toMatchObject({ ok: true, data: { hallId: "women" } });
   });
 
   it("лишние поля (телефон, почта, статус, источник) не принимаются", () => {
     const r = parseVisitorReview(form({ ...ok, phone: "+77001112233", email: "a@b.c", status: "PUBLISHED", source: "TWOGIS", fromVisitor: "false" }));
-    expect(r.ok && Object.keys(r.data).sort()).toEqual(["authorName", "hallId", "rating", "text"]);
+    expect(r.ok && Object.keys(r.data).sort()).toEqual(["authorName", "consent", "hallId", "rating", "text"]);
   });
 
   it.each([
@@ -85,8 +86,19 @@ describe("отзыв Посетителя из формы сайта", () => {
     ["ссылка в тексте", { text: "Хороший зал, но лучше https://spam.example" }, "link"],
     ["домен без http", { text: "Заходите на spam-site.kz, там дешевле" }, "link"],
     ["Зал не из списка", { hallId: "vip" }, "hall"],
+    ["нет согласия на обработку данных", { consent: "" }, "consent"],
+    ["согласие — не отметка формы", { consent: "true" }, "consent"],
   ])("%s — ошибка «%s»", (_name, patch, code) => {
     expect(parseVisitorReview(form({ ...ok, ...patch }))).toEqual({ ok: false, error: code });
+  });
+
+  it("галочки согласия в форме нет вовсе — отзыв не принимается", () => {
+    const withoutConsent = { authorName: ok.authorName, rating: ok.rating, text: ok.text, hallId: ok.hallId };
+    expect(parseVisitorReview(form(withoutConsent))).toEqual({ ok: false, error: "consent" });
+  });
+
+  it("сначала ошибки полей, согласие — последним: Посетитель чинит форму сверху вниз", () => {
+    expect(parseVisitorReview(form({ ...ok, text: "Супер", consent: "" }))).toEqual({ ok: false, error: "textShort" });
   });
 
   it("границы: имя 50, текст 10 и 1000 символов — принимаются", () => {

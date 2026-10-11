@@ -6,6 +6,8 @@ import {
   MARQUEE_MAX_ITEMS,
   MARQUEE_PLACEHOLDERS,
   hasUnknownPlaceholder,
+  normalizeBin,
+  normalizeEmail,
   normalizeInstagram,
   normalizePhoneDigits,
   parseRating,
@@ -98,6 +100,37 @@ export const ratingSchema = z.object({
 });
 export type RatingInput = z.output<typeof ratingSchema>;
 
+/** Необязательный текст Реквизитов: пусто → null. */
+function optionalText(name: string, max: number) {
+  return z
+    .string()
+    .max(max, { error: `«${name}» — не длиннее ${max} символов` })
+    .transform((v) => v || null);
+}
+
+/** Реквизиты и место хранения данных. Всё необязательно: пустое поле → null, на сайте его просто нет. */
+export const legalSchema = z
+  .object({
+    legalName: optionalText("Название ИП", LIMITS.legalName),
+    /** В базе — 12 цифр без пробелов */
+    legalBin: z.string().transform((raw, ctx) => {
+      if (raw === "") return null;
+      return normalizeBin(raw) ?? fail(ctx, "ИИН/БИН — ровно 12 цифр");
+    }),
+    legalAddress: optionalText("Юридический адрес", LIMITS.legalAddress),
+    privacyEmail: z.string().transform((raw, ctx) => {
+      if (raw === "") return null;
+      if (raw.length > LIMITS.email) return fail(ctx, `Email — не длиннее ${LIMITS.email} символов`);
+      return normalizeEmail(raw) ?? fail(ctx, "Email: нужен адрес почты, например info@example.kz");
+    }),
+    dataLocationRu: optionalText("Место хранения данных", LIMITS.dataLocation),
+    dataLocationKk: kkText("Место хранения данных", LIMITS.dataLocation),
+  })
+  .refine((v) => !(v.dataLocationKk && !v.dataLocationRu), {
+    error: "Место хранения данных: заполните текст на русском или очистите казахский",
+  });
+export type LegalInput = z.output<typeof legalSchema>;
+
 /** Бегущая строка: от одного до восьми пунктов; списки RU и KZ одной длины, пустой казахский пункт — «как на русском». */
 export type MarqueeInput = { marqueeRu: string[]; marqueeKk: string[] };
 
@@ -169,6 +202,12 @@ export function parseContactsForm(fd: FormData): Parsed<ContactsInput> {
     contactsSchema.safeParse(
       fields(fd, ["addressRu", "addressKk", "hoursRu", "hoursKk", "phone", "whatsapp", "instagram"]),
     ),
+  );
+}
+
+export function parseLegalForm(fd: FormData): Parsed<LegalInput> {
+  return toParsed(
+    legalSchema.safeParse(fields(fd, ["legalName", "legalBin", "legalAddress", "privacyEmail", "dataLocationRu", "dataLocationKk"])),
   );
 }
 

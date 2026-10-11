@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getSettingsForEdit } from "@/lib/services/site-settings";
 import { isSettingsForm } from "@/lib/domain/site-settings";
 import { SETTINGS_FORM_LABEL_RU } from "@/lib/presentation/site-settings-labels";
-import { AboutForm, ContactsForm, HeroForm, MarqueeForm, RatingForm, WomenForm } from "../SettingsForms";
+import { AboutForm, ContactsForm, HeroForm, LegalForm, MarqueeForm, RatingForm, WomenForm } from "../SettingsForms";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +20,7 @@ export default async function EditSettingsPage({ params }: { params: Promise<{ f
       {form === "women" && <WomenForm s={settings} />}
       {form === "contacts" && <ContactsForm s={settings} />}
       {form === "rating" && <RatingForm s={settings} />}
+      {form === "legal" && <LegalForm s={settings} />}
     </>
   );
 }

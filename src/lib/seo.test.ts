@@ -3,6 +3,7 @@ import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
+import { LEGAL_PAGES, LEGAL_UPDATED, legalHead } from "@/lib/legal";
 import {
   DEFAULT_SITE_URL,
   buildGymJsonLd,
@@ -139,6 +140,46 @@ describe("sitemap.xml", () => {
       expect(entry.lastModified).toEqual(new Date("2026-10-10T00:00:00Z"));
     }
     expect(JSON.stringify(map)).not.toContain("/admin");
+  });
+});
+
+describe("юридические страницы: метаданные и sitemap", () => {
+  const pages = LEGAL_PAGES.map((page) => ({ path: `/${page}`, lastModified: new Date(`${LEGAL_UPDATED[page]}T00:00:00.000Z`) }));
+
+  it("в sitemap — главная и оба документа на обоих языках, у документов hreflang на тот же документ", () => {
+    const map = buildSitemap(URL_, new Date("2026-10-10T00:00:00Z"), pages);
+    expect(map.map((e) => e.url)).toEqual([
+      `${URL_}/ru`,
+      `${URL_}/kk`,
+      `${URL_}/ru/privacy`,
+      `${URL_}/kk/privacy`,
+      `${URL_}/ru/terms`,
+      `${URL_}/kk/terms`,
+    ]);
+    const terms = map.find((e) => e.url === `${URL_}/kk/terms`)!;
+    expect(terms.alternates?.languages).toEqual({ ru: `${URL_}/ru/terms`, kk: `${URL_}/kk/terms`, "x-default": `${URL_}/ru/terms` });
+    expect(terms.lastModified).toEqual(new Date(`${LEGAL_UPDATED.terms}T00:00:00.000Z`));
+    // Главная от добавления страниц не изменилась
+    expect(map[0].alternates?.languages).toEqual({ ru: `${URL_}/ru`, kk: `${URL_}/kk`, "x-default": `${URL_}/ru` });
+  });
+
+  it.each(["ru", "kk"] as const)("/%s: у каждого документа свои title и description, canonical — на себя", (locale) => {
+    const heads = LEGAL_PAGES.map((page) => ({ page, head: legalHead(page, locale), meta: buildMetadata(locale, legalHead(page, locale), prod, ICON, `/${page}`) }));
+    for (const { page, head, meta } of heads) {
+      expect(meta.title).toBe(head.title);
+      expect(String(meta.title)).toContain("Athletic's Gym");
+      expect(String(meta.description).length).toBeGreaterThan(50);
+      expect(meta.alternates?.canonical).toBe(`${URL_}/${locale}/${page}`);
+      expect(meta.alternates?.languages).toEqual({ ru: `${URL_}/ru/${page}`, kk: `${URL_}/kk/${page}`, "x-default": `${URL_}/ru/${page}` });
+      expect(meta.openGraph?.url).toBe(`${URL_}/${locale}/${page}`);
+    }
+    expect(heads[0].head.title).not.toBe(heads[1].head.title);
+    expect(heads[0].head.description).not.toBe(heads[1].head.description);
+    expect(heads[0].head.title).not.toBe((locale === "ru" ? ru : kk).seo.title);
+  });
+
+  it("на превью документы тоже закрыты от индексации", () => {
+    expect(buildMetadata("ru", legalHead("privacy", "ru"), preview, ICON, "/privacy").robots).toEqual({ index: false, follow: false });
   });
 });
 

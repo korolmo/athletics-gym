@@ -1,6 +1,6 @@
 import { isHall } from "@/lib/domain/tariff";
 import type { ReviewSource, ReviewStatus } from "@/lib/domain/review";
-import { REVIEW_SOURCE_LABEL_RU, REVIEW_STATUS_LABEL_RU, formatReviewDateRu } from "@/lib/presentation/review-labels";
+import { REVIEW_SOURCE_LABEL_RU, REVIEW_STATUS_LABEL_RU, formatConsentRu, formatReviewDateRu } from "@/lib/presentation/review-labels";
 import { HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
 import { setReviewStatus } from "./actions";
 
@@ -15,6 +15,8 @@ export type AdminReview = {
   reviewedAt: Date;
   status: ReviewStatus;
   fromVisitor: boolean;
+  /** Когда Посетитель дал Согласие на обработку данных; у ручных Отзывов и у Отзывов до этапа 9 — пусто */
+  consentAt?: Date | null;
 };
 
 const STATUS_CHIP: Record<ReviewStatus, string> = {
@@ -39,6 +41,7 @@ export function ReviewMeta({ r }: { r: AdminReview }) {
     formatReviewDateRu(r.reviewedAt),
     r.hallId && isHall(r.hallId) ? HALL_LABEL_RU[r.hallId] : null,
     r.fromVisitor ? "оставлен на сайте" : "добавлен вручную",
+    r.consentAt ? `согласие на обработку данных: ${formatConsentRu(r.consentAt)}` : null,
   ].filter(Boolean);
   return <div className="mt-0.5 text-xs text-muted">{parts.join(" · ")}</div>;
 }

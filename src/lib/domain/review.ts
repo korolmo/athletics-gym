@@ -74,6 +74,8 @@ export const FORM_TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 /** Не больше трёх принятых Отзывов с одного адреса за сутки. */
 export const MAX_SUBMISSIONS = 3;
 export const SUBMISSION_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Записи об отправках старше двух суток для лимита не нужны — удаляются при приёме следующего Отзыва. Срок назван в Политике конфиденциальности. */
+export const SUBMISSION_KEEP_MS = 2 * SUBMISSION_WINDOW_MS;
 
 export type SubmissionCheck =
   /** Принять и записать */

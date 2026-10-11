@@ -210,6 +210,17 @@ section[id] {
     transition: opacity 0.25s ease;
   }
 
+  /* Сообщение о cookie появляется мягко; стоит поверх страницы и контент не сдвигает */
+  .cookie-notice {
+    animation: cookie-in 0.4s ease 0.3s both;
+  }
+  @keyframes cookie-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
   /* Телефон: нижняя панель выезжает после первого экрана и один раз «кивает» */
   [data-contact-source="mobile-bar"] {
     transform: translateY(110%);
@@ -247,6 +258,21 @@ section[id] {
 }
 html[data-late-fonts] .marquee-track {
   font-family: var(--font-display);
+}
+
+/* Сообщение о cookie на телефоне стоит над нижней панелью с кнопками, а не поверх неё */
+@media (max-width: 47.99rem) {
+  body:has([data-contact-source="mobile-bar"]) .cookie-notice {
+    bottom: 5.75rem;
+  }
+}
+
+/* Заглушка карты в «Контактах»: едва заметная сетка, как на плане */
+.map-placeholder {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 [data-site-header][data-top] [data-header-bg] {

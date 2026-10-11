@@ -7,6 +7,7 @@ import {
   isSettingsForm,
   type BlockId,
 } from "@/lib/domain/site-settings";
+import { LEGAL_PAGES, legalPath } from "@/lib/legal/meta";
 import { BLOCK_LABEL_RU, SETTINGS_FORM_LABEL_RU } from "@/lib/presentation/site-settings-labels";
 import { plural } from "@/lib/presentation/tariff-labels";
 import { PencilIcon } from "@/components/icons";
@@ -113,6 +114,35 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
             <PencilIcon />
           </Link>
         </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Реквизиты и документы</h2>
+        <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold leading-snug">{settings.legalName || "Реквизиты не заполнены"}</div>
+            <div className="mt-0.5 text-sm text-muted">
+              {settings.legalName || settings.legalBin || settings.legalAddress
+                ? "Показываются внизу сайта, в политике конфиденциальности и в пользовательском соглашении"
+                : "Название ИП, ИИН/БИН, юридический адрес, email. Пока пусто — внизу сайта только ссылки на документы"}
+            </div>
+          </div>
+          <Link href="/admin/site/legal" aria-label="Редактировать: реквизиты" className={pencil}>
+            <PencilIcon />
+          </Link>
+        </div>
+        <p className="mt-3 text-xs text-muted">
+          Документы на сайте:{" "}
+          {LEGAL_PAGES.map((page, i) => (
+            <span key={page}>
+              {i > 0 && " · "}
+              <a href={legalPath("ru", page)} target="_blank" rel="noopener" className="underline hover:text-accent">
+                {page === "privacy" ? "политика конфиденциальности" : "пользовательское соглашение"}
+              </a>
+            </span>
+          ))}
+          . Их текст меняется только вместе с сайтом.
+        </p>
       </section>
     </>
   );

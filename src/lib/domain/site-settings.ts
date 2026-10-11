@@ -1,7 +1,7 @@
 // Настройки сайта: модель и правила — чистые функции, без базы и запроса.
 
 import { pick, type Locale } from "@/lib/i18n";
-import { DEFAULT_SETTINGS } from "./site-settings.defaults";
+import { DEFAULT_DATA_LOCATION, DEFAULT_SETTINGS } from "./site-settings.defaults";
 
 /** Блоки главной, которые Владелец может скрыть, — в порядке страницы. Первый экран не скрывается и Блоком не считается. */
 export const BLOCKS = ["marquee", "about", "directions", "women", "prices", "gallery", "trainers", "reviews", "contacts"] as const;
@@ -25,7 +25,7 @@ export const SHOW_COLUMN = {
 } as const satisfies Record<BlockId, string>;
 
 /** Формы раздела «Сайт»: что из Настроек Владелец правит вместе. */
-export const SETTINGS_FORMS = ["hero", "marquee", "about", "women", "contacts", "rating"] as const;
+export const SETTINGS_FORMS = ["hero", "marquee", "about", "women", "contacts", "rating", "legal"] as const;
 export type SettingsFormId = (typeof SETTINGS_FORMS)[number];
 
 export function isSettingsForm(value: string): value is SettingsFormId {
@@ -53,6 +53,16 @@ export type SiteSettingsData = {
   instagram: string;
   ratingTenths: number;
   ratingCount: number;
+  /** Реквизиты: все необязательны */
+  legalName: string | null;
+  /** ИИН/БИН: ровно 12 цифр */
+  legalBin: string | null;
+  legalAddress: string | null;
+  /** Email для обращений о персональных данных */
+  privacyEmail: string | null;
+  /** Место хранения данных: продолжение фразы «Данные хранятся …»; пусто — текст по умолчанию */
+  dataLocationRu: string | null;
+  dataLocationKk: string | null;
   /** Пункты бегущей строки; списки одной длины, пустая строка в казахском — «как на русском» */
   marqueeRu: string[];
   marqueeKk: string[];
@@ -89,6 +99,15 @@ export type SiteContent = {
     instagram: string;
   };
   rating: { value: string; count: number };
+  /** Реквизиты для подвала и юридических страниц; пустая строка — не заполнено */
+  legal: {
+    name: string;
+    bin: string;
+    address: string;
+    email: string;
+    /** Продолжение фразы «Данные хранятся …» на языке страницы */
+    dataLocation: string;
+  };
   show: Record<BlockId, boolean>;
 };
 
@@ -130,6 +149,14 @@ export function toSiteContent(locale: Locale, s: SiteSettingsData, cards: AboutC
       instagram: safeInstagram(s.instagram, DEFAULT_SETTINGS.instagram),
     },
     rating: { value: formatRating(s.ratingTenths), count: s.ratingCount },
+    legal: {
+      name: s.legalName?.trim() ?? "",
+      // ИИН/БИН и email — только если проходят те же правила, что и форма: email попадает в ссылку mailto:
+      bin: s.legalBin && isBin(s.legalBin) ? s.legalBin : "",
+      address: s.legalAddress?.trim() ?? "",
+      email: s.privacyEmail && isEmail(s.privacyEmail) ? s.privacyEmail : "",
+      dataLocation: dataLocation(locale, s),
+    },
     show: Object.fromEntries(BLOCKS.map((b) => [b, s[SHOW_COLUMN[b]]])) as Record<BlockId, boolean>,
   };
 }
@@ -187,6 +214,50 @@ export function normalizeInstagram(raw: string): string | null {
 /** «https://instagram.com/имя» → «@имя» — для подсказок в админке. */
 export function instagramHandle(url: string): string {
   return `@${url.replace(/^https:\/\/instagram\.com\//, "")}`;
+}
+
+// ——— Реквизиты ———
+
+/** ИИН и БИН в Казахстане — ровно 12 цифр. */
+export function isBin(value: string): boolean {
+  return /^\d{12}$/.test(value);
+}
+
+/** ИИН/БИН из формы: пробелы и дефисы между цифрами убираются; null — если это не 12 цифр. */
+export function normalizeBin(raw: string): string | null {
+  const digits = raw.replace(/[\s-]/g, "");
+  return isBin(digits) ? digits : null;
+}
+
+export const EMAIL_MAX = 120;
+
+/** Email: одна «@», слева и справа без пробелов и кавычек, справа — домен с точкой. Адрес уходит в ссылку mailto:. */
+export function isEmail(value: string): boolean {
+  return value.length <= EMAIL_MAX && /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/.test(value);
+}
+
+/** Email из формы; null — если это не адрес почты. */
+export function normalizeEmail(raw: string): string | null {
+  const value = raw.trim();
+  return isEmail(value) ? value : null;
+}
+
+/**
+ * Место хранения данных на языке страницы. Владелец не указал — текст по умолчанию на обоих языках;
+ * указал только русский — на казахской версии показываем русский, как и в остальных Настройках.
+ */
+function dataLocation(locale: Locale, s: Pick<SiteSettingsData, "dataLocationRu" | "dataLocationKk">): string {
+  const ru = s.dataLocationRu?.trim();
+  if (!ru) return DEFAULT_DATA_LOCATION[locale];
+  return pick(locale, ru, s.dataLocationKk);
+}
+
+/**
+ * Строка реквизитов для подвала по частям: «ИП …», «ИИН/БИН …», «юр. адрес: …» — только заполненное.
+ * Пустой список — реквизитов в подвале нет.
+ */
+export function requisitesParts(legal: SiteContent["legal"], labels: { bin: string; legalAddress: string }): string[] {
+  return [legal.name, legal.bin && `${labels.bin} ${legal.bin}`, legal.address && `${labels.legalAddress} ${legal.address}`].filter(Boolean);
 }
 
 // ——— Рейтинг 2ГИС ———

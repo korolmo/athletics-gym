@@ -157,6 +157,16 @@ model SiteSettings {
   /// Рейтинг 2ГИС: оценка в десятых (50 = 5,0) и число оценок — Владелец вводит вручную
   ratingTenths   Int
   ratingCount    Int
+  /// Реквизиты: кто ведёт зал и отвечает за сайт. Все необязательны; пока пусты — в подвале сайта их нет
+  legalName      String?
+  /// ИИН/БИН: ровно 12 цифр
+  legalBin       String?
+  legalAddress   String?
+  /// Email для обращений о персональных данных
+  privacyEmail   String?
+  /// Место хранения данных — продолжение фразы «Данные хранятся …» в Политике конфиденциальности; пусто — текст по умолчанию из кода
+  dataLocationRu String?
+  dataLocationKk String?
   /// Бегущая строка: пункты по порядку. Списки одной длины; пустая строка в казахском — «как на русском»
   marqueeRu      String[] @default([])
   marqueeKk      String[] @default([])
@@ -234,6 +244,10 @@ model Review {
   status      ReviewStatus @default(NEW)
   /// Оставлен Посетителем через форму сайта: его текст Владелец не правит — только публикует, скрывает или удаляет
   fromVisitor Boolean      @default(false)
+  /// Согласие на обработку данных: когда Посетитель его дал. У Отзывов, добавленных Владельцем, пусто
+  consentAt   DateTime?
+  /// Дата редакции Политики конфиденциальности, с которой Посетитель согласился («2026-10-11»)
+  consentPolicyDate String?
   createdAt   DateTime     @default(now())
 
   @@index([status, reviewedAt])

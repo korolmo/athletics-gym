@@ -3,6 +3,8 @@
 /** Не больше 5 неудачных попыток входа с одного IP за 15 минут. */
 export const MAX_FAILED_ATTEMPTS = 5;
 export const WINDOW_MS = 15 * 60 * 1000;
+/** Записи о неудачных попытках старше суток не нужны — чистятся при каждой следующей неудаче. Срок назван в Политике конфиденциальности. */
+export const ATTEMPT_KEEP_MS = 24 * 60 * 60 * 1000;
 /** Пауза после неудачной попытки — замедляет перебор даже в пределах лимита. */
 export const FAILURE_DELAY_MS = 800;
 export type LimitState = { blocked: false } | { blocked: true; retryAfterMin: number };

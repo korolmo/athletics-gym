@@ -15,6 +15,15 @@ export const REVIEW_STATUS_LABEL_RU: Record<ReviewStatus, string> = {
   HIDDEN: "Скрыт",
 };
 
+/** Время Согласия на обработку данных по часам зала (Кызылорда, UTC+5): «11 октября 2026, 14:05» */
+export function formatConsentRu(date: Date): string {
+  const local = new Date(date.getTime() + 5 * 60 * 60 * 1000);
+  return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
+    .format(local)
+    .replace(" г.", "")
+    .replace(" в ", ", ");
+}
+
 /** «9 октября 2026» */
 export function formatReviewDateRu(date: Date): string {
   return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(date);
