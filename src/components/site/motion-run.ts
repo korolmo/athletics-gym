@@ -15,6 +15,15 @@ export function startMotion(): () => void {
   const stop = () => cleanups.forEach((f) => f());
   root.setAttribute("data-motion", "");
 
+  // Шрифт бегущей строки (Oswald) включаем, когда страница загрузилась и уже нарисована: до этого его файлы
+  // делили бы канал со шрифтом девиза и картинкой первого экрана (проверено Lighthouse: первая отрисовка +0,45 с)
+  const lateFonts = () => requestAnimationFrame(() => requestAnimationFrame(() => root.setAttribute("data-late-fonts", "")));
+  if (document.readyState === "complete") lateFonts();
+  else {
+    window.addEventListener("load", lateFonts, { once: true });
+    cleanups.push(() => window.removeEventListener("load", lateFonts));
+  }
+
   // Шапка: прозрачная только в самом верху страницы
   const header = document.querySelector("[data-site-header]");
   const onScroll = () => header?.toggleAttribute("data-top", window.scrollY <= 40);

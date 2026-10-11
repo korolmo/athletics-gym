@@ -3,6 +3,9 @@ import { text } from "@/lib/admin/form";
 import { LIMITS } from "@/lib/admin/limits";
 import {
   ABOUT_CARD_COUNT,
+  MARQUEE_MAX_ITEMS,
+  MARQUEE_PLACEHOLDERS,
+  hasUnknownPlaceholder,
   normalizeInstagram,
   normalizePhoneDigits,
   parseRating,
@@ -95,6 +98,9 @@ export const ratingSchema = z.object({
 });
 export type RatingInput = z.output<typeof ratingSchema>;
 
+/** Бегущая строка: от одного до восьми пунктов; списки RU и KZ одной длины, пустой казахский пункт — «как на русском». */
+export type MarqueeInput = { marqueeRu: string[]; marqueeKk: string[] };
+
 function fields<K extends string>(fd: FormData, keys: readonly K[]): Record<K, string> {
   return Object.fromEntries(keys.map((k) => [k, text(fd, k)])) as Record<K, string>;
 }
@@ -123,6 +129,35 @@ export function parseAboutForm(fd: FormData): Parsed<AboutInput> {
   const index = typeof issue?.path[1] === "number" ? issue.path[1] + 1 : null;
   const message = issue?.message ?? "Проверьте поля формы";
   return { ok: false, error: index ? `Карточка ${index}. ${message}` : message };
+}
+
+/**
+ * Поля формы — `marquee<номер>Ru` и `marquee<номер>Kk`, номера с 1. Пустые строки формы пропускаются,
+ * порядок остальных сохраняется. В сообщении называем номер строки формы: одинаковых полей восемь.
+ */
+export function parseMarqueeForm(fd: FormData): Parsed<MarqueeInput> {
+  const max = LIMITS.marqueeItem;
+  const allowed = Object.values(MARQUEE_PLACEHOLDERS).join(" и ");
+  const marqueeRu: string[] = [];
+  const marqueeKk: string[] = [];
+  for (let n = 1; n <= MARQUEE_MAX_ITEMS; n++) {
+    const ru = text(fd, `marquee${n}Ru`);
+    const kk = text(fd, `marquee${n}Kk`);
+    if (!ru && !kk) continue;
+    if (!ru) return { ok: false, error: `Пункт ${n}. Заполните текст на русском` };
+    for (const [value, lang] of [[ru, ""], [kk, " (KZ)"]] as const) {
+      if (value.length > max) return { ok: false, error: `Пункт ${n}${lang} — не длиннее ${max} символов` };
+      if (hasUnknownPlaceholder(value)) {
+        return { ok: false, error: `Пункт ${n}${lang}. В фигурных скобках — только ${allowed}` };
+      }
+    }
+    marqueeRu.push(ru);
+    marqueeKk.push(kk);
+  }
+  if (marqueeRu.length === 0) {
+    return { ok: false, error: "Нужен хотя бы один пункт. Чтобы убрать ленту с сайта, скройте её в списке блоков" };
+  }
+  return { ok: true, data: { marqueeRu, marqueeKk } };
 }
 
 export function parseWomenForm(fd: FormData): Parsed<WomenInput> {

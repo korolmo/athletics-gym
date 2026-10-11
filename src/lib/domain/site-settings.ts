@@ -4,7 +4,7 @@ import { pick, type Locale } from "@/lib/i18n";
 import { DEFAULT_SETTINGS } from "./site-settings.defaults";
 
 /** Блоки главной, которые Владелец может скрыть, — в порядке страницы. Первый экран не скрывается и Блоком не считается. */
-export const BLOCKS = ["about", "directions", "women", "prices", "gallery", "trainers", "reviews", "contacts"] as const;
+export const BLOCKS = ["marquee", "about", "directions", "women", "prices", "gallery", "trainers", "reviews", "contacts"] as const;
 export type BlockId = (typeof BLOCKS)[number];
 
 export function isBlock(value: string): value is BlockId {
@@ -13,6 +13,7 @@ export function isBlock(value: string): value is BlockId {
 
 /** Колонка «показывать на сайте» для каждого Блока. */
 export const SHOW_COLUMN = {
+  marquee: "showMarquee",
   about: "showAbout",
   directions: "showDirections",
   women: "showWomen",
@@ -24,7 +25,7 @@ export const SHOW_COLUMN = {
 } as const satisfies Record<BlockId, string>;
 
 /** Формы раздела «Сайт»: что из Настроек Владелец правит вместе. */
-export const SETTINGS_FORMS = ["hero", "about", "women", "contacts", "rating"] as const;
+export const SETTINGS_FORMS = ["hero", "marquee", "about", "women", "contacts", "rating"] as const;
 export type SettingsFormId = (typeof SETTINGS_FORMS)[number];
 
 export function isSettingsForm(value: string): value is SettingsFormId {
@@ -52,6 +53,9 @@ export type SiteSettingsData = {
   instagram: string;
   ratingTenths: number;
   ratingCount: number;
+  /** Пункты бегущей строки; списки одной длины, пустая строка в казахском — «как на русском» */
+  marqueeRu: string[];
+  marqueeKk: string[];
 } & Record<(typeof SHOW_COLUMN)[BlockId], boolean>;
 
 export type AboutCardData = {
@@ -67,6 +71,8 @@ export type AboutCardData = {
 /** Настройки сайта на языке страницы — то, что получают секции главной. */
 export type SiteContent = {
   hero: { title: string; subtitle: string };
+  /** Пункты бегущей строки с уже подставленными часами работы и рейтингом */
+  marquee: string[];
   /** Четыре карточки «О зале» по порядку */
   about: { kicker: string; title: string; text: string }[];
   women: { text: string; instagram: string };
@@ -102,6 +108,7 @@ export function toSiteContent(locale: Locale, s: SiteSettingsData, cards: AboutC
       title: pick(locale, s.heroTitleRu, s.heroTitleKk),
       subtitle: pick(locale, s.heroSubtitleRu, s.heroSubtitleKk),
     },
+    marquee: marqueeItems(locale, s),
     about: [...cards]
       .sort((a, b) => a.position - b.position)
       .map((c) => ({
@@ -198,6 +205,40 @@ export function parseRating(raw: string): number | null {
 /** 50 → «5,0» */
 export function formatRating(tenths: number): string {
   return `${Math.floor(tenths / 10)},${tenths % 10}`;
+}
+
+// ——— Бегущая строка ———
+
+export const MARQUEE_MAX_ITEMS = 8;
+
+/** Что Владелец может вставить в пункт: сайт подставит значение из Настроек сайта. */
+export const MARQUEE_PLACEHOLDERS = { hours: "{часы}", rating: "{рейтинг}" } as const;
+
+/** В пункте остались фигурные скобки, которые не подстановка: опечатка вроде «{час}» ушла бы на сайт как есть. */
+export function hasUnknownPlaceholder(item: string): boolean {
+  const rest = Object.values(MARQUEE_PLACEHOLDERS).reduce((text, p) => text.split(p).join(""), item);
+  return /[{}]/.test(rest);
+}
+
+/**
+ * Пункты бегущей строки на языке страницы: казахский пункт пуст — берём русский;
+ * {часы} и {рейтинг} заменяются часами работы и оценкой 2ГИС. Пустые после этого пункты пропускаются.
+ * Список в базе пуст (правили мимо админки) — показываем начальный.
+ */
+export function marqueeItems(
+  locale: Locale,
+  s: Pick<SiteSettingsData, "marqueeRu" | "marqueeKk" | "hoursRu" | "hoursKk" | "ratingTenths">,
+): string[] {
+  const filled = s.marqueeRu.some((item) => item.trim());
+  const ru = filled ? s.marqueeRu : DEFAULT_SETTINGS.marqueeRu;
+  const kk = filled ? s.marqueeKk : DEFAULT_SETTINGS.marqueeKk;
+  const hours = pick(locale, s.hoursRu, s.hoursKk);
+  const rating = formatRating(s.ratingTenths);
+  return ru
+    .slice(0, MARQUEE_MAX_ITEMS)
+    .map((item, i) => pick(locale, item, kk[i] || null))
+    .map((item) => item.split(MARQUEE_PLACEHOLDERS.hours).join(hours).split(MARQUEE_PLACEHOLDERS.rating).join(rating).trim())
+    .filter(Boolean);
 }
 
 // ——— Девиз ———

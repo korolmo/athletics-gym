@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
 import { SHOW_COLUMN, type BlockId, type SiteSettingsData } from "@/lib/domain/site-settings";
 import { DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
-import type { AboutInput, ContactsInput, HeroInput, RatingInput, WomenInput } from "@/lib/validation/site-settings";
+import type { AboutInput, ContactsInput, HeroInput, MarqueeInput, RatingInput, WomenInput } from "@/lib/validation/site-settings";
 import { SETTINGS_ID, getSiteSettings } from "./site";
 
 // Настройки сайта в админке. Каждая функция сама проверяет сессию Владельца.
@@ -24,6 +24,11 @@ async function update(data: Partial<SiteSettingsData>): Promise<void> {
 }
 
 export async function saveHero(input: HeroInput): Promise<void> {
+  await requireOwner();
+  await update(input);
+}
+
+export async function saveMarquee(input: MarqueeInput): Promise<void> {
   await requireOwner();
   await update(input);
 }

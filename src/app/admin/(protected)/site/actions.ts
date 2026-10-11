@@ -9,6 +9,7 @@ import {
   parseAboutForm,
   parseContactsForm,
   parseHeroForm,
+  parseMarqueeForm,
   parseRatingForm,
   parseWomenForm,
 } from "@/lib/validation/site-settings";
@@ -38,6 +39,10 @@ async function save<T>(
 
 export async function saveHero(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {
   return save(fd, parseHeroForm, settings.saveHero);
+}
+
+export async function saveMarquee(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {
+  return save(fd, parseMarqueeForm, settings.saveMarquee);
 }
 
 export async function saveAbout(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {

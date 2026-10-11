@@ -22,5 +22,14 @@ export const manrope = Manrope({
 
 // Админка
 export const fontVars = `${oswald.variable} ${inter.variable}`;
+// Бегущая строка на сайте — тоже Oswald, но без предзагрузки: лента ниже девиза и первой отрисовке не нужна.
+// Шрифт включается после оживления страницы (правило html[data-late-fonts] .marquee-track в globals.css)
+const oswaldSite = Oswald({
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+  variable: "--font-oswald",
+  display: "swap",
+  preload: false,
+});
+
 // Публичный сайт
-export const siteFontVars = manrope.variable;
+export const siteFontVars = `${manrope.variable} ${oswaldSite.variable}`;

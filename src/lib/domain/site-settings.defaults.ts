@@ -26,6 +26,11 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   instagram: "https://instagram.com/athletics_gym_qyzylorda",
   ratingTenths: 50,
   ratingCount: 405,
+  // Бегущая строка — факты о зале; {часы} и {рейтинг} сайт подставляет из Настроек.
+  // На боевую базу те же пункты кладёт миграция 20261011000000_marquee (совпадение проверяет тест).
+  marqueeRu: ["ПЕРВОЕ ПОСЕЩЕНИЕ БЕСПЛАТНО", "ОТДЕЛЬНЫЙ ЖЕНСКИЙ ЗАЛ", "{часы}", "{рейтинг} В 2ГИС", "ПЕРСОНАЛЬНЫЕ ТРЕНИРОВКИ", "СТУДЕНТАМ ДЕШЕВЛЕ"],
+  marqueeKk: ["АЛҒАШҚЫ КЕЛУ ТЕГІН", "БӨЛЕК ӘЙЕЛДЕР ЗАЛЫ", "{часы}", "2ГИС-ТЕ {рейтинг}", "ЖЕКЕ ЖАТТЫҒУЛАР", "СТУДЕНТТЕРГЕ АРЗАН"],
+  showMarquee: true,
   showAbout: true,
   showDirections: true,
   showWomen: true,

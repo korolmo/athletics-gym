@@ -2,6 +2,9 @@ import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   BLOCKS,
+  MARQUEE_MAX_ITEMS,
+  hasUnknownPlaceholder,
+  marqueeItems,
   formatPhone,
   formatRating,
   instagramHandle,
@@ -198,6 +201,64 @@ describe("девиз", () => {
   });
 });
 
+describe("бегущая строка", () => {
+  const base = { hoursRu: "Ежедневно 08:00–23:00", hoursKk: "Күн сайын 08:00–23:00", ratingTenths: 49 };
+
+  it("начальные пункты: часы работы и рейтинг подставляются из Настроек сайта", () => {
+    expect(marqueeItems("ru", DEFAULT_SETTINGS)).toEqual([
+      "ПЕРВОЕ ПОСЕЩЕНИЕ БЕСПЛАТНО",
+      "ОТДЕЛЬНЫЙ ЖЕНСКИЙ ЗАЛ",
+      "Ежедневно 08:00–23:00",
+      "5,0 В 2ГИС",
+      "ПЕРСОНАЛЬНЫЕ ТРЕНИРОВКИ",
+      "СТУДЕНТАМ ДЕШЕВЛЕ",
+    ]);
+    expect(marqueeItems("kk", DEFAULT_SETTINGS)).toEqual([
+      "АЛҒАШҚЫ КЕЛУ ТЕГІН",
+      "БӨЛЕК ӘЙЕЛДЕР ЗАЛЫ",
+      "Күн сайын 08:00–23:00",
+      "2ГИС-ТЕ 5,0",
+      "ЖЕКЕ ЖАТТЫҒУЛАР",
+      "СТУДЕНТТЕРГЕ АРЗАН",
+    ]);
+  });
+
+  it("казахский пункт пуст или его нет — на /kk идёт русский; часы при этом казахские", () => {
+    const s = { ...base, marqueeRu: ["Первый", "Работаем: {часы}", "Третий"], marqueeKk: ["Бірінші", ""] };
+    expect(marqueeItems("kk", s)).toEqual(["Бірінші", "Работаем: Күн сайын 08:00–23:00", "Третий"]);
+    expect(marqueeItems("ru", s)).toEqual(["Первый", "Работаем: Ежедневно 08:00–23:00", "Третий"]);
+  });
+
+  it("подстановка работает в любом месте пункта и несколько раз", () => {
+    const s = { ...base, marqueeRu: ["{рейтинг} из 5 — {рейтинг}!"], marqueeKk: [] };
+    expect(marqueeItems("ru", s)).toEqual(["4,9 из 5 — 4,9!"]);
+  });
+
+  it("пустые пункты пропускаются, лишние сверх восьми — тоже", () => {
+    const many = Array.from({ length: 12 }, (_, i) => `Пункт ${i + 1}`);
+    expect(marqueeItems("ru", { ...base, marqueeRu: ["А", "  ", "Б"], marqueeKk: [] })).toEqual(["А", "Б"]);
+    expect(marqueeItems("ru", { ...base, marqueeRu: many, marqueeKk: [] })).toHaveLength(MARQUEE_MAX_ITEMS);
+  });
+
+  it("список в базе пуст — показываем начальные пункты, а не пустую ленту", () => {
+    expect(marqueeItems("ru", { ...base, marqueeRu: [], marqueeKk: [] })[0]).toBe("ПЕРВОЕ ПОСЕЩЕНИЕ БЕСПЛАТНО");
+    expect(marqueeItems("kk", { ...base, marqueeRu: [""], marqueeKk: ["Бір"] })[0]).toBe("АЛҒАШҚЫ КЕЛУ ТЕГІН");
+  });
+
+  it("фигурные скобки — только {часы} и {рейтинг}", () => {
+    for (const ok of ["{часы}", "С {часы} и {рейтинг}", "Без подстановок"]) expect(hasUnknownPlaceholder(ok), ok).toBe(false);
+    for (const bad of ["{час}", "{часы работы}", "{Рейтинг}", "{часы", "рейтинг}", "{{часы}}", "{hours}"]) {
+      expect(hasUnknownPlaceholder(bad), bad).toBe(true);
+    }
+  });
+
+  it("лента — Блок: её можно скрыть, и она идёт первой, сразу после первого экрана", () => {
+    expect(BLOCKS[0]).toBe("marquee");
+    expect(toSiteContent("ru", { ...DEFAULT_SETTINGS, showMarquee: false }, DEFAULT_ABOUT_CARDS).show.marquee).toBe(false);
+    expect(toSiteContent("kk", DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS).marquee).toContain("2ГИС-ТЕ 5,0");
+  });
+});
+
 describe("Настройки сайта на языке страницы", () => {
   it("русская версия — русские тексты", () => {
     const s = toSiteContent("ru", DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS);
@@ -279,11 +340,20 @@ describe("начальные значения и миграция для бое�
 
   it("миграция кладёт в базу те же Настройки сайта, что и seed (кроме девиза: его начальное значение сменили на этапе 7)", () => {
     for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
-      if (value === null || typeof value === "boolean") continue;
+      // Пункты бегущей строки добавлены позже — их кладёт своя миграция (проверка ниже)
+      if (value === null || typeof value === "boolean" || Array.isArray(value)) continue;
       // Миграция уже применена к боевой базе и не переписывается: девиз там прежний, меняет его Владелец
       if (key === "heroTitleRu" || key === "heroTitleKk") continue;
       expect(sql, key).toContain(quoted(value));
     }
+  });
+
+  it("миграция бегущей строки кладёт те же пункты, что и seed", () => {
+    const marqueeSql = fs.readFileSync("prisma/migrations/20261011000000_marquee/migration.sql", "utf8");
+    const list = (items: string[]) => `ARRAY[${items.map(quoted).join(", ")}]`;
+    expect(marqueeSql).toContain(`"marqueeRu" = ${list(DEFAULT_SETTINGS.marqueeRu)}`);
+    expect(marqueeSql).toContain(`"marqueeKk" = ${list(DEFAULT_SETTINGS.marqueeKk)}`);
+    expect(DEFAULT_SETTINGS.marqueeKk).toHaveLength(DEFAULT_SETTINGS.marqueeRu.length);
   });
 
   it("и те же четыре карточки «О зале»", () => {
