@@ -195,6 +195,16 @@ section[id] {
     }
   }
 
+  /* Женский зал без фото: свечение за логотипом очень медленно «дышит» — меняется только прозрачность */
+  .women-glow {
+    animation: women-glow 5s ease-in-out infinite alternate;
+  }
+  @keyframes women-glow {
+    from {
+      opacity: 0.65;
+    }
+  }
+
   /* Шапка: в самом верху страницы прозрачная, после 40 px прокрутки — тёмная с размытием */
   [data-header-bg] {
     transition: opacity 0.25s ease;
