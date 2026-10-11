@@ -6,6 +6,7 @@ import {
   parseAboutForm,
   parseContactsForm,
   parseHeroForm,
+  parseMarqueeForm,
   parseRatingForm,
   parseWomenForm,
 } from "./site-settings";
@@ -73,6 +74,51 @@ describe("карточки «О зале» из формы", () => {
   it("карточки не хватает — ошибка, а не три карточки на сайте", () => {
     const three = Object.fromEntries(Object.entries(cards).filter(([k]) => !k.startsWith("card4.")));
     expect(parseAboutForm(form(three)).ok).toBe(false);
+  });
+});
+
+describe("бегущая строка из формы", () => {
+  it("пустые пункты пропускаются, порядок остальных сохраняется; пустой казахский — пустая строка на том же месте", () => {
+    const r = parseMarqueeForm(
+      form({ marquee1Ru: " Первое посещение бесплатно ", marquee1Kk: "Алғашқы келу тегін", marquee3Ru: "{часы}", marquee8Ru: "{рейтинг} в 2ГИС", marquee8Kk: "2ГИС-те {рейтинг}" }),
+    );
+    expect(r).toEqual({
+      ok: true,
+      data: {
+        marqueeRu: ["Первое посещение бесплатно", "{часы}", "{рейтинг} в 2ГИС"],
+        marqueeKk: ["Алғашқы келу тегін", "", "2ГИС-те {рейтинг}"],
+      },
+    });
+  });
+
+  it("девятый пункт форма не принимает: пунктов не больше восьми", () => {
+    const r = parseMarqueeForm(form(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`marquee${i + 1}Ru`, `Пункт ${i + 1}`]))));
+    expect(r.ok && r.data.marqueeRu).toHaveLength(8);
+  });
+
+  it("нужен хотя бы один пункт", () => {
+    expect(error(parseMarqueeForm(form({})))).toMatch(/хотя бы один пункт/);
+    expect(error(parseMarqueeForm(form({ marquee1Ru: "   " })))).toMatch(/хотя бы один пункт/);
+  });
+
+  it("казахский без русского — ошибка с номером пункта", () => {
+    expect(error(parseMarqueeForm(form({ marquee1Ru: "Раз", marquee2Kk: "Екі" })))).toBe("Пункт 2. Заполните текст на русском");
+  });
+
+  it("пункт — не длиннее 40 символов, на обоих языках", () => {
+    expect(LIMITS.marqueeItem).toBe(40);
+    expect(parseMarqueeForm(form({ marquee1Ru: "я".repeat(40), marquee1Kk: "ә".repeat(40) })).ok).toBe(true);
+    expect(error(parseMarqueeForm(form({ marquee1Ru: "я".repeat(41) })))).toBe("Пункт 1 — не длиннее 40 символов");
+    expect(error(parseMarqueeForm(form({ marquee1Ru: "Раз", marquee1Kk: "ә".repeat(41) })))).toBe("Пункт 1 (KZ) — не длиннее 40 символов");
+  });
+
+  it("в фигурных скобках — только {часы} и {рейтинг}", () => {
+    expect(error(parseMarqueeForm(form({ marquee1Ru: "Раз", marquee2Ru: "{часы работы}" })))).toBe(
+      "Пункт 2. В фигурных скобках — только {часы} и {рейтинг}",
+    );
+    expect(error(parseMarqueeForm(form({ marquee1Ru: "{часы}", marquee1Kk: "{сағат}" })))).toBe(
+      "Пункт 1 (KZ). В фигурных скобках — только {часы} и {рейтинг}",
+    );
   });
 });
 

@@ -4,13 +4,15 @@ import Link from "next/link";
 import { createContext, useActionState, useContext } from "react";
 import { LIMITS } from "@/lib/admin/limits";
 import {
+  MARQUEE_MAX_ITEMS,
+  MARQUEE_PLACEHOLDERS,
   formatPhone,
   formatRating,
   instagramHandle,
   type AboutCardData,
   type SiteSettingsData,
 } from "@/lib/domain/site-settings";
-import { saveAbout, saveContacts, saveHero, saveRating, saveWomen, type SettingsFormState } from "./actions";
+import { saveAbout, saveContacts, saveHero, saveMarquee, saveRating, saveWomen, type SettingsFormState } from "./actions";
 
 const field =
   "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
@@ -139,6 +141,31 @@ export function HeroForm({ s }: { s: SiteSettingsData }) {
         max={LIMITS.subtitle}
         rows={3}
       />
+    </Form>
+  );
+}
+
+export function MarqueeForm({ s }: { s: SiteSettingsData }) {
+  const max = LIMITS.marqueeItem;
+  return (
+    <Form action={saveMarquee}>
+      <p className="text-sm text-muted">
+        Короткие факты о зале — они бегут лентой под первым экраном, между ними звёздочка. До {MARQUEE_MAX_ITEMS} пунктов,
+        каждый не длиннее {max} символов; на сайте буквы станут заглавными. Пустые пункты пропускаются.
+      </p>
+      <p className="text-sm text-muted">
+        <span className="text-fg">{MARQUEE_PLACEHOLDERS.hours}</span> — сайт подставит часы работы из «Контактов» (сейчас:{" "}
+        {s.hoursRu}), <span className="text-fg">{MARQUEE_PLACEHOLDERS.rating}</span> — оценку из «Рейтинга 2ГИС» (сейчас:{" "}
+        {formatRating(s.ratingTenths)}).
+      </p>
+      {Array.from({ length: MARQUEE_MAX_ITEMS }, (_, i) => (
+        <fieldset key={i} className="space-y-3 rounded-2xl bg-card-2/40 p-4">
+          <legend className="font-display text-xl uppercase tracking-wide">Пункт {i + 1}</legend>
+          <Input name={`marquee${i + 1}Ru`} label="Текст (RU)" saved={s.marqueeRu[i] ?? ""} max={max} autoComplete="off" />
+          <Input name={`marquee${i + 1}Kk`} label="Текст (KZ)" saved={s.marqueeKk[i] ?? ""} max={max} autoComplete="off" />
+        </fieldset>
+      ))}
+      <p className={hint}>Если казахский текст пуст — на казахской версии покажем русский.</p>
     </Form>
   );
 }

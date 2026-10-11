@@ -129,7 +129,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <Header {...props} hasDirections={directions.length > 0} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} photo={photos.hero} />
-        <Marquee words={t.marquee} />
+        {s.show.marquee && s.marquee.length > 0 && <Marquee items={s.marquee} />}
         {s.show.about && <About {...props} />}
         {/* Без видимых Направлений блока нет */}
         {s.show.directions && directions.length > 0 && <Directions {...props} directions={directions} />}

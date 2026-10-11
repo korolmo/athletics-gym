@@ -157,7 +157,11 @@ model SiteSettings {
   /// Рейтинг 2ГИС: оценка в десятых (50 = 5,0) и число оценок — Владелец вводит вручную
   ratingTenths   Int
   ratingCount    Int
+  /// Бегущая строка: пункты по порядку. Списки одной длины; пустая строка в казахском — «как на русском»
+  marqueeRu      String[] @default([])
+  marqueeKk      String[] @default([])
   /// Блоки главной: показывать ли на сайте (первый экран не скрывается)
+  showMarquee    Boolean  @default(true)
   showAbout      Boolean  @default(true)
   showDirections Boolean  @default(true)
   showWomen      Boolean  @default(true)

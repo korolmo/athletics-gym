@@ -150,14 +150,15 @@ section[id] {
     }
   }
 
-  /* Бегущая строка: две одинаковые половины, сдвиг ровно на одну — шва нет; при наведении стоит */
+  /* Бегущая строка: две одинаковые половины, сдвиг ровно на одну — шва нет; при наведении стоит.
+     Длительность считает Marquee.tsx по длине текста — скорость не зависит от числа пунктов */
   .marquee-track {
-    animation: marquee 11s linear infinite;
+    animation: marquee var(--marquee-s, 14s) linear infinite;
   }
-  /* С планшета половина строки длиннее (восемь повторов вместо трёх) — и идёт дольше, скорость та же */
+  /* С планшета половина строки длиннее и буквы крупнее — идёт дольше, скорость та же */
   @media (min-width: 48rem) {
     .marquee-track {
-      animation-duration: 28s;
+      animation-duration: var(--marquee-s-md, 30s);
     }
   }
   .marquee:hover .marquee-track {
@@ -228,6 +229,16 @@ section[id] {
     }
   }
 }
+/* Бегущая строка — шрифтом Oswald. Файлы шрифта начинают грузиться, только когда страница загрузилась и нарисована
+   (data-late-fonts ставит motion-run.ts): раньше они делили бы канал со шрифтом девиза и картинкой первого экрана.
+   До этого и без скриптов — узкий системный шрифт; высота ленты задана межстрочным интервалом и не меняется. */
+.marquee-track {
+  font-family: "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+}
+html[data-late-fonts] .marquee-track {
+  font-family: var(--font-display);
+}
+
 [data-site-header][data-top] [data-header-bg] {
   opacity: 0;
 }
