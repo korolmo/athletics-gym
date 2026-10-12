@@ -13,6 +13,8 @@ type Row = {
   reviewedAt: Date;
   status: string;
   fromVisitor: boolean;
+  consentAt?: Date | null;
+  consentPolicyDate?: string | null;
   createdAt: Date;
 };
 
@@ -72,11 +74,14 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
 
+import { LEGAL_UPDATED } from "@/lib/legal/meta";
 import * as reviews from "./reviews";
 
 const NOW = new Date("2026-10-10T09:00:00Z");
 const HOUR = 60 * 60 * 1000;
-const visitor = { authorName: "Айгерим", rating: 5, text: "Отличный зал, хожу второй год.", hallId: null };
+// То, что Посетитель написал в форме, и то же вместе с Согласием на обработку данных — так его отдаёт проверка формы
+const written = { authorName: "Айгерим", rating: 5, text: "Отличный зал, хожу второй год.", hallId: null };
+const visitor = { ...written, consent: true as const };
 const manual = {
   id: null,
   authorName: "Данияр",
@@ -105,13 +110,36 @@ describe("отзыв Посетителя с сайта", () => {
     await reviews.createVisitorReview(visitor, "ip-1", NOW);
     expect(state.reviews).toHaveLength(1);
     expect(state.reviews[0]).toMatchObject({
-      ...visitor,
+      ...written,
       status: "NEW",
       source: "SITE",
       sourceUrl: null,
       fromVisitor: true,
       reviewedAt: new Date("2026-10-10T00:00:00.000Z"),
     });
+  });
+
+  it("вместе с отзывом записаны время Согласия на обработку данных и дата редакции политики; самой галочки в записи нет", async () => {
+    await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    expect(state.reviews[0].consentAt).toEqual(NOW);
+    expect(state.reviews[0].consentPolicyDate).toBe(LEGAL_UPDATED.privacy);
+    expect(state.reviews[0]).not.toHaveProperty("consent");
+  });
+
+  it.each([
+    ["согласия нет", written],
+    ["согласие — не «да»", { ...written, consent: false }],
+    ["согласие строкой", { ...written, consent: "on" }],
+  ])("без Согласия отзыв не сохраняется: %s", async (_name, input) => {
+    await expect(reviews.createVisitorReview(input as typeof visitor, "ip-1", NOW)).rejects.toThrow(/согласия/);
+    expect(state.reviews).toEqual([]);
+    expect(state.submissions).toEqual([]);
+    expect(db.review.create).not.toHaveBeenCalled();
+  });
+
+  it("у отзыва, добавленного Владельцем, Согласия нет", async () => {
+    await reviews.saveOwnerReview(manual);
+    expect(state.reviews[0].consentAt ?? null).toBeNull();
   });
 
   it("до одобрения на сайте его нет", async () => {
@@ -177,6 +205,7 @@ describe("на сайте видны только опубликованные",
 
   it("сайту не отдаются служебные поля", async () => {
     const [shown] = await reviews.listPublishedReviews();
+    // Время Согласия на сайт не уходит: оно нужно только Владельцу
     expect(Object.keys(shown).sort()).toEqual(["authorName", "id", "rating", "reviewedAt", "source", "sourceUrl", "text"]);
   });
 
@@ -213,7 +242,7 @@ describe("админка", () => {
     const id = state.reviews[0].id;
     const r = await reviews.saveOwnerReview({ ...manual, id, text: "Исправленный текст", authorName: "Другой", rating: 1 });
     expect(r.ok === false && r.error).toMatch(/править нельзя/);
-    expect(state.reviews[0]).toMatchObject({ ...visitor, status: "NEW", fromVisitor: true });
+    expect(state.reviews[0]).toMatchObject({ ...written, status: "NEW", fromVisitor: true });
     expect(db.review.update).not.toHaveBeenCalled();
   });
 

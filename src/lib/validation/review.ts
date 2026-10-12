@@ -30,7 +30,7 @@ const rating = z.string().transform((raw, ctx) => {
  * Ошибки — кодами: форма на сайте двуязычная, текст ошибки берётся из словаря по коду.
  * Телефон и email не собираем: полей для них нет.
  */
-export const VISITOR_REVIEW_ERRORS = ["name", "nameLong", "rating", "textShort", "textLong", "link", "hall"] as const;
+export const VISITOR_REVIEW_ERRORS = ["name", "nameLong", "rating", "textShort", "textLong", "link", "hall", "consent"] as const;
 export type VisitorReviewError = (typeof VISITOR_REVIEW_ERRORS)[number];
 
 export const visitorReviewSchema = z.object({
@@ -46,6 +46,8 @@ export const visitorReviewSchema = z.object({
     .max(textMax, { error: "textLong" })
     .refine((v) => !containsLink(v), { error: "link" }),
   hallId: hall,
+  /** Согласие на обработку данных: галочка формы. Без неё Отзыв не принимается; стоит последней — сначала ошибки полей */
+  consent: z.string().transform((raw, ctx) => (raw === "on" ? (true as const) : fail(ctx, "consent"))),
 });
 export type VisitorReviewInput = z.output<typeof visitorReviewSchema>;
 
@@ -55,6 +57,7 @@ export function parseVisitorReview(fd: FormData): { ok: true; data: VisitorRevie
     rating: text(fd, "rating"),
     text: text(fd, "text"),
     hallId: text(fd, "hallId"),
+    consent: text(fd, "consent"),
   });
   if (result.success) return { ok: true, data: result.data };
   const code = result.error.issues[0]?.message;

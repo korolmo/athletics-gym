@@ -1,13 +1,10 @@
 import crypto from "node:crypto";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { FAILURE_DELAY_MS, WINDOW_MS, evaluateAttempts, type LimitState } from "./login-limit.rules";
+import { ATTEMPT_KEEP_MS, FAILURE_DELAY_MS, WINDOW_MS, evaluateAttempts, type LimitState } from "./login-limit.rules";
 
 // Лимит попыток входа хранится в базе (таблица LoginAttempt).
 // Любая ошибка базы здесь пробрасывается наверх: без работающего лимита вход запрещён.
-
-/** Записи старше суток не нужны — чистим при каждой неудаче. */
-const KEEP_MS = 24 * 60 * 60 * 1000;
 
 /** IP клиента: на Vercel приходит в x-real-ip / x-forwarded-for. */
 async function clientIp(): Promise<string> {
@@ -35,7 +32,7 @@ export async function checkLoginLimit(ipHash: string): Promise<LimitState> {
 
 export async function recordFailedLogin(ipHash: string): Promise<void> {
   await db.loginAttempt.create({ data: { ipHash } });
-  await db.loginAttempt.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - KEEP_MS) } } });
+  await db.loginAttempt.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - ATTEMPT_KEEP_MS) } } });
   await new Promise((resolve) => setTimeout(resolve, FAILURE_DELAY_MS));
 }
 

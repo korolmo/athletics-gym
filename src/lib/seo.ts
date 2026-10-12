@@ -38,27 +38,34 @@ export function readSeoEnv(env: Record<string, string | undefined> = process.env
   };
 }
 
-/** hreflang: у каждой языковой версии — ссылки на обе и на версию по умолчанию (русскую). */
-export function languageAlternates(siteUrl: string): Record<string, string> {
-  return { ru: `${siteUrl}/ru`, kk: `${siteUrl}/kk`, "x-default": `${siteUrl}/ru` };
+/**
+ * hreflang: у каждой языковой версии — ссылки на обе и на версию по умолчанию (русскую).
+ * `path` — страница внутри языка: «» — главная, «/privacy», «/terms».
+ */
+export function languageAlternates(siteUrl: string, path = ""): Record<string, string> {
+  return { ru: `${siteUrl}/ru${path}`, kk: `${siteUrl}/kk${path}`, "x-default": `${siteUrl}/ru${path}` };
 }
 
 const OG_LOCALE: Record<Locale, string> = { ru: "ru_KZ", kk: "kk_KZ" };
 
-/** Метаданные главной на одном языке: title, description, canonical, hreflang, Open Graph, Twitter, robots. */
+/**
+ * Метаданные страницы на одном языке: title, description, canonical, hreflang, Open Graph, Twitter, robots.
+ * `path` — страница внутри языка: «» — главная, «/privacy», «/terms».
+ */
 export function buildMetadata(
   locale: Locale,
   text: { title: string; description: string },
   env: SeoEnv,
   icon: string,
+  path = "",
 ): Metadata {
-  const url = `${env.siteUrl}/${locale}`;
+  const url = `${env.siteUrl}/${locale}${path}`;
   const indexable = isIndexable(env.vercelEnv);
   return {
     metadataBase: new URL(env.siteUrl),
     title: text.title,
     description: text.description,
-    alternates: { canonical: url, languages: languageAlternates(env.siteUrl) },
+    alternates: { canonical: url, languages: languageAlternates(env.siteUrl, path) },
     // Картинка-превью подставляется сама: файлы opengraph-image и twitter-image рядом со страницей
     openGraph: {
       type: "website",
@@ -86,15 +93,28 @@ export function buildRobots(env: SeoEnv): MetadataRoute.Robots {
   };
 }
 
-/** sitemap.xml: обе языковые версии главной, у каждой — hreflang на обе и на x-default. */
-export function buildSitemap(siteUrl: string, lastModified: Date): MetadataRoute.Sitemap {
-  return locales.map((locale) => ({
+/**
+ * sitemap.xml: обе языковые версии главной и каждой из остальных страниц (`pages`: Политика конфиденциальности,
+ * Пользовательское соглашение), у каждой — hreflang на обе версии и на x-default.
+ */
+export function buildSitemap(siteUrl: string, lastModified: Date, pages: { path: string; lastModified: Date }[] = []): MetadataRoute.Sitemap {
+  const home = locales.map((locale) => ({
     url: `${siteUrl}/${locale}`,
     lastModified,
     changeFrequency: "weekly" as const,
     priority: locale === "ru" ? 1 : 0.8,
     alternates: { languages: languageAlternates(siteUrl) },
   }));
+  const rest = pages.flatMap((page) =>
+    locales.map((locale) => ({
+      url: `${siteUrl}/${locale}${page.path}`,
+      lastModified: page.lastModified,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+      alternates: { languages: languageAlternates(siteUrl, page.path) },
+    })),
+  );
+  return [...home, ...rest];
 }
 
 /** Часы работы из текста Настроек сайта («Ежедневно 08:00–23:00») → время открытия и закрытия; null — времени в тексте нет. */

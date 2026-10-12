@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, readSession } from "@/lib/auth/session";
+import { LOCALE_COOKIE as COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 
 const LOCALES = ["ru", "kk"];
-const COOKIE = "NEXT_LOCALE";
 const LOGIN_PATH = "/admin/login";
 
 /**
@@ -28,7 +28,7 @@ export async function middleware(req: NextRequest) {
   if (LOCALES.includes(first)) {
     const res = NextResponse.next();
     if (req.cookies.get(COOKIE)?.value !== first) {
-      res.cookies.set(COOKIE, first, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+      res.cookies.set(COOKIE, first, { path: "/", maxAge: LOCALE_COOKIE_MAX_AGE_SEC });
     }
     return res;
   }

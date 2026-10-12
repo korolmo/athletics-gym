@@ -1,9 +1,8 @@
-import Image from "next/image";
-import { mapEmbedUrl, site, whatsappUrl } from "@/lib/site";
-import { CallSym, ChatSym, LocationOnSym, OpenInNewSym, ScheduleSym } from "@/components/symbols";
+import { whatsappUrl } from "@/lib/site";
+import { CallSym, ChatSym, LocationOnSym, ScheduleSym } from "@/components/symbols";
 import { container, eyebrow, h2, sectionY } from "@/components/ui/styles";
+import { MapPanel } from "@/components/site/contacts/MapPanel";
 import type { SectionProps } from "@/components/site/sections/types";
-import { logo } from "@/lib/brand";
 
 // Контакты
 export function Contacts({ t, s }: SectionProps) {
@@ -56,33 +55,13 @@ export function Contacts({ t, s }: SectionProps) {
             </div>
           </div>
 
-          <div className="relative h-[320px] overflow-hidden rounded-2xl bg-surface-card shadow-lg md:h-[420px] lg:col-span-7">
-            <iframe
-              title={t.contacts.mapTitle}
-              src={mapEmbedUrl}
-              loading="lazy"
-              className="absolute inset-0 h-full w-full [filter:brightness(0.75)]"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-background/20" />
-            <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/95 p-4 shadow-xl backdrop-blur-md">
-              <Image src={logo} alt="" width={32} height={32} className="h-8 w-8 object-contain" />
-              <div>
-                <div className="text-[13px] uppercase leading-5 text-text-primary">{site.name}</div>
-                <div className="text-[11px] leading-4 text-primary-container">
-                  {c.address} · 2ГИС ★ {s.rating.value}
-                </div>
-              </div>
-            </div>
-            <a
-              href={site.twoGisRoute}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute bottom-8 right-4 flex items-center gap-1.5 rounded-xl bg-surface-dim/90 px-4 py-2 text-[11px] uppercase text-text-primary shadow-md backdrop-blur-xs transition-colors hover:text-primary-container"
-            >
-              <span>{t.contacts.route}</span>
-              <OpenInNewSym className="h-3.5 w-3.5" />
-            </a>
-          </div>
+          {/* Карта грузится только по нажатию «Показать карту»: до него сайт к сервису карты не обращается */}
+          <MapPanel
+            labels={{ show: t.contacts.showMap, open2gis: t.contacts.open2gis, note: t.contacts.mapNote, route: t.contacts.route, mapTitle: t.contacts.mapTitle }}
+            address={c.address}
+            city={t.contacts.city}
+            rating={s.rating.value}
+          />
         </div>
       </div>
     </section>

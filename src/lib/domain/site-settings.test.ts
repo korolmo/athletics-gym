@@ -4,6 +4,11 @@ import {
   BLOCKS,
   MARQUEE_MAX_ITEMS,
   hasUnknownPlaceholder,
+  isBin,
+  isEmail,
+  normalizeBin,
+  normalizeEmail,
+  requisitesParts,
   marqueeItems,
   formatPhone,
   formatRating,
@@ -17,7 +22,7 @@ import {
   splitMotto,
   toSiteContent,
 } from "./site-settings";
-import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "./site-settings.defaults";
+import { DEFAULT_ABOUT_CARDS, DEFAULT_DATA_LOCATION, DEFAULT_SETTINGS } from "./site-settings.defaults";
 
 describe("телефон", () => {
   it.each([
@@ -331,6 +336,80 @@ describe("Настройки сайта на языке страницы", () =>
     const s = toSiteContent("ru", { ...DEFAULT_SETTINGS, showGallery: false }, DEFAULT_ABOUT_CARDS);
     expect(s.show.gallery).toBe(false);
     expect(BLOCKS.filter((b) => s.show[b])).toEqual(BLOCKS.filter((b) => b !== "gallery"));
+  });
+});
+
+describe("реквизиты", () => {
+  const filled = {
+    ...DEFAULT_SETTINGS,
+    legalName: "ИП Иванов Иван Иванович",
+    legalBin: "880101300123",
+    legalAddress: "г. Кызылорда, ул. Султана Бейбарса, 2а",
+    privacyEmail: "info@athletics-gym.kz",
+  };
+  const labels = { bin: "ИИН/БИН", legalAddress: "юр. адрес:" };
+
+  it("ИИН/БИН — ровно 12 цифр", () => {
+    expect(isBin("880101300123")).toBe(true);
+    for (const bad of ["", "88010130012", "8801013001234", "88010130012a", " 880101300123", "880101300123\n", "８８０１０１３００１２３"]) {
+      expect(isBin(bad), bad).toBe(false);
+    }
+    expect(normalizeBin(" 880101 300 123 ")).toBe("880101300123");
+    expect(normalizeBin("8801-0130-0123")).toBe("880101300123");
+    expect(normalizeBin("88010130012")).toBeNull();
+    expect(normalizeBin("БИН 880101300123")).toBeNull();
+  });
+
+  it("email: обычные адреса проходят, всё остальное — нет", () => {
+    for (const good of ["info@athletics-gym.kz", "ivan.ivanov+gym@mail.ru", "a@b.co", "Owner_1@sub.domain.kz"]) {
+      expect(isEmail(good), good).toBe(true);
+    }
+    for (const bad of ["", "info", "info@", "@a.kz", "info@a", "in fo@a.kz", "info@a..kz", "info@a.k", "a@b.kz?subject=x", "a@b.kz\nbcc:x@y.kz", "<a@b.kz>", "javascript:alert(1)@a.kz"]) {
+      expect(isEmail(bad), bad).toBe(false);
+    }
+    expect(normalizeEmail("  info@athletics-gym.kz ")).toBe("info@athletics-gym.kz");
+    expect(normalizeEmail("не почта")).toBeNull();
+  });
+
+  it("пока Владелец их не ввёл, реквизитов нет — и в подвале пусто", () => {
+    const s = toSiteContent("ru", DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS);
+    expect(s.legal).toEqual({ name: "", bin: "", address: "", email: "", dataLocation: DEFAULT_DATA_LOCATION.ru });
+    expect(requisitesParts(s.legal, labels)).toEqual([]);
+  });
+
+  it("реквизиты из Настроек попадают в подвал: название, ИИН/БИН, юридический адрес", () => {
+    const s = toSiteContent("ru", filled, DEFAULT_ABOUT_CARDS);
+    expect(s.legal).toMatchObject({ name: filled.legalName, bin: filled.legalBin, address: filled.legalAddress, email: filled.privacyEmail });
+    expect(requisitesParts(s.legal, labels).join(" · ")).toBe(
+      "ИП Иванов Иван Иванович · ИИН/БИН 880101300123 · юр. адрес: г. Кызылорда, ул. Султана Бейбарса, 2а",
+    );
+  });
+
+  it("заполнена часть реквизитов — в подвале только она", () => {
+    const s = toSiteContent("ru", { ...filled, legalBin: null, legalAddress: "  " }, DEFAULT_ABOUT_CARDS);
+    expect(requisitesParts(s.legal, labels)).toEqual(["ИП Иванов Иван Иванович"]);
+  });
+
+  it("на казахской версии подписи свои, сами реквизиты те же", () => {
+    const s = toSiteContent("kk", filled, DEFAULT_ABOUT_CARDS);
+    expect(requisitesParts(s.legal, { bin: "ЖСН/БСН", legalAddress: "заңды мекенжайы:" })[1]).toBe("ЖСН/БСН 880101300123");
+  });
+
+  it("вторая линия защиты: ИИН/БИН и email не по правилам (правили мимо админки) на сайт не попадают", () => {
+    const s = toSiteContent("ru", { ...filled, legalBin: "12345", privacyEmail: "a@b.kz?bcc=x@y.kz" }, DEFAULT_ABOUT_CARDS);
+    expect(s.legal.bin).toBe("");
+    expect(s.legal.email).toBe("");
+  });
+
+  it("место хранения данных: по умолчанию — текст из кода на обоих языках; своё — из Настроек, без перевода на /kk идёт русский", () => {
+    expect(toSiteContent("kk", DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS).legal.dataLocation).toBe(DEFAULT_DATA_LOCATION.kk);
+    const moved = { ...DEFAULT_SETTINGS, dataLocationRu: "на серверах в Республике Казахстан", dataLocationKk: null };
+    expect(toSiteContent("ru", moved, DEFAULT_ABOUT_CARDS).legal.dataLocation).toBe("на серверах в Республике Казахстан");
+    expect(toSiteContent("kk", moved, DEFAULT_ABOUT_CARDS).legal.dataLocation).toBe("на серверах в Республике Казахстан");
+    const translated = { ...moved, dataLocationKk: "Қазақстан Республикасындағы серверлерде" };
+    expect(toSiteContent("kk", translated, DEFAULT_ABOUT_CARDS).legal.dataLocation).toBe("Қазақстан Республикасындағы серверлерде");
+    // Перевод без русского текста не показываем: на /ru и /kk было бы о разном
+    expect(toSiteContent("kk", { ...translated, dataLocationRu: " " }, DEFAULT_ABOUT_CARDS).legal.dataLocation).toBe(DEFAULT_DATA_LOCATION.kk);
   });
 });
 

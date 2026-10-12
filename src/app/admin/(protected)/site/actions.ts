@@ -9,6 +9,7 @@ import {
   parseAboutForm,
   parseContactsForm,
   parseHeroForm,
+  parseLegalForm,
   parseMarqueeForm,
   parseRatingForm,
   parseWomenForm,
@@ -59,6 +60,10 @@ export async function saveContacts(_prev: SettingsFormState, fd: FormData): Prom
 
 export async function saveRating(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {
   return save(fd, parseRatingForm, settings.saveRating);
+}
+
+export async function saveLegal(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {
+  return save(fd, parseLegalForm, settings.saveLegal);
 }
 
 export async function toggleBlock(fd: FormData): Promise<void> {

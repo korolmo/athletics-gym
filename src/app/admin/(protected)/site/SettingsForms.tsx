@@ -12,7 +12,8 @@ import {
   type AboutCardData,
   type SiteSettingsData,
 } from "@/lib/domain/site-settings";
-import { saveAbout, saveContacts, saveHero, saveMarquee, saveRating, saveWomen, type SettingsFormState } from "./actions";
+import { DEFAULT_DATA_LOCATION } from "@/lib/domain/site-settings.defaults";
+import { saveAbout, saveContacts, saveHero, saveLegal, saveMarquee, saveRating, saveWomen, type SettingsFormState } from "./actions";
 
 const field =
   "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
@@ -248,6 +249,71 @@ export function ContactsForm({ s }: { s: SiteSettingsData }) {
         autoComplete="off"
         note="Имя профиля (@athletics_gym_qyzylorda) или ссылка на него."
       />
+    </Form>
+  );
+}
+
+export function LegalForm({ s }: { s: SiteSettingsData }) {
+  return (
+    <Form action={saveLegal}>
+      <p className="text-sm text-muted">
+        Реквизиты показываются внизу сайта, в политике конфиденциальности и в пользовательском соглашении. Все поля
+        необязательны: пустое поле на сайте просто не показывается.
+      </p>
+      <Input
+        name="legalName"
+        label="Название ИП"
+        saved={s.legalName ?? ""}
+        max={LIMITS.legalName}
+        autoComplete="off"
+        placeholder="ИП Иванов Иван Иванович"
+        note="Как в свидетельстве или талоне о регистрации, вместе с «ИП»."
+      />
+      <Input
+        name="legalBin"
+        label="ИИН/БИН"
+        saved={s.legalBin ?? ""}
+        max={20}
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="000000000000"
+        note="Ровно 12 цифр."
+      />
+      <Input name="legalAddress" label="Юридический адрес" saved={s.legalAddress ?? ""} max={LIMITS.legalAddress} autoComplete="off" rows={2} />
+      <Input
+        name="privacyEmail"
+        label="Email для обращений о персональных данных"
+        saved={s.privacyEmail ?? ""}
+        max={LIMITS.email}
+        type="email"
+        inputMode="email"
+        autoComplete="off"
+        placeholder="info@example.kz"
+        note="На этот адрес люди пишут, чтобы узнать, исправить или удалить свои данные. Он виден на сайте."
+      />
+      <fieldset className="space-y-3 rounded-2xl bg-card-2/40 p-4">
+        <legend className="font-display text-xl uppercase tracking-wide">Место хранения данных</legend>
+        <p className="text-xs text-muted">
+          Продолжение фразы «Данные хранятся …» в политике конфиденциальности. Если пусто — «{DEFAULT_DATA_LOCATION.ru}».
+        </p>
+        <Input
+          name="dataLocationRu"
+          label="Текст (RU)"
+          saved={s.dataLocationRu ?? ""}
+          max={LIMITS.dataLocation}
+          autoComplete="off"
+          placeholder={DEFAULT_DATA_LOCATION.ru}
+        />
+        <Input
+          name="dataLocationKk"
+          label="Текст (KZ)"
+          saved={s.dataLocationKk ?? ""}
+          max={LIMITS.dataLocation}
+          autoComplete="off"
+          placeholder={DEFAULT_DATA_LOCATION.kk}
+          note="Если пусто — на казахской версии покажем русский."
+        />
+      </fieldset>
     </Form>
   );
 }

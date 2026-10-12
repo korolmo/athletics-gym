@@ -24,6 +24,11 @@ export const LIMITS = {
   ratingCount: 1_000_000,
   /** Пункт бегущей строки */
   marqueeItem: 40,
+  /** Реквизиты: название ИП, юридический адрес, email, место хранения данных */
+  legalName: 120,
+  legalAddress: 200,
+  email: 120,
+  dataLocation: 160,
   /** Подпись фото Галереи */
   caption: 80,
 } as const;

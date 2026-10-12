@@ -26,6 +26,14 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   instagram: "https://instagram.com/athletics_gym_qyzylorda",
   ratingTenths: 50,
   ratingCount: 405,
+  // Реквизиты вводит Владелец; пока пусты — в подвале сайта их нет
+  legalName: null,
+  legalBin: null,
+  legalAddress: null,
+  privacyEmail: null,
+  // Пусто — DEFAULT_DATA_LOCATION
+  dataLocationRu: null,
+  dataLocationKk: null,
   // Бегущая строка — факты о зале; {часы} и {рейтинг} сайт подставляет из Настроек.
   // На боевую базу те же пункты кладёт миграция 20261011000000_marquee (совпадение проверяет тест).
   marqueeRu: ["ПЕРВОЕ ПОСЕЩЕНИЕ БЕСПЛАТНО", "ОТДЕЛЬНЫЙ ЖЕНСКИЙ ЗАЛ", "{часы}", "{рейтинг} В 2ГИС", "ПЕРСОНАЛЬНЫЕ ТРЕНИРОВКИ", "СТУДЕНТАМ ДЕШЕВЛЕ"],
@@ -40,6 +48,16 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   showReviews: true,
   showContacts: true,
 };
+
+/**
+ * Место хранения данных, пока Владелец не указал своё: продолжение фразы «Данные хранятся …» в Политике конфиденциальности.
+ * Названо как есть: база и файлы — в Supabase, сайт — на Vercel, оба во Франкфурте. Переехали — Владелец меняет текст
+ * в форме «Реквизиты», а здесь меняется значение по умолчанию. Казахский текст черновой — проверить носителем языка.
+ */
+export const DEFAULT_DATA_LOCATION = {
+  ru: "на серверах Vercel и Supabase в Германии (ЕС)",
+  kk: "Vercel және Supabase компанияларының Германиядағы (ЕО) серверлерінде",
+} as const;
 
 export const DEFAULT_ABOUT_CARDS: AboutCardData[] = [
   {
