@@ -154,19 +154,28 @@ section[id] {
      Длительность считает Marquee.tsx по длине текста — скорость не зависит от числа пунктов */
   .marquee-track {
     animation: marquee var(--marquee-s, 14s) linear infinite;
+    /* Лента едет всё время: свой слой у неё с самого начала, а не создаётся на каждом кадре */
+    will-change: transform;
   }
-  /* С планшета половина строки длиннее и буквы крупнее — идёт дольше, скорость та же */
+  /* С планшета буквы крупнее, на широком экране копий текста больше — половина строки длиннее и идёт дольше, скорость та же */
   @media (min-width: 48rem) {
     .marquee-track {
-      animation-duration: var(--marquee-s-md, 30s);
+      animation-duration: var(--marquee-s-md, 15s);
     }
   }
-  .marquee:hover .marquee-track {
+  @media (min-width: 96rem) {
+    .marquee-track {
+      animation-duration: var(--marquee-s-2xl, 30s);
+    }
+  }
+  /* Стоит при наведении и пока лента не на экране (пометку data-offscreen ставит motion-run.ts) */
+  .marquee:hover .marquee-track,
+  .marquee[data-offscreen] .marquee-track {
     animation-play-state: paused;
   }
   @keyframes marquee {
     to {
-      transform: translateX(-50%);
+      transform: translate3d(-50%, 0, 0);
     }
   }
 
@@ -192,16 +201,6 @@ section[id] {
   @keyframes hall-fade {
     from {
       opacity: 0;
-    }
-  }
-
-  /* Женский зал без фото: свечение за логотипом очень медленно «дышит» — меняется только прозрачность */
-  .women-glow {
-    animation: women-glow 5s ease-in-out infinite alternate;
-  }
-  @keyframes women-glow {
-    from {
-      opacity: 0.65;
     }
   }
 
@@ -265,6 +264,25 @@ html[data-late-fonts] .marquee-track {
   body:has([data-contact-source="mobile-bar"]) .cookie-notice {
     bottom: 5.75rem;
   }
+}
+
+/* Женский зал без фото: мягкое жёлтое свечение за логотипом. Градиент вместо размытого круга (filter: blur):
+   выглядит так же, но рисуется один раз и без отдельного слоя. Ступени повторяют спад размытия на 50 px;
+   свечение неподвижно. */
+.women-halo::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgb(245 230 66 / 0.17) 0%,
+    rgb(245 230 66 / 0.15) 25%,
+    rgb(245 230 66 / 0.09) 50%,
+    rgb(245 230 66 / 0.03) 75%,
+    rgb(245 230 66 / 0) 100%
+  );
 }
 
 /* Заглушка карты в «Контактах»: едва заметная сетка, как на плане */

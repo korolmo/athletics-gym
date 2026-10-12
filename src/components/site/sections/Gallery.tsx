@@ -11,8 +11,8 @@ import { GalleryGrid, type GalleryView } from "@/components/site/halls/GalleryGr
 export function Gallery({ t, s, photos }: SectionProps & { photos: GalleryView[] }) {
   const own = photos.length > 0;
   const tiles = [
-    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-8", sizes: "(min-width: 768px) 820px, 100vw", item: s.about[2] },
-    { src: "/stitch/gallery-weights-crop.jpg", span: "md:col-span-4", sizes: "(min-width: 768px) 400px, 100vw", item: s.about[0] },
+    { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-8", sizes: "(min-width: 1280px) 820px, (min-width: 768px) 66vw, 100vw", item: s.about[2] },
+    { src: "/stitch/gallery-weights-crop.jpg", span: "md:col-span-4", sizes: "(min-width: 1280px) 400px, (min-width: 768px) 33vw, 100vw", item: s.about[0] },
   ];
   return (
     <section id="gallery" className={`w-full bg-surface-container-low ${sectionY}`}>

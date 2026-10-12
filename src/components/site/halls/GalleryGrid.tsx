@@ -22,7 +22,7 @@ export function GalleryGrid({ photos, more }: { photos: GalleryView[]; more: str
               src={photo.url}
               alt={photo.caption ?? ""}
               fill
-              sizes="(min-width: 1024px) 300px, (min-width: 768px) 33vw, 50vw"
+              sizes="(min-width: 1280px) 300px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
               className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
             {photo.caption && (

@@ -132,13 +132,14 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
                 src={photo ?? "/stitch/hero.jpg"}
                 alt=""
                 fill
-                sizes="(min-width: 1024px) 500px, 100vw"
+                // С десктопа фото стоит в пяти колонках из двенадцати: до 1280 px это около 40% экрана, дальше — 500 px
+                sizes="(min-width: 1280px) 500px, (min-width: 1024px) 40vw, 100vw"
                 className="hero-zoom object-cover"
                 priority
               />
               <div className="absolute inset-0 bg-linear-to-t from-background via-surface-dim/40 to-transparent" />
               {s.show.women && (
-                <div className="absolute right-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/90 px-3.5 py-2 shadow-lg backdrop-blur-md">
+                <div className="absolute right-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/95 px-3.5 py-2 shadow-lg md:bg-surface-card/90 md:backdrop-blur-md">
                   <Image
                     src={logoWomen}
                     alt=""
@@ -152,7 +153,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
                   </div>
                 </div>
               )}
-              <div className="absolute bottom-5 left-5 flex max-w-[280px] items-center gap-4 rounded-xl bg-background/95 p-4 shadow-xl backdrop-blur-md">
+              <div className="absolute bottom-5 left-5 flex max-w-[280px] items-center gap-4 rounded-xl bg-background/95 p-4 shadow-xl md:backdrop-blur-md">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary">
                   <FitnessCenterSym className="h-[26px] w-[26px]" />
                 </div>
@@ -162,7 +163,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
                   <span className="text-[11px] leading-4 text-primary-container">{t.prices.trialNote}</span>
                 </div>
               </div>
-              <div className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-surface-dim/80 text-[10px] text-text-muted backdrop-blur-xs">
+              <div className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-surface-dim/90 text-[10px] text-text-muted md:bg-surface-dim/80 md:backdrop-blur-xs">
                 {"'22"}
               </div>
             </div>

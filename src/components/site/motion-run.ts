@@ -33,6 +33,17 @@ export function startMotion(): () => void {
 
   const canObserve = "IntersectionObserver" in window;
 
+  // Бегущая строка едет, только пока она на экране: вне экрана анимация стоит и кадры на неё не тратятся
+  const marquee = document.querySelector(".marquee");
+  if (marquee && canObserve && !reduce) {
+    const io = new IntersectionObserver(([entry]) => marquee.toggleAttribute("data-offscreen", !entry.isIntersecting));
+    io.observe(marquee);
+    cleanups.push(() => {
+      io.disconnect();
+      marquee.removeAttribute("data-offscreen");
+    });
+  }
+
   // Нижняя панель на телефоне: выезжает, когда первый экран почти ушёл (его низ поднялся выше 40% экрана);
   // один раз «кивает» через 3 с
   const bar = document.querySelector('[data-contact-source="mobile-bar"]');
