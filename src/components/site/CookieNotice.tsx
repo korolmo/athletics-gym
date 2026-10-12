@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 /** Запись в памяти браузера: Посетитель нажал «Понятно». Это не cookie, и на сервер она не уходит. */
 const KEY = "ag-cookie-notice";
@@ -18,13 +18,24 @@ function dismissed(): boolean {
 
 /**
  * Сообщение о cookie при первом визите: сайт ставит только необходимые, выбирать нечего — достаточно «Понятно».
- * Сервер его не отдаёт: показывать ли, знает только браузер. Стоит поверх страницы и контент не сдвигает;
+ * Сервер его не отдаёт: показывать ли, знает только браузер; появляется, когда браузер освободился после загрузки
+ * (requestIdleCallback), — первой отрисовке не мешает. Стоит поверх страницы и контент не сдвигает;
  * на телефоне — над нижней панелью с кнопками (globals.css).
  */
 export function CookieNotice({ label, text, more, ok, href }: { label: string; text: string; more: string; ok: string; href: string }) {
   const stored = useSyncExternalStore(subscribe, dismissed, () => true);
   const [closed, setClosed] = useState(false);
-  if (stored || closed) return null;
+  const [idle, setIdle] = useState(false);
+  useEffect(() => {
+    // Safari не знает requestIdleCallback — там просто небольшая задержка
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setIdle(true), { timeout: 3000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(() => setIdle(true), 600);
+    return () => clearTimeout(timer);
+  }, []);
+  if (stored || closed || !idle) return null;
 
   const accept = () => {
     try {

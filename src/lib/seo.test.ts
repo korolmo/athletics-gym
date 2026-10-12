@@ -20,7 +20,7 @@ import {
 const URL_ = "https://athletics-gym.vercel.app";
 const prod = { siteUrl: URL_, vercelEnv: "production" };
 const preview = { siteUrl: URL_, vercelEnv: "preview" };
-const ICON = "/logo.png?v=2";
+const ICON = { small: "/icon-32.png?v=1", large: "/icon-192.png?v=1", apple: "/apple-icon-180.png?v=1" };
 
 describe("адрес сайта из SITE_URL", () => {
   it("переменной нет — адрес по умолчанию", () => {
@@ -91,8 +91,14 @@ describe("метаданные /ru и /kk", () => {
     expect(String(m.metadataBase)).toBe(`${URL_}/`);
   });
 
-  it("иконки: favicon и apple-touch-icon из logo.png", () => {
-    expect(buildMetadata("ru", ru.seo, prod, ICON).icons).toEqual({ icon: [{ url: ICON, type: "image/png" }], apple: [{ url: ICON }] });
+  it("иконки: маленькие копии логотипа с размерами, а не logo.png целиком", () => {
+    expect(buildMetadata("ru", ru.seo, prod, ICON).icons).toEqual({
+      icon: [
+        { url: ICON.small, sizes: "32x32", type: "image/png" },
+        { url: ICON.large, sizes: "192x192", type: "image/png" },
+      ],
+      apple: [{ url: ICON.apple, sizes: "180x180" }],
+    });
   });
 
   it("GOOGLE_SITE_VERIFICATION: задана — есть meta для Search Console; не задана — нет", () => {

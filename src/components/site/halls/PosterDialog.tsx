@@ -2,9 +2,14 @@
 
 import Image from "next/image";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { CloseSym } from "@/components/symbols";
 
-/** Плакат целиком поверх страницы; закрывается нажатием, крестиком и Escape. */
+/**
+ * Плакат целиком поверх страницы; закрывается нажатием, крестиком и Escape.
+ * Рисуется прямо в body (портал): блоки сайта — с content-visibility, внутри них position: fixed
+ * считался бы от блока, а не от экрана.
+ */
 export function PosterDialog({
   src,
   title,
@@ -26,7 +31,7 @@ export function PosterDialog({
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -50,6 +55,7 @@ export function PosterDialog({
       >
         <CloseSym className="h-6 w-6" />
       </button>
-    </div>
+    </div>,
+    document.body,
   );
 }

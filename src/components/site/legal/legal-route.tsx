@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LegalPage } from "@/components/site/legal/LegalPage";
-import { logoIconUrl } from "@/lib/brand";
+import { siteIcons } from "@/lib/brand";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { legalContext, legalDoc, legalHead, type LegalPageId } from "@/lib/legal";
@@ -16,7 +16,7 @@ type Params = Promise<{ locale: string }>;
 export async function legalMetadata(page: LegalPageId, params: Params): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  return buildMetadata(locale, legalHead(page, locale), readSeoEnv(), logoIconUrl, `/${page}`);
+  return buildMetadata(locale, legalHead(page, locale), readSeoEnv(), siteIcons, `/${page}`);
 }
 
 /** Документ на языке страницы: реквизиты, адрес зала и телефон — из Настроек сайта. */

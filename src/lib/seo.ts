@@ -56,7 +56,7 @@ export function buildMetadata(
   locale: Locale,
   text: { title: string; description: string },
   env: SeoEnv,
-  icon: string,
+  icons: { readonly small: string; readonly large: string; readonly apple: string },
   path = "",
 ): Metadata {
   const url = `${env.siteUrl}/${locale}${path}`;
@@ -77,7 +77,13 @@ export function buildMetadata(
       alternateLocale: locales.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
     },
     twitter: { card: "summary_large_image", title: text.title, description: text.description },
-    icons: { icon: [{ url: icon, type: "image/png" }], apple: [{ url: icon }] },
+    icons: {
+      icon: [
+        { url: icons.small, sizes: "32x32", type: "image/png" },
+        { url: icons.large, sizes: "192x192", type: "image/png" },
+      ],
+      apple: [{ url: icons.apple, sizes: "180x180" }],
+    },
     robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
     ...(env.googleVerification ? { verification: { google: env.googleVerification } } : {}),
   };

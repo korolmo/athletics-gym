@@ -50,8 +50,10 @@ export function Header({
             {locales.map((l, i) => (
               <span key={l} className="flex items-center gap-1">
                 {i > 0 && <span aria-hidden="true">|</span>}
+                {/* Без предзагрузки: иначе браузер при каждом визите качал бы вторую языковую версию страницы */}
                 <Link
                   href={`/${l}${path}`}
+                  prefetch={false}
                   aria-current={l === locale ? "page" : undefined}
                   className={
                     l === locale

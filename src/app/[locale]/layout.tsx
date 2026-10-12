@@ -4,7 +4,7 @@ import "../globals.css";
 import { siteFontVars } from "@/lib/fonts";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { buildMetadata, readSeoEnv } from "@/lib/seo";
-import { logoIconUrl } from "@/lib/brand";
+import { siteIcons } from "@/lib/brand";
 import { COOKIES_ANCHOR, legalPath } from "@/lib/legal/meta";
 import { CookieNotice } from "@/components/site/CookieNotice";
 
@@ -23,7 +23,7 @@ export async function generateMetadata({
   if (!isLocale(locale)) return {};
   const t = getDictionary(locale);
   // title и description — на языке страницы; canonical, hreflang, Open Graph и robots — по адресу и окружению деплоя
-  return buildMetadata(locale, t.seo, readSeoEnv(), logoIconUrl);
+  return buildMetadata(locale, t.seo, readSeoEnv(), siteIcons);
 }
 
 export default async function LocaleLayout({
