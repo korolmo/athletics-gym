@@ -1,19 +1,21 @@
 # Шрифты публичного сайта
 
-- `manrope-400-800.woff2` — Manrope, переменный, начертания 400–800: весь текст сайта.
+- `onest-400-800.woff2` — Onest, переменный, начертания 400–800: весь текст сайта.
 - `oswald-600.woff2` — Oswald 600: бегущая строка.
 
 Каждое семейство — одним файлом и только с теми знаками, которые нужны сайту: латиница без диакритики, русский алфавит,
 казахские, украинские и белорусские буквы, знаки препинания, №, стрелки. Буква, которой в файле нет (например, é),
 рисуется системным шрифтом — тогда добавить её в список и пересобрать. Подключаются в `src/lib/fonts.ts` через `next/font/local`.
 
-В Manrope нет букв Қ Ғ Ұ Ә Ң и знака ₸ (нет их и в версии Google Fonts) — браузер рисует их системным шрифтом.
+Onest выбран вместо Manrope из макета: в Manrope нет казахских букв Қ Ғ Ұ Ә Ң и знака ₸ (нет их и в версии Google Fonts) —
+их рисовал системный шрифт. В Onest и Oswald все казахские буквы (Ә Ғ Қ Ң Ө Ұ Ү Һ І) и ₸ есть. Знака ★ нет ни в одном —
+его рисует системный шрифт.
 
-Собраны из исходников Google Fonts (github.com/google/fonts, `ofl/manrope`, `ofl/oswald`) пакетом fonttools:
+Собраны из исходников Google Fonts (github.com/google/fonts, `ofl/onest`, `ofl/oswald`) пакетом fonttools:
 
 ```
-fonttools varLib.instancer "Manrope[wght].ttf" wght=400:800 -o Manrope-v.ttf
-pyftsubset Manrope-v.ttf --unicodes="<список>" --layout-features="*" --flavor=woff2 --output-file=manrope-400-800.woff2
+fonttools varLib.instancer "Onest[wght].ttf" wght=400:800 -o Onest-v.ttf
+pyftsubset Onest-v.ttf --unicodes="<список>" --layout-features="*" --flavor=woff2 --output-file=onest-400-800.woff2
 fonttools varLib.instancer "Oswald[wght].ttf" wght=600 -o Oswald-600.ttf
 pyftsubset Oswald-600.ttf --unicodes="<список>" --layout-features="*" --flavor=woff2 --output-file=oswald-600.woff2
 ```

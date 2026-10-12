@@ -29,8 +29,8 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
 
   const [logo, bold, medium] = await Promise.all([
     asset("public/logo.png"),
-    asset("src/assets/fonts/Manrope-ExtraBold.ttf"),
-    asset("src/assets/fonts/Manrope-Medium.ttf"),
+    asset("src/assets/fonts/Onest-ExtraBold.ttf"),
+    asset("src/assets/fonts/Onest-Medium.ttf"),
   ]);
   const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
 
@@ -46,7 +46,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
           padding: "0 84px",
           background: "linear-gradient(120deg, #131315 0%, #1f1f23 60%, #2a2a1c 100%)",
           color: "#f4f4f5",
-          fontFamily: "Manrope",
+          fontFamily: "Onest",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- next/og рисует картинку сам, компонент Image здесь не работает */}
@@ -64,8 +64,8 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
     {
       ...size,
       fonts: [
-        { name: "Manrope", data: bold, weight: 800, style: "normal" },
-        { name: "Manrope", data: medium, weight: 500, style: "normal" },
+        { name: "Onest", data: bold, weight: 800, style: "normal" },
+        { name: "Onest", data: medium, weight: 500, style: "normal" },
       ],
     },
   );

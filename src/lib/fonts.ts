@@ -4,14 +4,16 @@ import localFont from "next/font/local";
 
 // Публичный сайт: два семейства, каждое — одним своим файлом (src/assets/fonts/site, как собраны — README там же).
 // Google Fonts режет шрифт на части по алфавитам: латиница, кириллица, расширенная кириллица, расширенная латиница
-// (её тянул знак ₸) — четыре файла Manrope, и после прихода каждого браузер заново раскладывал всю страницу.
-// Один файл — одна подмена шрифта. Начертания — только нужные сайту: Manrope 400–800, Oswald 600.
+// (её тянул знак ₸) — четыре файла, и после прихода каждого браузер заново раскладывал всю страницу.
+// Один файл — одна подмена шрифта. Начертания — только нужные сайту: Onest 400–800, Oswald 600.
 
-// Шрифт макета Stitch — весь текст сайта. Предзагружается; запасной шрифт подогнан по метрикам — подмена без сдвига
-const manrope = localFont({
-  src: "../assets/fonts/site/manrope-400-800.woff2",
+// Весь текст сайта — Onest. В макете Stitch был Manrope, но в нём нет казахских Қ Ғ Ұ Ә Ң и знака ₸: их рисовал
+// системный шрифт, и буквы в одном слове получались разными. Onest — самый близкий по рисунку гротеск с полным
+// казахским набором. Предзагружается; запасной шрифт подогнан по метрикам — подмена без сдвига
+const onest = localFont({
+  src: "../assets/fonts/site/onest-400-800.woff2",
   weight: "400 800",
-  variable: "--font-manrope",
+  variable: "--font-onest",
   display: "swap",
   adjustFontFallback: "Arial",
 });
@@ -26,4 +28,4 @@ const oswaldSite = localFont({
   preload: false,
 });
 
-export const siteFontVars = `${manrope.variable} ${oswaldSite.variable}`;
+export const siteFontVars = `${onest.variable} ${oswaldSite.variable}`;
