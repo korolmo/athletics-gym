@@ -1,35 +1,29 @@
-import { Inter, Manrope, Oswald } from "next/font/google";
+import localFont from "next/font/local";
 
-export const oswald = Oswald({
-  subsets: ["latin", "cyrillic", "cyrillic-ext"],
-  variable: "--font-oswald",
-  display: "swap",
-});
+// Шрифты админки — в admin-fonts.ts: общий файл заставлял публичные страницы предзагружать и их.
 
-export const inter = Inter({
-  subsets: ["latin", "cyrillic", "cyrillic-ext"],
-  variable: "--font-inter",
-  display: "swap",
-});
+// Публичный сайт: два семейства, каждое — одним своим файлом (src/assets/fonts/site, как собраны — README там же).
+// Google Fonts режет шрифт на части по алфавитам: латиница, кириллица, расширенная кириллица, расширенная латиница
+// (её тянул знак ₸) — четыре файла Manrope, и после прихода каждого браузер заново раскладывал всю страницу.
+// Один файл — одна подмена шрифта. Начертания — только нужные сайту: Manrope 400–800, Oswald 600.
 
-// Шрифт макета Stitch (сайт); cyrillic-ext нужен для казахских букв
-export const manrope = Manrope({
-  subsets: ["latin", "cyrillic", "cyrillic-ext"],
-  weight: ["400", "500", "700", "800"],
+// Шрифт макета Stitch — весь текст сайта. Предзагружается; запасной шрифт подогнан по метрикам — подмена без сдвига
+const manrope = localFont({
+  src: "../assets/fonts/site/manrope-400-800.woff2",
+  weight: "400 800",
   variable: "--font-manrope",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
 
-// Админка
-export const fontVars = `${oswald.variable} ${inter.variable}`;
-// Бегущая строка на сайте — тоже Oswald, но без предзагрузки: лента ниже девиза и первой отрисовке не нужна.
+// Бегущая строка — Oswald, без предзагрузки: лента ниже девиза и первой отрисовке не нужна.
 // Шрифт включается после оживления страницы (правило html[data-late-fonts] .marquee-track в globals.css)
-const oswaldSite = Oswald({
-  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+const oswaldSite = localFont({
+  src: "../assets/fonts/site/oswald-600.woff2",
+  weight: "600",
   variable: "--font-oswald",
   display: "swap",
   preload: false,
 });
 
-// Публичный сайт
 export const siteFontVars = `${manrope.variable} ${oswaldSite.variable}`;

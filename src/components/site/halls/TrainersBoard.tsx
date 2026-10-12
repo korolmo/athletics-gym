@@ -1,14 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import { whatsappUrl } from "@/lib/site";
-import { ChatSym, CloseSym, PersonSym, ZoomInSym } from "@/components/symbols";
+import { ChatSym, PersonSym, ZoomInSym } from "@/components/symbols";
 import type { TrainerView } from "@/components/site/halls/types";
 import { useHall } from "@/components/site/halls/hall-store";
 import { HallSwitch } from "@/components/site/halls/HallSwitch";
 import { TariffRows } from "@/components/site/halls/TariffRows";
+import { PosterDialog } from "@/components/site/halls/PosterDialog";
 
 /**
  * Плакат заполняет рамку 3:4 и прижат к верху. Плакат шире рамки обрезается по бокам, и если важное у края,
@@ -32,17 +33,6 @@ export function TrainersBoard({
   const hall = useHall();
   const [zoomed, setZoomed] = useState<TrainerView | null>(null);
   const list = trainers.filter((x) => x.hallId === hall);
-
-  useEffect(() => {
-    if (!zoomed) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setZoomed(null);
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [zoomed]);
 
   return (
     <>
@@ -124,32 +114,7 @@ export function TrainersBoard({
         </div>
       )}
 
-      {zoomed?.photo && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={zoomed.name}
-          onClick={() => setZoomed(null)}
-          className="fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center bg-background/90 p-3 backdrop-blur-md"
-        >
-          <Image
-            src={zoomed.photo}
-            alt={zoomed.name}
-            width={1200}
-            height={1700}
-            sizes="100vw"
-            className="h-auto max-h-[94dvh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
-          />
-          <button
-            type="button"
-            aria-label={t.trainers.close}
-            onClick={() => setZoomed(null)}
-            className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-surface-card text-text-primary shadow-lg hover:text-primary-container"
-          >
-            <CloseSym className="h-6 w-6" />
-          </button>
-        </div>
-      )}
+      {zoomed?.photo && <PosterDialog src={zoomed.photo} title={zoomed.name} closeLabel={t.trainers.close} onClose={() => setZoomed(null)} />}
     </>
   );
 }

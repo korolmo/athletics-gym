@@ -16,7 +16,8 @@ export function startMotion(): () => void {
   root.setAttribute("data-motion", "");
 
   // Шрифт бегущей строки (Oswald) включаем, когда страница загрузилась и уже нарисована: до этого его файлы
-  // делили бы канал со шрифтом девиза и картинкой первого экрана (проверено Lighthouse: первая отрисовка +0,45 с)
+  // делили бы канал со шрифтом девиза и картинкой первого экрана (проверено Lighthouse: первая отрисовка +0,45 с).
+  // По той же пометке начинается медленное приближение фото первого экрана
   const lateFonts = () => requestAnimationFrame(() => requestAnimationFrame(() => root.setAttribute("data-late-fonts", "")));
   if (document.readyState === "complete") lateFonts();
   else {
@@ -74,19 +75,33 @@ export function startMotion(): () => void {
 
   // Появление при прокрутке. Помечаем только то, что сейчас ниже экрана: видимое не мигает,
   // а карточки одного ряда (один и тот же верхний край) получают задержку по очереди.
-  // Сначала все замеры, потом все пометки — иначе каждая пометка заставляла бы браузер пересчитывать страницу
-  const rows = new Map<number, number>();
-  const limit = window.innerHeight * 0.95;
-  const below = [...document.querySelectorAll<HTMLElement>(REVEAL)]
-    .map((el) => ({ el, top: el.getBoundingClientRect().top }))
-    .filter((m) => m.top > limit);
-  for (const { el, top } of below) {
-    const row = Math.round(top + window.scrollY);
-    const i = rows.get(row) ?? 0;
-    rows.set(row, i + 1);
-    el.style.setProperty("--reveal-i", String(Math.min(i, 6)));
-    el.setAttribute("data-reveal", "");
-  }
+  // Блок готовим, когда до него осталось не больше экрана: блоки ниже браузер ещё не раскладывал
+  // (content-visibility в globals.css), и замер всех карточек страницы сразу заставил бы разложить её целиком.
+  // Внутри блока — сначала все замеры, потом все пометки, иначе каждая пометка вызывала бы пересчёт
+  const marked: HTMLElement[] = [];
+  const prepare = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        prepare.unobserve(entry.target);
+        const rows = new Map<number, number>();
+        const limit = window.innerHeight * 0.95;
+        const below = [...entry.target.querySelectorAll<HTMLElement>(REVEAL)]
+          .map((el) => ({ el, top: el.getBoundingClientRect().top }))
+          .filter((m) => m.top > limit);
+        for (const { el, top } of below) {
+          const row = Math.round(top + window.scrollY);
+          const i = rows.get(row) ?? 0;
+          rows.set(row, i + 1);
+          el.style.setProperty("--reveal-i", String(Math.min(i, 6)));
+          el.setAttribute("data-reveal", "");
+          marked.push(el);
+          reveal.observe(el);
+        }
+      }
+    },
+    { rootMargin: "0px 0px 100% 0px" },
+  );
   const reveal = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
@@ -103,10 +118,11 @@ export function startMotion(): () => void {
     },
     { rootMargin: "0px 0px -6% 0px" },
   );
-  below.forEach(({ el }) => reveal.observe(el));
+  document.querySelectorAll("main > section[id]:not(#top)").forEach((el) => prepare.observe(el));
   cleanups.push(() => {
+    prepare.disconnect();
     reveal.disconnect();
-    below.forEach(({ el }) => el.removeAttribute("data-reveal"));
+    marked.forEach((el) => el.removeAttribute("data-reveal"));
   });
 
   // Рейтинг 2ГИС: число отсчитывается от нуля за секунду, когда попало в экран. Ширина закреплена — соседи не прыгают.

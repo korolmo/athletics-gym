@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import { site, whatsappUrl } from "@/lib/site";
 import { mottoWords } from "@/lib/domain/site-settings";
 import { CountNumber, CountText } from "@/components/site/Count";
@@ -19,6 +19,9 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
   ];
   const ratingCount = ratingCountText(t.rating, s.rating.count);
   const ratingBadge = ratingCountText({ count: t.hero.rating, words: t.rating.words }, s.rating.count);
+  // С десктопа фото стоит в пяти колонках из двенадцати: до 1280 px это около 40% экрана, дальше — 500 px
+  const heroPhoto = { src: photo ?? "/stitch/hero.jpg", alt: "", fill: true, sizes: "(min-width: 1280px) 500px, (min-width: 1024px) 40vw, 100vw" };
+  const heroPreload = getImageProps(heroPhoto).props;
   return (
     <>
       <section data-contact-source="hero" className="hidden w-full border-b border-surface-border bg-surface-container-lowest/90 px-gutter py-2 text-body-sm text-text-muted backdrop-blur-md md:block">
@@ -128,15 +131,10 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
 
           <div className="relative lg:col-span-5">
             <div className="relative h-[360px] w-full overflow-hidden rounded-2xl bg-surface-card shadow-2xl md:h-[520px]">
-              <Image
-                src={photo ?? "/stitch/hero.jpg"}
-                alt=""
-                fill
-                // С десктопа фото стоит в пяти колонках из двенадцати: до 1280 px это около 40% экрана, дальше — 500 px
-                sizes="(min-width: 1280px) 500px, (min-width: 1024px) 40vw, 100vw"
-                className="hero-zoom object-cover"
-                priority
-              />
+              {/* Фото предзагружается с высоким приоритетом только там, где оно на первом экране, — с 1024 px (рядом с текстом).
+                  На телефоне оно ниже первого экрана: там грузится обычным порядком и не делит канал со шрифтом и стилями */}
+              <link rel="preload" as="image" imageSrcSet={heroPreload.srcSet} imageSizes={heroPreload.sizes} media="(min-width: 1024px)" fetchPriority="high" />
+              <Image {...heroPhoto} alt="" className="hero-zoom object-cover" />
               <div className="absolute inset-0 bg-linear-to-t from-background via-surface-dim/40 to-transparent" />
               {s.show.women && (
                 <div className="absolute right-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/95 px-3.5 py-2 shadow-lg md:bg-surface-card/90 md:backdrop-blur-md">
