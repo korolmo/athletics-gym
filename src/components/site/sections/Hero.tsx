@@ -151,7 +151,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
                   </div>
                 </div>
               )}
-              <div className="absolute bottom-5 left-5 flex max-w-[280px] items-center gap-4 rounded-xl bg-background/95 p-4 shadow-xl md:backdrop-blur-md">
+              <div className="absolute bottom-5 left-5 flex max-w-[300px] items-center gap-4 rounded-xl bg-background/95 p-4 shadow-xl md:backdrop-blur-md">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary">
                   <FitnessCenterSym className="h-[26px] w-[26px]" />
                 </div>
