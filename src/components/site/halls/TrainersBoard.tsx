@@ -77,11 +77,12 @@ export function TrainersBoard({
                     src={tr.photo}
                     alt={tr.name}
                     fill
-                    sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, 100vw"
+                    // По сетке карточек: одна в ряд на телефоне, две с планшета, три с десктопа (не шире 395 px)
+                    sizes="(min-width: 1280px) 395px, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                     className={`object-cover ${posterPosition[tr.photo] ?? "object-top"}`}
                   />
                   {/* Лупа — в левом нижнем углу: там у плакатов контакты, а цены стоят справа */}
-                  <span className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-dim/80 text-text-primary backdrop-blur-md transition-colors group-hover:text-primary-container">
+                  <span className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-dim/90 text-text-primary transition-colors md:bg-surface-dim/80 md:backdrop-blur-md group-hover:text-primary-container">
                     <ZoomInSym className="h-5 w-5" />
                   </span>
                 </button>

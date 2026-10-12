@@ -7,7 +7,7 @@ export function MobileBar({ t, s }: SectionProps) {
   const trial = whatsappUrl(s.contacts.whatsapp, t.wa.trial);
   return (
     <>
-      <div data-contact-source="mobile-bar" className="fixed inset-x-0 bottom-0 z-50 border-t border-surface-border bg-background/85 p-3 backdrop-blur-md md:hidden">
+      <div data-contact-source="mobile-bar" className="fixed inset-x-0 bottom-0 z-50 border-t border-surface-border bg-background/95 p-3 md:hidden">
         <div className="flex gap-3">
           <a
             href={trial}

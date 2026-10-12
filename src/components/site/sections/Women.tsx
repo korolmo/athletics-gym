@@ -60,14 +60,16 @@ export function Women({ t, s, photo }: SectionProps & { /** Фото Женск�
                   />
                 </div>
               ) : (
-              // Логотип Женского зала без подложки: тонкое жёлтое кольцо с отступом и мягкое свечение позади
-              <div className="relative flex h-[204px] w-[204px] items-center justify-center rounded-full ring-2 ring-primary-container/40 lg:h-[244px] lg:w-[244px]">
-                <span aria-hidden="true" className="women-glow absolute inset-0 rounded-full bg-primary-container/20 blur-[50px]" />
+              // Логотип Женского зала без подложки: тонкое жёлтое кольцо с отступом и мягкое свечение позади.
+              // Свечение — градиент на псевдоэлементе (women-halo в globals.css): размытие (filter) браузеру дорого
+              <div className="women-halo relative flex h-[204px] w-[204px] items-center justify-center rounded-full ring-2 ring-primary-container/40 lg:h-[244px] lg:w-[244px]">
                 <Image
                   src={logoWomen}
                   alt={t.women.title}
                   width={220}
                   height={220}
+                  // Показывается 180 px на телефоне и 220 px на десктопе: без sizes экран с плотностью 2 брал бы файл 640 px
+                  sizes="(min-width: 1024px) 220px, 180px"
                   className="relative h-[180px] w-[180px] rounded-full object-contain lg:h-[220px] lg:w-[220px]"
                 />
                 <div className={`${label} absolute -bottom-2 rounded-full bg-primary-container px-3 py-1 text-on-primary shadow-md`}>
