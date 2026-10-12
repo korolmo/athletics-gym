@@ -258,7 +258,7 @@ describe("политика говорит то же, что делает код"
         "Сайт работает только по защищённому соединению (HTTPS).",
         "Вход в панель управления — только по паролю, число попыток входа ограничено.",
         "IP-адреса в базе не хранятся — только их хэши, по которым адрес не восстановить.",
-        "Доступ к серверам и базе есть только у владельца зала и у тех, кто по его поручению обслуживает сайт.",
+        "Пароли и ключи доступа к панели управления, серверам и базе данных есть только у владельца зала и у тех, кто по его поручению обслуживает сайт.",
       ]);
     });
 
@@ -297,6 +297,18 @@ describe("политика говорит то же, что делает код"
     const service = fs.readFileSync("src/lib/services/reviews.ts", "utf8");
     expect(service).toContain("consentPolicyDate: LEGAL_UPDATED.privacy");
     expect(fs.readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts")).filter((f) => /"2026-10-1[12]"/.test(fs.readFileSync(`src/${f}`, "utf8"))).map((f) => f.replace(/\\/g, "/"))).toEqual(["lib/legal/meta.ts"]);
+  });
+
+  it("о том, у кого есть доступ, сказано один раз — в разделе о защите; в «Где хранятся данные» — только место и журналы", () => {
+    for (const locale of locales) {
+      const storage = build("privacy", locale).sections.find((s) => s.id === "storage")!;
+      expect(storage.blocks).toHaveLength(2);
+    }
+    const storage = legalDocText({ ...build("privacy", "ru"), sections: build("privacy", "ru").sections.filter((s) => s.id === "storage") }, "");
+    expect(storage).toContain(`Данные хранятся ${DEFAULT_DATA_LOCATION.ru}.
+Хостинг-провайдеры`);
+    expect(storage).not.toMatch(/Доступ|владельца/);
+    expect(privacy.split("по его поручению обслуживает сайт")).toHaveLength(2);
   });
 
   it("срок ответа на обращение — по закону, без своего числа дней", () => {
