@@ -1,7 +1,8 @@
+import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
-import { ATTEMPT_KEEP_MS } from "@/lib/auth/login-limit.rules";
+import { ATTEMPT_KEEP_MS, MAX_FAILED_ATTEMPTS, evaluateAttempts } from "@/lib/auth/login-limit.rules";
 import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/lib/auth/session";
 import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS, SUBMISSION_WINDOW_MS } from "@/lib/domain/review";
 import { toSiteContent } from "@/lib/domain/site-settings";
@@ -221,6 +222,81 @@ describe("политика говорит то же, что делает код"
     expect(section("sharing", "ru")).toContain("хранят данные по нашему поручению");
     expect(section("sharing", "kk")).toContain("біздің тапсырмамыз бойынша");
     for (const locale of locales) expect(hrefs(build("privacy", locale))).toContain("#storage");
+  });
+
+  it("разделы политики идут по порядку: «Как мы защищаем данные» — сразу после «Где хранятся данные»", () => {
+    for (const locale of locales) {
+      expect(build("privacy", locale).sections.map((s) => s.id)).toEqual([
+        "operator",
+        "data",
+        "retention",
+        "storage",
+        "security",
+        "sharing",
+        "messengers",
+        "rights",
+        COOKIES_ANCHOR,
+        "changes",
+      ]);
+    }
+  });
+
+  it("основание обработки отзыва — согласие; ссылка ведёт на раздел о правах", () => {
+    expect(privacy).toContain(
+      "Данные отзыва обрабатываются на основании вашего согласия, которое вы даёте галочкой в форме отзыва. Согласие можно отозвать — см. раздел «Ваши права».",
+    );
+    for (const locale of locales) expect(hrefs(build("privacy", locale))).toContain("#rights");
+  });
+
+  describe("«Как мы защищаем данные»: каждое утверждение — правда о коде", () => {
+    const security = build("privacy", "ru").sections.find((s) => s.id === "security")!;
+    const claims = security.blocks.flatMap((b) => ("ul" in b ? b.ul.map((item) => item.join("")) : []));
+    const schema = fs.readFileSync("prisma/schema.prisma", "utf8");
+
+    it("в разделе четыре утверждения", () => {
+      expect(claims).toEqual([
+        "Сайт работает только по защищённому соединению (HTTPS).",
+        "Вход в панель управления — только по паролю, число попыток входа ограничено.",
+        "IP-адреса в базе не хранятся — только их хэши, по которым адрес не восстановить.",
+        "Доступ к серверам и базе есть только у владельца зала и у тех, кто по его поручению обслуживает сайт.",
+      ]);
+    });
+
+    it("HTTPS: сайт велит браузеру ходить только по защищённому соединению (HSTS), а кука сессии в production — только по HTTPS", () => {
+      expect(fs.readFileSync("next.config.mjs", "utf8")).toMatch(/Strict-Transport-Security", value: "max-age=\d{8,}/);
+      expect(fs.readFileSync("src/lib/auth/index.ts", "utf8")).toContain('secure: process.env.NODE_ENV === "production"');
+    });
+
+    it("число попыток входа ограничено: после лимита неудач вход закрыт", () => {
+      const now = new Date("2026-10-12T10:00:00Z");
+      const failures = (n: number) => Array.from({ length: n }, (_, i) => new Date(now.getTime() - i * 1000));
+      expect(evaluateAttempts(failures(MAX_FAILED_ATTEMPTS - 1), now).blocked).toBe(false);
+      expect(evaluateAttempts(failures(MAX_FAILED_ATTEMPTS), now).blocked).toBe(true);
+    });
+
+    it("в базе нет колонок с IP-адресом — только хэш", () => {
+      const columns = [...schema.matchAll(/^\s{2}(\w+)\s+\w/gm)].map((m) => m[1]);
+      const aboutIp = columns.filter((c) => /^ip([A-Z]|$)|I[Pp]([A-Z]|$)/.test(c));
+      expect([...new Set(aboutIp)]).toEqual(["ipHash"]);
+      // Хэш считается с секретом: без него по хэшу адрес не подобрать
+      expect(fs.readFileSync("src/lib/auth/login-limit.ts", "utf8")).toContain('createHmac("sha256", process.env.AUTH_SECRET');
+    });
+  });
+
+  it("соглашение: материалы принадлежат залу или используются с разрешения правообладателей", () => {
+    expect(terms).toContain(
+      "Тексты, логотипы и фотографии на сайте принадлежат залу или используются с разрешения правообладателей. Копировать и использовать их без согласия зала нельзя.",
+    );
+  });
+
+  it("дата редакции обоих документов — 12 октября 2026; она же записывается в Отзыв", () => {
+    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-10-12", terms: "2026-10-12" });
+    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^12 октября 2026/);
+    expect(build("privacy", "kk").updated).toBe(LEGAL_UPDATED.privacy);
+    // Сервис берёт дату из той же константы, своей копии у него нет
+    const service = fs.readFileSync("src/lib/services/reviews.ts", "utf8");
+    expect(service).toContain("consentPolicyDate: LEGAL_UPDATED.privacy");
+    expect(fs.readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts")).filter((f) => /"2026-10-1[12]"/.test(fs.readFileSync(`src/${f}`, "utf8"))).map((f) => f.replace(/\\/g, "/"))).toEqual(["lib/legal/meta.ts"]);
   });
 
   it("срок ответа на обращение — по закону, без своего числа дней", () => {
