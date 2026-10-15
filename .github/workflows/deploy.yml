@@ -1,0 +1,69 @@
+name: Deploy (hoster.kz)
+
+# После merge в main собирает готовое приложение для хостинга hoster.kz и кладёт его в ветку deploy
+# (ADR 0004, docs/hosting-plesk.md). Plesk «Развернуть с помощью Git» забирает ветку deploy.
+# В ветке — только собранные файлы: без исходников, без .env и секретов. Секреты — только в Plesk.
+# Ветка перезаписывается одним коммитом без истории: в репозитории хостинга не копятся старые сборки.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hosting
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    name: Build and publish to deploy branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Сборке база не нужна (страницы с данными собираются по запросу); строка — чтобы Prisma сгенерировала клиент
+      DATABASE_URL: mysql://build:build@127.0.0.1:3306/build
+      # Заголовки (X-Robots-Tag) вычисляются при сборке: ветка deploy — для боевого хостинга
+      APP_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck and unit tests
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Assemble hosting bundle
+        run: node scripts/standalone/assemble.mjs
+
+      - name: Check bundle (no secrets, engines for Linux)
+        run: |
+          cd dist/hosting
+          if find . -name ".env*" | grep -q .; then echo "В сборке есть .env"; exit 1; fi
+          ls node_modules/.prisma/client/ | grep -E "libquery_engine-(debian|rhel)-openssl-(1\.1|3\.0)\.x\.so\.node" | wc -l | grep -qx 4
+          test -f start.cjs && test -f server.js && test -f prisma/migrations/migration_lock.toml
+          du -sh .
+
+      - name: Publish to deploy branch
+        run: |
+          cd dist/hosting
+          git init -q -b deploy
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -f
+          git commit -q -m "Сборка из main ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" deploy

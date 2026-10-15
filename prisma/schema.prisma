@@ -1,14 +1,17 @@
 // Термины — см. GLOSSARY.md
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Движок запросов под ОС хостинга: дистрибутив и OpenSSL на hoster.kz заранее неизвестны (SSH нет),
+  // поэтому в сборку идут все четыре варианта Linux; Prisma сама выбирает подходящий (ADR 0004)
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x", "rhel-openssl-3.0.x", "rhel-openssl-1.1.x"]
 }
 
+// MariaDB 10.4 на хостинге (localhost:3306), локально — docker-compose.yml.
+// Строки по умолчанию — VARCHAR(191); всё, что может быть длиннее, — @db.Text.
 datasource db {
-  provider  = "postgresql"
-  // Supabase: приложение ходит через пулер (порт 6543), миграции — через session pooler (порт 5432)
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 /// Категория тарифа: заданы заранее, Владелец их не создаёт
@@ -94,8 +97,8 @@ model Trainer {
   photo         String?
   /// Плакат Тренера, загруженный Владельцем: путь к Фото в хранилище. Если задан — показываем его, а не photo
   uploadedPhoto String?
-  descriptionRu String?
-  descriptionKk String?
+  descriptionRu String? @db.Text
+  descriptionKk String? @db.Text
   sortOrder     Int      @default(0)
   isVisible     Boolean  @default(true)
   tariffs       Tariff[]
@@ -133,19 +136,19 @@ model SiteSettings {
   /// Первый экран: девиз и подзаголовок
   heroTitleRu    String
   heroTitleKk    String?
-  heroSubtitleRu String
-  heroSubtitleKk String?
+  heroSubtitleRu String @db.Text
+  heroSubtitleKk String? @db.Text
   /// Фон первого экрана: путь к Фото в хранилище; пусто — картинка из public/
   heroPhoto      String?
   /// Женский зал
-  womenTextRu    String
-  womenTextKk    String?
+  womenTextRu    String @db.Text
+  womenTextKk    String? @db.Text
   womenInstagram String
   /// Фото Женского зала: путь в хранилище; пусто — показываем логотип Женского зала
   womenPhoto     String?
   /// Контакты
-  addressRu      String
-  addressKk      String?
+  addressRu      String @db.Text
+  addressKk      String? @db.Text
   hoursRu        String
   hoursKk        String?
   /// Телефон: +7 и десять цифр, например +77714846344
@@ -161,15 +164,16 @@ model SiteSettings {
   legalName      String?
   /// ИИН/БИН: ровно 12 цифр
   legalBin       String?
-  legalAddress   String?
+  legalAddress   String? @db.Text
   /// Email для обращений о персональных данных
   privacyEmail   String?
   /// Место хранения данных — продолжение фразы «Данные хранятся …» в Политике конфиденциальности; пусто — текст по умолчанию из кода
-  dataLocationRu String?
-  dataLocationKk String?
+  dataLocationRu String? @db.Text
+  dataLocationKk String? @db.Text
   /// Бегущая строка: пункты по порядку. Списки одной длины; пустая строка в казахском — «как на русском»
-  marqueeRu      String[] @default([])
-  marqueeKk      String[] @default([])
+  /// Хранятся как JSON-массив строк в тексте: у MariaDB нет массивов, а её JSON — тот же LONGTEXT
+  marqueeRu      String   @db.Text
+  marqueeKk      String   @db.Text
   /// Блоки главной: показывать ли на сайте (первый экран не скрывается)
   showMarquee    Boolean  @default(true)
   showAbout      Boolean  @default(true)
@@ -190,8 +194,8 @@ model AboutCard {
   kickerKk String?
   titleRu  String
   titleKk  String?
-  textRu   String
-  textKk   String?
+  textRu   String @db.Text
+  textKk   String? @db.Text
 }
 
 /// Фото Галереи: загружает и упорядочивает Владелец. В базе — только путь к файлу в хранилище.
@@ -231,14 +235,14 @@ model Review {
   id          String       @id @default(cuid())
   authorName  String
   /// Как написан: без перевода и без правок, показывается на обоих языках сайта
-  text        String
+  text        String @db.Text
   /// Оценка от 1 до 5
   rating      Int
   hall        Hall?        @relation(fields: [hallId], references: [id], onDelete: SetNull)
   hallId      String?
   source      ReviewSource
   /// Ссылка на оригинал Отзыва — только https
-  sourceUrl   String?
+  sourceUrl   String? @db.Text
   /// Дата Отзыва: когда он был написан (у Отзывов с сайта — день отправки)
   reviewedAt  DateTime
   status      ReviewStatus @default(NEW)
@@ -284,8 +288,8 @@ model Direction {
   titleRu       String
   titleKk       String?
   /// Короткое описание, до 200 символов
-  descriptionRu String?
-  descriptionKk String?
+  descriptionRu String? @db.Text
+  descriptionKk String? @db.Text
   /// Иконка из набора — ключ из src/lib/domain/direction.ts
   icon          String   @default("exercise")
   /// Своё Фото вместо иконки: путь к файлу в хранилище

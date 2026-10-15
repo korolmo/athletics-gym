@@ -18,15 +18,15 @@ import {
 } from "./seo";
 
 const URL_ = "https://athletics-gym.vercel.app";
-const prod = { siteUrl: URL_, vercelEnv: "production" };
-const preview = { siteUrl: URL_, vercelEnv: "preview" };
+const prod = { siteUrl: URL_, deployEnv: "production" };
+const preview = { siteUrl: URL_, deployEnv: "preview" };
 const ICON = { small: "/icon-32.png?v=1", large: "/icon-192.png?v=1", apple: "/apple-icon-180.png?v=1" };
 
 describe("адрес сайта из SITE_URL", () => {
   it("переменной нет — адрес по умолчанию", () => {
     expect(resolveSiteUrl(undefined)).toBe(DEFAULT_SITE_URL);
     expect(resolveSiteUrl("")).toBe(DEFAULT_SITE_URL);
-    expect(DEFAULT_SITE_URL).toBe("https://athletics-gym.vercel.app");
+    expect(DEFAULT_SITE_URL).toBe("https://athleticsgym.kz");
   });
 
   it("свой домен: берётся как есть, без пути и слэша в конце", () => {
@@ -110,6 +110,14 @@ describe("метаданные /ru и /kk", () => {
 });
 
 describe("индексация: только production", () => {
+  it("среда — из APP_ENV (hoster.kz), запасная — VERCEL_ENV; APP_ENV главнее", () => {
+    expect(readSeoEnv({ APP_ENV: "production" }).deployEnv).toBe("production");
+    expect(readSeoEnv({ VERCEL_ENV: "production" }).deployEnv).toBe("production");
+    expect(readSeoEnv({ APP_ENV: "staging", VERCEL_ENV: "production" }).deployEnv).toBe("staging");
+    expect(readSeoEnv({ APP_ENV: "  ", VERCEL_ENV: "preview" }).deployEnv).toBe("preview");
+    expect(readSeoEnv({}).deployEnv).toBeUndefined();
+  });
+
   it("production на Vercel — можно; превью, development и локальный запуск — нельзя", () => {
     expect(isIndexable("production")).toBe(true);
     for (const env of ["preview", "development", undefined, "", "Production"]) expect(isIndexable(env)).toBe(false);
@@ -119,7 +127,7 @@ describe("индексация: только production", () => {
     const text = locale === "ru" ? ru.seo : kk.seo;
     expect(buildMetadata(locale, text, prod, ICON).robots).toEqual({ index: true, follow: true });
     expect(buildMetadata(locale, text, preview, ICON).robots).toEqual({ index: false, follow: false });
-    expect(buildMetadata(locale, text, { siteUrl: URL_, vercelEnv: undefined }, ICON).robots).toEqual({ index: false, follow: false });
+    expect(buildMetadata(locale, text, { siteUrl: URL_, deployEnv: undefined }, ICON).robots).toEqual({ index: false, follow: false });
   });
 
   it("robots.txt в production: сайт открыт, /admin и /api закрыты, есть ссылка на sitemap", () => {
@@ -130,8 +138,8 @@ describe("индексация: только production", () => {
     });
   });
 
-  it.each(["preview", "development", undefined])("robots.txt на «%s»: Disallow: / и никакого sitemap", (vercelEnv) => {
-    const robots = buildRobots({ siteUrl: URL_, vercelEnv });
+  it.each(["preview", "development", undefined])("robots.txt на «%s»: Disallow: / и никакого sitemap", (deployEnv) => {
+    const robots = buildRobots({ siteUrl: URL_, deployEnv });
     expect(robots).toEqual({ rules: [{ userAgent: "*", disallow: "/" }] });
     expect(robots.sitemap).toBeUndefined();
   });

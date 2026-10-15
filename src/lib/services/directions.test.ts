@@ -292,7 +292,7 @@ describe("права: без сессии Владельца — отказ", ()
 });
 
 describe("перенос текущих Направлений миграцией", () => {
-  const sql = fs.readFileSync("prisma/migrations/20261010020000_directions/migration.sql", "utf8");
+  const sql = fs.readFileSync("prisma/archive/postgres-migrations/20261010020000_directions/migration.sql", "utf8");
 
   it("те же пять Направлений, в том же порядке и с теми же иконками, что были в коде", () => {
     expect(DEFAULT_DIRECTIONS.map((d) => d.titleRu)).toEqual(["Набор массы", "Снижение веса", "Коррекция фигуры", "Пауэрлифтинг", "Бокс"]);

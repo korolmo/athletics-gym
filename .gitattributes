@@ -1,0 +1,3 @@
+# Файлы миграций — всегда с LF: от их байтов считается контрольная сумма в _prisma_migrations,
+# на Windows (core.autocrlf) и в сборке на Linux она должна совпадать (scripts/standalone/migrate.cjs).
+*.sql text eol=lf

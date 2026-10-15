@@ -16,7 +16,17 @@ import {
   pathMatchesKind,
   photoUrl,
   storageOrigin,
+  variantPath,
+  photoFiles,
+  basePhotoPath,
+  PHOTO_VARIANTS,
+  sniffImageType,
+  typeOfPath,
+  localPhotoUrl,
+  checkQuota,
+  DEFAULT_MEDIA_QUOTA_MB,
 } from "./photo";
+import imageLoader, { MEDIA_VARIANT_WIDTHS } from "@/lib/image-loader";
 
 const UUID = "3f2b8c1e-9a4d-4e7b-8c21-0a1b2c3d4e5f";
 const MB = 1024 * 1024;
@@ -205,21 +215,139 @@ describe("брошенные загрузки", () => {
   const now = new Date("2026-10-09T12:00:00Z");
   const old = new Date(now.getTime() - ORPHAN_AGE_MS - 1000);
   const fresh = new Date(now.getTime() - 60_000);
+  const a = `gallery/${UUID}.webp`;
+  const b = `gallery/${UUID.replace("3f2b", "aaaa")}.webp`;
 
-  it("старый файл без ссылки из базы — удалить; со ссылкой — оставить", () => {
+  it("старое Фото без ссылки из базы — удалить; со ссылкой — оставить", () => {
     const objects = [
-      { path: "gallery/a.webp", createdAt: old },
-      { path: "gallery/b.webp", createdAt: old },
+      { path: a, createdAt: old },
+      { path: b, createdAt: old },
     ];
-    expect(findOrphans(objects, ["gallery/b.webp"], now)).toEqual(["gallery/a.webp"]);
+    expect(findOrphans(objects, [b], now)).toEqual([a]);
+  });
+
+  it("копии принадлежат своему Фото: брошенное Фото — один путь, копии Фото из базы не трогаем", () => {
+    const objects = [a, variantPath(a, 400), variantPath(a, 800), b, variantPath(b, 400)].map((path) => ({ path, createdAt: old }));
+    expect(findOrphans(objects, [b], now)).toEqual([a]);
+  });
+
+  it("копия без самого Фото (загрузка оборвалась) — тоже брошена", () => {
+    expect(findOrphans([{ path: variantPath(a, 800), createdAt: old }], [], now)).toEqual([a]);
+  });
+
+  it("если хоть один файл Фото свежий — Фото не трогаем", () => {
+    const objects = [
+      { path: a, createdAt: old },
+      { path: variantPath(a, 400), createdAt: fresh },
+    ];
+    expect(findOrphans(objects, [], now)).toEqual([]);
   });
 
   it("свежий файл не трогаем: его ещё привязывают к месту", () => {
-    expect(findOrphans([{ path: "hero/a.webp", createdAt: fresh }], [], now)).toEqual([]);
+    expect(findOrphans([{ path: `hero/${UUID}.webp`, createdAt: fresh }], [], now)).toEqual([]);
   });
 
   it("файл без времени создания не трогаем", () => {
-    expect(findOrphans([{ path: "hero/a.webp", createdAt: null }], [], now)).toEqual([]);
+    expect(findOrphans([{ path: `hero/${UUID}.webp`, createdAt: null }], [], now)).toEqual([]);
+  });
+
+  it("чужие файлы (не по правилу имён) не трогаем", () => {
+    expect(findOrphans([{ path: "gallery/readme.txt", createdAt: old }, { path: "gallery/a.webp", createdAt: old }], [], now)).toEqual([]);
+  });
+});
+
+describe("уменьшенные копии Фото", () => {
+  it("копии лежат рядом: имя Фото и ширина", () => {
+    expect(variantPath(`gallery/${UUID}.webp`, 400)).toBe(`gallery/${UUID}-w400.webp`);
+    expect(photoFiles(`hero/${UUID}.jpg`)).toEqual([`hero/${UUID}.jpg`, `hero/${UUID}-w400.jpg`, `hero/${UUID}-w800.jpg`]);
+  });
+
+  it("по любому файлу находится его Фото; чужие пути — null", () => {
+    expect(basePhotoPath(`gallery/${UUID}.webp`)).toBe(`gallery/${UUID}.webp`);
+    expect(basePhotoPath(`gallery/${UUID}-w800.webp`)).toBe(`gallery/${UUID}.webp`);
+    for (const bad of [
+      `gallery/${UUID}-w801.webp`,
+      `gallery/${UUID}-w400.gif`,
+      `gallery/../${UUID}.webp`,
+      `../gallery/${UUID}.webp`,
+      `gallery/${UUID}.webp/../../.env`,
+      `secret/${UUID}.webp`,
+      `gallery\${UUID}.webp`,
+      `gallery/${UUID}.webp.part-1`,
+      "",
+    ]) {
+      expect(basePhotoPath(bad), bad).toBeNull();
+    }
+  });
+
+  it("ширины копий в загрузчике картинок совпадают с PHOTO_VARIANTS", () => {
+    expect([...MEDIA_VARIANT_WIDTHS]).toEqual([...PHOTO_VARIANTS]);
+  });
+});
+
+describe("тип файла по содержимому", () => {
+  const bytes = (...parts: (string | number[])[]) =>
+    new Uint8Array(parts.flatMap((p) => (typeof p === "string" ? [...p].map((c) => c.charCodeAt(0)) : p)));
+
+  it("WebP, JPEG и PNG узнаются по первым байтам", () => {
+    expect(sniffImageType(bytes("RIFF", [1, 2, 3, 4], "WEBPVP8 "))).toBe("image/webp");
+    expect(sniffImageType(bytes([0xff, 0xd8, 0xff, 0xe0]))).toBe("image/jpeg");
+    expect(sniffImageType(bytes([0x89], "PNG", [0x0d, 0x0a, 0x1a, 0x0a]))).toBe("image/png");
+  });
+
+  it("HTML, SVG, GIF и обрывки — не картинка", () => {
+    expect(sniffImageType(bytes("<html><script>"))).toBeNull();
+    expect(sniffImageType(bytes("<svg xmlns="))).toBeNull();
+    expect(sniffImageType(bytes("GIF89a"))).toBeNull();
+    expect(sniffImageType(bytes("RIFF", [1, 2, 3, 4], "WAVE"))).toBeNull();
+    expect(sniffImageType(bytes([0xff, 0xd8]))).toBeNull();
+    expect(sniffImageType(new Uint8Array())).toBeNull();
+  });
+
+  it("тип по расширению пути — для раздачи", () => {
+    expect(typeOfPath(`gallery/${UUID}-w400.webp`)).toBe("image/webp");
+    expect(typeOfPath(`hero/${UUID}.jpg`)).toBe("image/jpeg");
+    expect(typeOfPath(`hero/${UUID}.png`)).toBe("image/png");
+    expect(typeOfPath("hero/x.svg")).toBeNull();
+  });
+});
+
+describe("Фото на диске хостинга", () => {
+  it("адрес — /media/<путь>, только для наших путей", () => {
+    expect(localPhotoUrl(`gallery/${UUID}.webp`)).toBe(`/media/gallery/${UUID}.webp`);
+    expect(localPhotoUrl("/trainers/aisha.jpg")).toBeNull();
+    expect(localPhotoUrl(null)).toBeNull();
+  });
+
+  it("лимит объёма: впритык — можно, на байт больше — понятная ошибка с цифрами", () => {
+    const quota = DEFAULT_MEDIA_QUOTA_MB * MB;
+    expect(checkQuota(quota - 100, 100, quota)).toEqual({ ok: true });
+    const r = checkQuota(Math.round(499.5 * MB), 2 * MB, quota);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("Место для фото закончилось: занято 499,5 МБ из 500,0 МБ. Удалите ненужные фото Галереи или замените старые — и загрузите снова.");
+  });
+});
+
+describe("загрузчик картинок next/image", () => {
+  it("Фото с диска: до 400 и до 800 px — копии, шире — само Фото", () => {
+    const src = `/media/gallery/${UUID}.webp`;
+    expect(imageLoader({ src, width: 64 })).toBe(`/media/gallery/${UUID}-w400.webp`);
+    expect(imageLoader({ src, width: 400 })).toBe(`/media/gallery/${UUID}-w400.webp`);
+    expect(imageLoader({ src, width: 800 })).toBe(`/media/gallery/${UUID}-w800.webp`);
+    expect(imageLoader({ src, width: 1200 })).toBe(src);
+  });
+
+  it("картинки из public/: готовые копии WebP, версия в адресе сохраняется", () => {
+    expect(imageLoader({ src: "/stitch/hero.jpg", width: 800 })).toBe("/_img/stitch/hero-800.webp");
+    expect(imageLoader({ src: "/stitch/hero.jpg", width: 1000 })).toBe("/_img/stitch/hero-1200.webp");
+    expect(imageLoader({ src: "/stitch/hero.jpg", width: 1600 })).toBe("/_img/stitch/hero-1200.webp");
+    expect(imageLoader({ src: "/logo.png?v=2", width: 64 })).toBe("/_img/logo-64.webp?v=2");
+  });
+
+  it("остальное — как есть", () => {
+    for (const src of ["https://abc.supabase.co/storage/v1/object/public/media/x.webp", "/_next/static/media/a.png", "data:image/png;base64,AA", "/icon.svg"]) {
+      expect(imageLoader({ src, width: 400 })).toBe(src);
+    }
   });
 });
 

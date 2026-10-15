@@ -1,0 +1,26 @@
+# Локальная база как на хостинге hoster.kz: MariaDB 10.4 (ADR 0004).
+# Запуск: docker compose up -d. Строка подключения — в .env.example.
+services:
+  mariadb:
+    image: mariadb:10.4
+    container_name: athletics-gym-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: athletics
+      MARIADB_USER: athletics
+      MARIADB_PASSWORD: athletics
+    # Как на хостинге: utf8mb4 и время сервера в UTC (Prisma пишет даты в UTC)
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+00:00"]
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  mariadb-data:

@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { SHOW_COLUMN, type BlockId, type SiteSettingsData } from "@/lib/domain/site-settings";
+import { SHOW_COLUMN, settingsToRow, type BlockId, type SiteSettingsData } from "@/lib/domain/site-settings";
 import { DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
 import type { AboutInput, ContactsInput, HeroInput, LegalInput, MarqueeInput, RatingInput, WomenInput } from "@/lib/validation/site-settings";
 import { SETTINGS_ID, getSiteSettings } from "./site";
@@ -18,8 +18,8 @@ export async function getSettingsForEdit() {
 async function update(data: Partial<SiteSettingsData>): Promise<void> {
   await db.siteSettings.upsert({
     where: { id: SETTINGS_ID },
-    update: data,
-    create: { id: SETTINGS_ID, ...DEFAULT_SETTINGS, ...data },
+    update: settingsToRow(data),
+    create: { id: SETTINGS_ID, ...settingsToRow({ ...DEFAULT_SETTINGS, ...data }) },
   });
 }
 

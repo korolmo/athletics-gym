@@ -9,13 +9,13 @@ import * as photos from "@/lib/services/photos";
 
 // Действия — тонкие: права → сервис → обновить страницы. Проверки файла и путей — в сервисе.
 
-export type UploadTicket = { ok: true; path: string; uploadUrl: string } | { ok: false; error: string };
+export type UploadTicket = { ok: true; path: string; uploads: { path: string; url: string }[] } | { ok: false; error: string };
 export type PhotoResult = { ok: true } | { ok: false; error: string };
 
-/** Шаг 1: ссылка на загрузку одного файла. Браузер загружает по ней напрямую в хранилище. */
-export async function requestUpload(target: string, type: string, size: number): Promise<UploadTicket> {
+/** Шаг 1: адреса загрузки Фото и его уменьшенных копий. Браузер загружает по ним файлы (PUT). */
+export async function requestUpload(target: string, type: string, sizes: number[]): Promise<UploadTicket> {
   await requireOwner();
-  return photos.requestUpload(String(target), String(type), Number(size));
+  return photos.requestUpload(String(target), String(type), Array.isArray(sizes) ? sizes.map(Number) : []);
 }
 
 /** Шаг 2: файл загружен — привязать его к месту на сайте. */
