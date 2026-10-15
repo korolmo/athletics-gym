@@ -10,6 +10,8 @@
 ## Текущая работа
 Зал согласился. Делаем админку Владельца по `docs/admin-plan.md` (этапы 0–7 и 9 закрыты и в production; новые задачи — каждая отдельной веткой с превью Vercel).
 
+Этап 8 — переезд на виртуальный хостинг hoster.kz (Plesk, Node 23, MariaDB 10.4, 256 МБ RAM, 1 ГБ диска, домен athleticsgym.kz), ветка `stage-8-plesk`, решение — ADR 0004. Боевой Vercel и боевую Supabase не трогаем до шага переключения, он — только после «ок» пользователя. Шаг 0 — диагностика сервера (`scripts/plesk-diag/`): ждём вывод от пользователя.
+
 ## Стек
 Next.js 15 (App Router, TS) · Tailwind CSS 4 · Prisma 6 · PostgreSQL на Supabase (`DATABASE_URL` — пулер 6543, `DIRECT_URL` — 5432) · деплой Vercel · публичный репозиторий GitHub.
 
