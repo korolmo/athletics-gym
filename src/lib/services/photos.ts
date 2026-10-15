@@ -9,6 +9,8 @@ import {
   isPhotoPath,
   newPhotoPath,
   parsePhotoTarget,
+  photoFiles,
+  PHOTO_VARIANTS,
   pathMatchesKind,
   type PhotoTarget,
 } from "@/lib/domain/photo";
@@ -51,24 +53,34 @@ async function targetExists(target: PhotoTarget): Promise<boolean> {
 }
 
 /**
- * Шаг 1 загрузки. Проверяет тип и размер файла и выдаёт подписанную ссылку: по ней браузер
- * загружает файл в хранилище напрямую. Путь и имя файла задаёт сервер.
+ * Шаг 1 загрузки. Проверяет тип и размер файлов и лимит объёма и выдаёт адрес загрузки для каждого файла:
+ * самого Фото и его уменьшенных копий (`sizes` — в порядке photoFiles: Фото, потом копии от меньшей к большей).
+ * Путь и имя файла задаёт сервер.
  */
 export async function requestUpload(
   targetRaw: string,
   type: string,
-  size: number,
-): Promise<ServiceResult<{ path: string; uploadUrl: string }>> {
+  sizes: number[],
+): Promise<ServiceResult<{ path: string; uploads: { path: string; url: string }[] }>> {
   await requireOwner();
   const target = parsePhotoTarget(targetRaw);
   if (!target) return { ok: false, error: BAD_TARGET };
-  const check = checkUpload(type, size);
-  if (!check.ok) return check;
+  if (!Array.isArray(sizes) || sizes.length !== 1 + PHOTO_VARIANTS.length) return { ok: false, error: BAD_TARGET };
+  let allowed: ReturnType<typeof checkUpload> | null = null;
+  for (const size of sizes) {
+    allowed = checkUpload(type, size);
+    if (!allowed.ok) return allowed;
+  }
+  if (!allowed?.ok) return { ok: false, error: BAD_TARGET };
   if (!(await targetExists(target))) return { ok: false, error: NOT_FOUND_MESSAGE };
 
-  const path = newPhotoPath(target.kind, check.type, crypto.randomUUID());
+  const path = newPhotoPath(target.kind, allowed.type, crypto.randomUUID());
+  const files = photoFiles(path);
   try {
-    return { ok: true, path, uploadUrl: await storage.signUpload(path) };
+    const space = await storage.checkSpace(sizes.reduce((a, b) => a + b, 0));
+    if (!space.ok) return space;
+    const urls = await storage.uploadUrls(files);
+    return { ok: true, path, uploads: files.map((file, i) => ({ path: file, url: urls[i] })) };
   } catch (e) {
     return { ok: false, error: storageError(e) };
   }
@@ -120,7 +132,7 @@ export async function attachPhoto(targetRaw: string, path: string): Promise<Serv
   if (!pathMatchesKind(path, target.kind)) return { ok: false, error: BAD_TARGET };
 
   try {
-    if (!(await storage.objectExists(path))) {
+    if (!(await storage.photoUploaded(path))) {
       return { ok: false, error: "Фото не загрузилось. Попробуйте ещё раз." };
     }
   } catch (e) {

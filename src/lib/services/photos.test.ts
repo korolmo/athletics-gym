@@ -89,8 +89,9 @@ const { state, db, storage, requireOwner } = vi.hoisted(() => {
     StorageNotConfigured,
     isStorageConfigured: vi.fn(() => true),
     mediaUrl: vi.fn((path: string | null | undefined) => (path ? `https://storage.test/${path}` : null)),
-    signUpload: vi.fn(async (path: string) => `https://storage.test/upload/${path}?token=t`),
-    objectExists: vi.fn(async (path: string) => state.files.has(path)),
+    uploadUrls: vi.fn(async (files: string[]) => files.map((f) => `https://storage.test/upload/${f}?token=t`)),
+    photoUploaded: vi.fn(async (path: string) => state.files.has(path)),
+    checkSpace: vi.fn(async (): Promise<{ ok: true } | { ok: false; error: string }> => ({ ok: true })),
     removeObjects: vi.fn(async (paths: string[]) => paths.forEach((p) => state.files.delete(p))),
     listObjects: vi.fn(async () => [...state.files].map(([path, createdAt]) => ({ path, createdAt }))),
   };
@@ -123,42 +124,58 @@ beforeEach(() => {
 
 describe("ссылка на загрузку", () => {
   it("имя файла задаёт сервер: папка места и uuid, расширение — по типу", async () => {
-    const r = await photos.requestUpload("gallery", "image/webp", 300_000);
+    const r = await photos.requestUpload("gallery", "image/webp", [300_000, 20_000, 60_000]);
     if (!r.ok) throw new Error(r.error);
     expect(r.path).toMatch(/^gallery\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.webp$/);
-    expect(storage.signUpload).toHaveBeenCalledWith(r.path);
-    expect(r.uploadUrl).toContain(r.path);
+    // Само Фото и две уменьшенные копии рядом с ним
+    const base = r.path.replace(".webp", "");
+    expect(r.uploads.map((u) => u.path)).toEqual([r.path, `${base}-w400.webp`, `${base}-w800.webp`]);
+    expect(r.uploads.every((u) => u.url.includes(u.path))).toBe(true);
+    expect(storage.checkSpace).toHaveBeenCalledWith(380_000);
+  });
+
+  it("файлов должно быть ровно три: Фото и две копии", async () => {
+    expect(await photos.requestUpload("gallery", "image/webp", [1000])).toMatchObject({ ok: false });
+    expect(await photos.requestUpload("gallery", "image/webp", [1000, 1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(storage.uploadUrls).not.toHaveBeenCalled();
+  });
+
+  it("место для фото закончилось — ошибка с цифрами, ссылки не выдаются", async () => {
+    storage.checkSpace.mockResolvedValueOnce({ ok: false, error: "Место для фото закончилось: занято 599,9 МБ из 600,0 МБ." });
+    const r = await photos.requestUpload("gallery", "image/webp", [1000, 1000, 1000]);
+    expect(r.ok === false && r.error).toMatch(/Место для фото закончилось/);
+    expect(storage.uploadUrls).not.toHaveBeenCalled();
   });
 
   it("у каждой загрузки своё имя", async () => {
-    const a = await photos.requestUpload("hero", "image/jpeg", 1000);
-    const b = await photos.requestUpload("hero", "image/jpeg", 1000);
+    const a = await photos.requestUpload("hero", "image/jpeg", [1000, 1000, 1000]);
+    const b = await photos.requestUpload("hero", "image/jpeg", [1000, 1000, 1000]);
     expect(a.ok && b.ok && a.path !== b.path).toBe(true);
   });
 
   it("не картинка или слишком большой файл — ссылка не выдаётся", async () => {
-    expect(await photos.requestUpload("gallery", "application/pdf", 1000)).toMatchObject({ ok: false });
-    expect(await photos.requestUpload("gallery", "image/svg+xml", 1000)).toMatchObject({ ok: false });
-    const big = await photos.requestUpload("gallery", "image/webp", 5 * 1024 * 1024 + 1);
+    expect(await photos.requestUpload("gallery", "application/pdf", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await photos.requestUpload("gallery", "image/svg+xml", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    const big = await photos.requestUpload("gallery", "image/webp", [5 * 1024 * 1024 + 1, 1000, 1000]);
     expect(big.ok === false && big.error).toMatch(/слишком большое/);
-    expect(storage.signUpload).not.toHaveBeenCalled();
+    expect(storage.uploadUrls).not.toHaveBeenCalled();
   });
 
   it("неизвестное место или удалённый Тренер — ссылка не выдаётся", async () => {
-    expect(await photos.requestUpload("logo", "image/webp", 1000)).toMatchObject({ ok: false });
-    expect(await photos.requestUpload("trainer:ghost", "image/webp", 1000)).toMatchObject({ ok: false });
-    expect(storage.signUpload).not.toHaveBeenCalled();
+    expect(await photos.requestUpload("logo", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await photos.requestUpload("trainer:ghost", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(storage.uploadUrls).not.toHaveBeenCalled();
   });
 
   it("хранилище не настроено или не отвечает — понятная ошибка, а не падение", async () => {
-    storage.signUpload.mockRejectedValueOnce(new storage.StorageNotConfigured());
-    expect(await photos.requestUpload("hero", "image/webp", 1000)).toEqual({
+    storage.uploadUrls.mockRejectedValueOnce(new storage.StorageNotConfigured());
+    expect(await photos.requestUpload("hero", "image/webp", [1000, 1000, 1000])).toEqual({
       ok: false,
       error: "Хранилище фото не настроено. Сообщите разработчику.",
     });
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    storage.signUpload.mockRejectedValueOnce(new Error("timeout"));
-    const r = await photos.requestUpload("hero", "image/webp", 1000);
+    storage.uploadUrls.mockRejectedValueOnce(new Error("timeout"));
+    const r = await photos.requestUpload("hero", "image/webp", [1000, 1000, 1000]);
     expect(r.ok === false && r.error).toMatch(/не отвечает/);
     log.mockRestore();
   });
@@ -224,7 +241,7 @@ describe("привязка загруженного Фото", () => {
   ])("путь из браузера не наш (%s) — отказ, хранилище и базу не трогаем", async (_name, target, path) => {
     state.files.set(path, new Date());
     expect((await photos.attachPhoto(target, path)).ok).toBe(false);
-    expect(storage.objectExists).not.toHaveBeenCalled();
+    expect(storage.photoUploaded).not.toHaveBeenCalled();
     expect(db.siteSettings.update).not.toHaveBeenCalled();
     expect(db.galleryPhoto.create).not.toHaveBeenCalled();
     expect(db.trainer.update).not.toHaveBeenCalled();
@@ -375,7 +392,7 @@ describe("права: без сессии Владельца — отказ", ()
   const g1 = `gallery/${uuid(1)}.webp`;
 
   const calls: [string, () => Promise<unknown>][] = [
-    ["requestUpload", () => photos.requestUpload("gallery", "image/webp", 1000)],
+    ["requestUpload", () => photos.requestUpload("gallery", "image/webp", [1000, 1000, 1000])],
     ["attachPhoto", () => photos.attachPhoto("gallery", g1)],
     ["discardUpload", () => photos.discardUpload(g1)],
     ["removePhoto", () => photos.removePhoto("hero")],
@@ -407,7 +424,7 @@ describe("права: без сессии Владельца — отказ", ()
     for (const model of [db.siteSettings, db.hall, db.trainer, db.galleryPhoto, db.direction]) {
       for (const fn of Object.values(model)) expect(fn).not.toHaveBeenCalled();
     }
-    for (const fn of [storage.signUpload, storage.objectExists, storage.removeObjects, storage.listObjects]) {
+    for (const fn of [storage.uploadUrls, storage.photoUploaded, storage.removeObjects, storage.listObjects]) {
       expect(fn).not.toHaveBeenCalled();
     }
   });

@@ -1,65 +1,70 @@
 import "server-only";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { MEDIA_BUCKET, PHOTO_KINDS, photoUrl, storageOrigin } from "@/lib/domain/photo";
+import { checkQuota, localPhotoUrl, photoFiles } from "@/lib/domain/photo";
+import * as local from "./local";
+import * as supabase from "./supabase";
 
-// Supabase Storage. Работает только на сервере: ключ service_role даёт полный доступ к хранилищу
-// и в браузер не попадает (переменные без NEXT_PUBLIC). Браузер получает только подписанную ссылку на одну загрузку.
+// Хранилище Фото — единственный вход для остального кода. Драйвер выбирает STORAGE_DRIVER:
+// local (по умолчанию) — диск хостинга hoster.kz, папка MEDIA_DIR (ADR 0004);
+// supabase — Supabase Storage, как на Vercel до переезда (ADR 0002).
+// Путь из базы — всегда путь самого Фото; его уменьшенные копии (photoFiles) хранилище держит рядом.
 
-export class StorageNotConfigured extends Error {
-  constructor() {
-    super("Хранилище фото не настроено: SUPABASE_URL (https-адрес проекта) и SUPABASE_SERVICE_ROLE_KEY не заданы или заданы с ошибкой");
-  }
-}
+export { StorageNotConfigured, MediaFileExists } from "./errors";
 
-let cached: SupabaseClient | null = null;
+export type StorageDriver = "local" | "supabase";
 
-function client(): SupabaseClient {
-  const url = storageOrigin(process.env.SUPABASE_URL);
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new StorageNotConfigured();
-  cached ??= createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  return cached;
+export function storageDriver(): StorageDriver {
+  return process.env.STORAGE_DRIVER === "supabase" ? "supabase" : "local";
 }
 
 export function isStorageConfigured(): boolean {
-  return Boolean(storageOrigin(process.env.SUPABASE_URL) && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return storageDriver() === "local" ? true : supabase.isStorageConfigured();
 }
 
-/** Прямая ссылка на Фото; пусто — пути нет или хранилище не настроено (сайт покажет картинку из public/). */
+/** Ссылка на Фото для сайта; пусто — пути нет или хранилище не настроено (сайт покажет картинку из public/). */
 export function mediaUrl(path: string | null | undefined): string | null {
-  return photoUrl(process.env.SUPABASE_URL, path);
+  return storageDriver() === "local" ? localPhotoUrl(path) : supabase.mediaUrl(path);
 }
 
-/** Подписанная ссылка на загрузку одного файла по заданному пути. Действует два часа, перезаписать существующий файл по ней нельзя. */
-export async function signUpload(path: string): Promise<string> {
-  const { data, error } = await client().storage.from(MEDIA_BUCKET).createSignedUploadUrl(path);
-  if (error) throw error;
-  return data.signedUrl;
+/**
+ * Куда браузеру загрузить каждый файл (PUT). Диск — наш обработчик /api/admin/media с проверкой сессии;
+ * Supabase — подписанная ссылка на одну загрузку.
+ */
+export async function uploadUrls(files: string[]): Promise<string[]> {
+  if (storageDriver() === "local") return files.map((f) => `/api/admin/media/${f}`);
+  return Promise.all(files.map((f) => supabase.signUpload(f)));
 }
 
-/** Есть ли файл в хранилище — проверяем перед записью пути в базу. */
-export async function objectExists(path: string): Promise<boolean> {
-  const { data, error } = await client().storage.from(MEDIA_BUCKET).exists(path);
-  if (error) return false;
-  return data;
+/** Загружены ли все файлы Фото — проверяем перед записью пути в базу. */
+export async function photoUploaded(path: string): Promise<boolean> {
+  const files = photoFiles(path);
+  const check = storageDriver() === "local" ? local.objectExists : supabase.objectExists;
+  return (await Promise.all(files.map(check))).every(Boolean);
 }
 
+/** Удаляет Фото вместе с уменьшенными копиями. */
 export async function removeObjects(paths: string[]): Promise<void> {
   if (paths.length === 0) return;
-  const { error } = await client().storage.from(MEDIA_BUCKET).remove(paths);
-  if (error) throw error;
+  if (storageDriver() === "local") return local.removeObjects(paths);
+  return supabase.removeObjects(paths.flatMap(photoFiles));
 }
 
-/** Все файлы бакета с временем создания — для поиска брошенных загрузок. */
+/** Все файлы хранилища с временем появления — для уборки брошенных загрузок. */
 export async function listObjects(): Promise<{ path: string; createdAt: Date | null }[]> {
-  const all: { path: string; createdAt: Date | null }[] = [];
-  for (const folder of PHOTO_KINDS) {
-    const { data, error } = await client().storage.from(MEDIA_BUCKET).list(folder, { limit: 1000 });
-    if (error) throw error;
-    for (const o of data) {
-      // У папок-заглушек id нет — это не файлы
-      if (o.id) all.push({ path: `${folder}/${o.name}`, createdAt: o.created_at ? new Date(o.created_at) : null });
-    }
-  }
-  return all;
+  return storageDriver() === "local" ? local.listObjects() : supabase.listObjects();
 }
+
+/** Поместятся ли новые файлы в лимит объёма Фото. У Supabase свой лимит, здесь не считаем. */
+export async function checkSpace(incomingBytes: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (storageDriver() !== "local") return { ok: true };
+  return checkQuota(await local.usedBytes(), incomingBytes, local.quotaBytes());
+}
+
+/** Для обработчиков /media и /api/admin/media и для /api/health: работают только с драйвером local. */
+export const disk = {
+  dir: local.mediaDir,
+  quotaBytes: local.quotaBytes,
+  usedBytes: local.usedBytes,
+  freeBytes: local.freeBytes,
+  write: local.writeObject,
+  open: local.openObject,
+};

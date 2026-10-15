@@ -216,9 +216,9 @@ describe("политика говорит то же, что делает код"
   });
 
   it("место хранения по умолчанию названо прямо, а о хостинг-провайдерах сказано и в разделе о передаче данных", () => {
-    expect(DEFAULT_DATA_LOCATION.ru).toBe("на серверах Vercel и Supabase в Германии (ЕС)");
+    expect(DEFAULT_DATA_LOCATION.ru).toBe("на серверах в Республике Казахстан (hoster.kz)");
     const section = (id: string, locale: Locale) => legalDocText({ ...build("privacy", locale), sections: build("privacy", locale).sections.filter((s) => s.id === id) }, "");
-    expect(section("storage", "ru")).toContain("Данные хранятся на серверах Vercel и Supabase в Германии (ЕС).");
+    expect(section("storage", "ru")).toContain("Данные хранятся на серверах в Республике Казахстан (hoster.kz).");
     expect(section("sharing", "ru")).toContain("хранят данные по нашему поручению");
     expect(section("sharing", "kk")).toContain("біздің тапсырмамыз бойынша");
     for (const locale of locales) expect(hrefs(build("privacy", locale))).toContain("#storage");
@@ -289,9 +289,9 @@ describe("политика говорит то же, что делает код"
     );
   });
 
-  it("дата редакции обоих документов — 12 октября 2026; она же записывается в Отзыв", () => {
-    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-10-12", terms: "2026-10-12" });
-    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^12 октября 2026/);
+  it("дата редакции: Политика — 15 октября 2026 (переезд на hoster.kz), Соглашение — 12 октября; дата Политики записывается в Отзыв", () => {
+    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-10-15", terms: "2026-10-12" });
+    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^15 октября 2026/);
     expect(build("privacy", "kk").updated).toBe(LEGAL_UPDATED.privacy);
     // Сервис берёт дату из той же константы, своей копии у него нет
     const service = fs.readFileSync("src/lib/services/reviews.ts", "utf8");

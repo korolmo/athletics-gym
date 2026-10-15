@@ -1,10 +1,13 @@
 const isDev = process.env.NODE_ENV !== "production";
+// Среда — как в src/lib/seo.ts (resolveAppEnv): APP_ENV на hoster.kz, запасная — VERCEL_ENV
+const appEnv = process.env.APP_ENV?.trim() || process.env.VERCEL_ENV?.trim() || undefined;
 // На превью Vercel подключает свою панель комментариев (vercel.live)
 const isPreview = process.env.VERCEL_ENV === "preview";
 
-// Хранилище фото (Supabase Storage): адрес берётся из SUPABASE_URL при сборке.
-// Если переменная не задана или это не https-адрес, хранилище просто не разрешается — сайт показывает картинки из public/.
+// Хранилище фото Supabase (STORAGE_DRIVER=supabase): адрес берётся из SUPABASE_URL при сборке.
+// С диском хостинга (по умолчанию, ADR 0004) Фото отдаёт наш же сервер (/media/…), внешний адрес не нужен.
 function storageOrigin() {
+  if (process.env.STORAGE_DRIVER !== "supabase") return null;
   try {
     const url = new URL(process.env.SUPABASE_URL ?? "");
     // То же правило, что в src/lib/domain/photo.ts (storageOrigin)
@@ -34,9 +37,11 @@ const csp = [
   "object-src 'none'",
 ].join("; ");
 
-// Превью и любые не-production деплои работают на базе разработки: в поиск они попадать не должны.
+// Всё, кроме production (проверочный запуск, превью, локальный сайт), в поиск попадать не должно.
 // Заголовок закрывает от индексации всё, включая картинки и файлы, у которых нет своего meta robots.
-const isProductionDeploy = process.env.VERCEL_ENV === "production";
+// Заголовки вычисляются при сборке: ветку deploy для hoster.kz собирают с APP_ENV=production (.github/workflows/deploy.yml);
+// robots.txt и meta robots главной читают APP_ENV уже на сервере, при запросе.
+const isProductionDeploy = appEnv === "production";
 
 const securityHeaders = [
   ...(isProductionDeploy ? [] : [{ key: "X-Robots-Tag", value: "noindex, nofollow" }]),
@@ -54,17 +59,24 @@ const OG_IMAGE_FILES = ["./src/assets/fonts/*.ttf", "./public/logo.png"];
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   devIndicators: false,
+  // Хостинг hoster.kz (ADR 0004): готовый сервер (server.js) без node_modules, его запускает Passenger в Plesk
+  output: "standalone",
+  // 256 МБ на весь процесс: кэш страниц в памяти не держим, он лежит на диске (.next) и переживает перезапуск
+  cacheMaxMemorySize: 0,
   // Картинка-превью ссылок читает шрифты и логотип с диска. Сборка Vercel кладёт в серверную функцию только те файлы,
   // которые нашла сама; эти она не находит — без явного списка маршрут отвечает ошибкой 500.
   outputFileTracingIncludes: {
     "/[locale]/opengraph-image": OG_IMAGE_FILES,
     "/[locale]/twitter-image": OG_IMAGE_FILES,
   },
+  // Оптимизатора картинок на сервере нет (памяти мало, sharp на хостинг не ставим). Размеры готовят заранее:
+  // для public/ — scripts/images/build-variants.mjs при сборке, для Фото — браузер Владельца при загрузке.
+  // Загрузчик (src/lib/image-loader.ts) подставляет в srcset готовые файлы нужной ширины.
   images: {
-    // next/image берёт из хранилища только публичные файлы бакета media
-    remotePatterns: storage
-      ? [{ protocol: "https", hostname: storage.hostname, pathname: "/storage/v1/object/public/media/**" }]
-      : [],
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
+    deviceSizes: [400, 800, 1200, 1600],
+    imageSizes: [64, 128, 256],
   },
   poweredByHeader: false,
   async headers() {

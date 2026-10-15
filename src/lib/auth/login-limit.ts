@@ -6,7 +6,7 @@ import { ATTEMPT_KEEP_MS, FAILURE_DELAY_MS, WINDOW_MS, evaluateAttempts, type Li
 // Лимит попыток входа хранится в базе (таблица LoginAttempt).
 // Любая ошибка базы здесь пробрасывается наверх: без работающего лимита вход запрещён.
 
-/** IP клиента: на Vercel приходит в x-real-ip / x-forwarded-for. */
+/** IP клиента: на hoster.kz его ставит nginx Plesk в x-real-ip (подделку из запроса он перезаписывает), на Vercel — так же. */
 async function clientIp(): Promise<string> {
   const h = await headers();
   return h.get("x-real-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";

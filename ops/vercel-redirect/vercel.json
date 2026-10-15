@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": "public",
+  "redirects": [{ "source": "/:path*", "destination": "https://athleticsgym.kz/:path*", "permanent": true }]
+}

@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "images:build": "node scripts/images/build-variants.mjs",
+    "predev": "npm run images:build",
     "dev": "next dev",
+    "prebuild": "npm run images:build",
     "build": "next build",
     "start": "next start",
+    "start:standalone": "node scripts/standalone/start-local.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -14,13 +18,14 @@
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:status": "prisma migrate status",
-    "db:migrate:prod": "dotenv -e .env.preview -- prisma migrate deploy",
-    "db:status:prod": "dotenv -e .env.preview -- prisma migrate status",
     "seed": "prisma db seed",
     "seed:force-production": "prisma db seed -- --force-production",
     "studio": "prisma studio",
     "storage:setup": "dotenv -e .env -- tsx scripts/storage-setup.ts",
-    "storage:setup:prod": "dotenv -e .env.preview -- tsx scripts/storage-setup.ts"
+    "db:up": "docker compose up -d mariadb",
+    "transfer:export": "tsx scripts/transfer/export.ts",
+    "transfer:verify": "tsx scripts/transfer/verify.ts",
+    "memory:check": "tsx scripts/standalone/memory-check.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -39,15 +44,23 @@
     "@eslint/eslintrc": "^3.3.7",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "dotenv": "^16.6.1",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.27",
+    "fflate": "^0.8.3",
+    "pg": "^8.23.1",
     "prisma": "^6.19.3",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

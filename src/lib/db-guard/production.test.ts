@@ -46,7 +46,7 @@ describe("решение о запуске seed", () => {
   it("на боевой базе без флага — отказ с объяснением", () => {
     const d = decideSeed({ DATABASE_URL: prodPooler, DIRECT_URL: prodSession }, []);
     expect(d.allowed).toBe(false);
-    expect(!d.allowed && d.reason).toContain("боевую базу");
+    expect(!d.allowed && d.reason).toContain("боевая база");
     expect(!d.allowed && d.reason).toContain(FORCE_PRODUCTION_FLAG);
   });
 
@@ -65,5 +65,12 @@ describe("решение о запуске seed", () => {
 
   it("похожий, но другой флаг не подходит", () => {
     expect(decideSeed({ DATABASE_URL: prodPooler }, ["--force", "--production", "--force-production=no"]).allowed).toBe(false);
+  });
+
+  it("на хостинге (APP_ENV=production) — только с флагом, какой бы ни была строка подключения", () => {
+    const mariadb = "mysql://u:p@localhost:3306/athletics";
+    expect(decideSeed({ DATABASE_URL: mariadb, APP_ENV: "production" }, []).allowed).toBe(false);
+    expect(decideSeed({ DATABASE_URL: mariadb, APP_ENV: "production" }, [FORCE_PRODUCTION_FLAG])).toEqual({ allowed: true, production: true });
+    expect(decideSeed({ DATABASE_URL: mariadb, APP_ENV: "development" }, []).allowed).toBe(true);
   });
 });

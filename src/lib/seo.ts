@@ -5,8 +5,8 @@ import type { Metadata, MetadataRoute } from "next";
 import { locales, type Locale } from "@/lib/i18n";
 import type { SiteContent } from "@/lib/domain/site-settings";
 
-/** Адрес сайта, пока нет своего домена. С доменом .kz меняется только переменная SITE_URL. */
-export const DEFAULT_SITE_URL = "https://athletics-gym.vercel.app";
+/** Адрес сайта на хостинге hoster.kz (ADR 0004); другой адрес задаёт переменная SITE_URL. */
+export const DEFAULT_SITE_URL = "https://athleticsgym.kz";
 
 /** Адрес сайта из SITE_URL: только правильный https-адрес без пути; иначе — адрес по умолчанию. */
 export function resolveSiteUrl(raw: string | undefined): string {
@@ -21,19 +21,31 @@ export function resolveSiteUrl(raw: string | undefined): string {
 }
 
 /**
- * Можно ли показывать этот деплой поисковикам. Только production на Vercel:
- * превью и локальный сайт работают на базе разработки и в поиск попадать не должны.
+ * Среда, в которой работает сайт: APP_ENV (задаётся в Plesk на hoster.kz, ADR 0004),
+ * запасной вариант — VERCEL_ENV, пока сайт ещё и на Vercel. Пусто — локальный сайт.
  */
-export function isIndexable(vercelEnv: string | undefined): boolean {
-  return vercelEnv === "production";
+export function resolveAppEnv(env: Record<string, string | undefined>): string | undefined {
+  return env.APP_ENV?.trim() || env.VERCEL_ENV?.trim() || undefined;
 }
 
-export type SeoEnv = { siteUrl: string; vercelEnv: string | undefined; googleVerification?: string };
+export function appEnv(): string | undefined {
+  return resolveAppEnv(process.env);
+}
+
+/**
+ * Можно ли показывать сайт поисковикам. Только production:
+ * проверочный запуск, превью и локальный сайт в поиск попадать не должны.
+ */
+export function isIndexable(deployEnv: string | undefined): boolean {
+  return deployEnv === "production";
+}
+
+export type SeoEnv = { siteUrl: string; deployEnv: string | undefined; googleVerification?: string };
 
 export function readSeoEnv(env: Record<string, string | undefined> = process.env): SeoEnv {
   return {
     siteUrl: resolveSiteUrl(env.SITE_URL),
-    vercelEnv: env.VERCEL_ENV,
+    deployEnv: resolveAppEnv(env),
     googleVerification: env.GOOGLE_SITE_VERIFICATION?.trim() || undefined,
   };
 }
@@ -60,7 +72,7 @@ export function buildMetadata(
   path = "",
 ): Metadata {
   const url = `${env.siteUrl}/${locale}${path}`;
-  const indexable = isIndexable(env.vercelEnv);
+  const indexable = isIndexable(env.deployEnv);
   return {
     metadataBase: new URL(env.siteUrl),
     title: text.title,
@@ -91,7 +103,7 @@ export function buildMetadata(
 
 /** robots.txt: в production закрыты админка и API; на превью и локально закрыто всё. */
 export function buildRobots(env: SeoEnv): MetadataRoute.Robots {
-  if (!isIndexable(env.vercelEnv)) return { rules: [{ userAgent: "*", disallow: "/" }] };
+  if (!isIndexable(env.deployEnv)) return { rules: [{ userAgent: "*", disallow: "/" }] };
   return {
     rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/api"] }],
     sitemap: `${env.siteUrl}/sitemap.xml`,

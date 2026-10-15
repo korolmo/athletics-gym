@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { ABOUT_CARD_COUNT, type AboutCardData, type SiteSettingsData } from "@/lib/domain/site-settings";
+import { ABOUT_CARD_COUNT, settingsFromRow, type AboutCardData, type SiteSettingsData } from "@/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
 import { mediaUrl } from "@/lib/storage/client";
 
@@ -35,7 +35,7 @@ export async function getSiteSettings(): Promise<{ settings: SiteSettingsData; c
     db.aboutCard.findMany({ orderBy: { position: "asc" } }),
   ]);
   return {
-    settings: settings ?? DEFAULT_SETTINGS,
+    settings: settings ? settingsFromRow(settings) : DEFAULT_SETTINGS,
     cards: cards.length === ABOUT_CARD_COUNT ? cards : DEFAULT_ABOUT_CARDS,
   };
 }

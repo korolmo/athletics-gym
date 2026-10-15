@@ -31,15 +31,23 @@ export function isProductionDatabaseUrl(url: string | undefined): boolean {
 
 export type SeedDecision = { allowed: true; production: boolean } | { allowed: false; reason: string };
 
-/** Можно ли запускать seed: на боевой базе — только с флагом. Проверяются обе строки подключения. */
-export function decideSeed(env: { DATABASE_URL?: string; DIRECT_URL?: string }, argv: readonly string[]): SeedDecision {
-  const production = isProductionDatabaseUrl(env.DATABASE_URL) || isProductionDatabaseUrl(env.DIRECT_URL);
+/**
+ * Можно ли запускать seed: на боевой базе — только с флагом.
+ * Боевая база — та, что на хостинге hoster.kz (там задано APP_ENV=production, ADR 0004),
+ * или прежняя боевая Supabase (по строкам подключения).
+ */
+export function decideSeed(
+  env: { DATABASE_URL?: string; DIRECT_URL?: string; APP_ENV?: string },
+  argv: readonly string[],
+): SeedDecision {
+  const production =
+    env.APP_ENV === "production" || isProductionDatabaseUrl(env.DATABASE_URL) || isProductionDatabaseUrl(env.DIRECT_URL);
   if (!production) return { allowed: true, production: false };
   if (argv.includes(FORCE_PRODUCTION_FLAG)) return { allowed: true, production: true };
   return {
     allowed: false,
     reason:
-      `Отказ: строка подключения указывает на боевую базу (${PRODUCTION_DB.region}, проект ${PRODUCTION_DB.projectRef}).\n` +
+      `Отказ: это боевая база — APP_ENV=production или строка подключения к боевой Supabase (${PRODUCTION_DB.region}, проект ${PRODUCTION_DB.projectRef}).\n` +
       `Seed удаляет все Залы, Тарифы и Тренеров, заводит их заново из прайса и возвращает Настройки сайта к начальным.\n` +
       `Если это действительно нужно: npm run seed:force-production (передаёт ${FORCE_PRODUCTION_FLAG}).`,
   };

@@ -1,6 +1,7 @@
 import { PrismaClient, type Access, type Audience, type TariffCategory } from "@prisma/client";
 import { decideSeed } from "../src/lib/db-guard/production";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
+import { settingsToRow } from "../src/lib/domain/site-settings";
 import { DEFAULT_DIRECTIONS } from "../src/lib/domain/direction.defaults";
 
 // Реальный прайс и Тренеры от Владельца (7 октября 2026):
@@ -129,7 +130,7 @@ const trainers: TrainerSeed[] = [
 async function main() {
   // Seed стирает данные: на боевой базе — только с явным флагом
   const decision = decideSeed(
-    { DATABASE_URL: process.env.DATABASE_URL, DIRECT_URL: process.env.DIRECT_URL },
+    { DATABASE_URL: process.env.DATABASE_URL, DIRECT_URL: process.env.DIRECT_URL, APP_ENV: process.env.APP_ENV },
     process.argv,
   );
   if (!decision.allowed) {
@@ -173,8 +174,8 @@ async function main() {
   // Настройки сайта и карточки «О зале» — к начальным значениям. Аккаунт Владельца seed не трогает.
   await db.siteSettings.upsert({
     where: { id: "site" },
-    update: DEFAULT_SETTINGS,
-    create: { id: "site", ...DEFAULT_SETTINGS },
+    update: settingsToRow(DEFAULT_SETTINGS),
+    create: { id: "site", ...settingsToRow(DEFAULT_SETTINGS) },
   });
   for (const { position, ...card } of DEFAULT_ABOUT_CARDS) {
     await db.aboutCard.upsert({ where: { position }, update: card, create: { position, ...card } });

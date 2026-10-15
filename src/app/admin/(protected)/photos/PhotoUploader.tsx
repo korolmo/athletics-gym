@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { checkSource, checkUpload } from "@/lib/domain/photo";
-import { compressPhoto } from "@/lib/photo/compress";
+import { compressPhotoSet } from "@/lib/photo/compress";
 import { attachPhoto, discardUpload, requestUpload } from "./actions";
 
 type Stage =
@@ -13,23 +13,33 @@ type Stage =
 
 const NETWORK = "Фото не загрузилось: проверьте связь и попробуйте ещё раз.";
 
-/** Загрузка файла по подписанной ссылке напрямую в хранилище, с ходом загрузки. */
-function putFile(url: string, blob: Blob, onProgress: (percent: number) => void): Promise<void> {
+/** Загрузка файла (PUT) по адресу от сервера, с ходом загрузки. Ошибку с текстом от сервера показываем как есть. */
+function putFile(url: string, blob: Blob, onProgress: (loaded: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
     xhr.setRequestHeader("content-type", blob.type);
     // Имя файла уникальное и не меняется — браузерам и CDN можно хранить его год
     xhr.setRequestHeader("cache-control", "max-age=31536000");
-    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(NETWORK)));
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded);
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) return resolve();
+      let message = NETWORK;
+      try {
+        const body = JSON.parse(xhr.responseText) as { error?: unknown };
+        if (typeof body.error === "string" && body.error) message = body.error;
+      } catch {
+        // ответ не JSON — общая ошибка
+      }
+      reject(new Error(message));
+    };
     xhr.onerror = () => reject(new Error(NETWORK));
     xhr.send(blob);
   });
 }
 
 /**
- * Кнопка «выбрать фото»: сжимает в браузере, загружает в хранилище и привязывает к месту на сайте.
+ * Кнопка «выбрать фото»: сжимает в браузере (с уменьшенными копиями), загружает в хранилище и привязывает к месту на сайте.
  * `target` — куда: hero, women, gallery, trainer:<id>, hall:<зал>. Для Галереи можно выбрать сразу несколько фото.
  */
 export function PhotoUploader({
@@ -65,23 +75,31 @@ export function PhotoUploader({
     if (!source.ok) throw new Error(source.error);
 
     working("Сжимаем фото", null, null);
-    const blob = await compressPhoto(file);
-    const check = checkUpload(blob.type, blob.size);
-    if (!check.ok) throw new Error(check.error);
-    const shown = URL.createObjectURL(blob);
+    const blobs = await compressPhotoSet(file);
+    for (const blob of blobs) {
+      const check = checkUpload(blob.type, blob.size);
+      if (!check.ok) throw new Error(check.error);
+    }
+    const shown = URL.createObjectURL(blobs[0]);
 
     working("Готовим загрузку", null, shown);
-    const ticket = await requestUpload(target, blob.type, blob.size);
+    const ticket = await requestUpload(target, blobs[0].type, blobs.map((b) => b.size));
     if (!ticket.ok) throw new Error(ticket.error);
 
     try {
+      // Ход загрузки — по всем файлам вместе: само Фото и его уменьшенные копии
+      const total = blobs.reduce((sum, b) => sum + b.size, 0);
+      let before = 0;
       working("Загружаем", 0, shown);
-      await putFile(ticket.uploadUrl, blob, (percent) => working("Загружаем", percent, shown));
+      for (const [i, upload] of ticket.uploads.entries()) {
+        await putFile(upload.url, blobs[i], (loaded) => working("Загружаем", Math.round(((before + loaded) / total) * 100), shown));
+        before += blobs[i].size;
+      }
       working("Сохраняем", null, shown);
       const saved = await attachPhoto(target, ticket.path);
       if (!saved.ok) throw new Error(saved.error);
     } catch (e) {
-      // Файл мог успеть попасть в хранилище — без записи в базе он там не нужен
+      // Файлы могли успеть попасть в хранилище — без записи в базе они там не нужны
       await discardUpload(ticket.path).catch(() => {});
       throw e;
     }

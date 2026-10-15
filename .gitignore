@@ -19,3 +19,10 @@ docs/owner/**/*.jpg
 
 .vercel
 .env*.local
+
+# Этап 8 (hoster.kz): копии картинок для srcset собираются при сборке, Фото локального хранилища — не в git
+/public/_img/
+/.media/
+# перенос данных с Supabase: дамп и архив фото — только у себя, в git не попадают
+/transfer-out/
+/dist/

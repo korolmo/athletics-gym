@@ -23,6 +23,7 @@ import {
   toSiteContent,
 } from "./site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_DATA_LOCATION, DEFAULT_SETTINGS } from "./site-settings.defaults";
+import { decodeTextList, settingsFromRow, settingsToRow } from "./site-settings";
 
 describe("телефон", () => {
   it.each([
@@ -413,8 +414,8 @@ describe("реквизиты", () => {
   });
 });
 
-describe("начальные значения и миграция для боевой базы", () => {
-  const sql = fs.readFileSync("prisma/migrations/20261009010000_site_settings/migration.sql", "utf8");
+describe("начальные значения и PostgreSQL-миграция прежней боевой базы (архив)", () => {
+  const sql = fs.readFileSync("prisma/archive/postgres-migrations/20261009010000_site_settings/migration.sql", "utf8");
   const quoted = (v: string | number) => (typeof v === "number" ? String(v) : `'${v.replace(/'/g, "''")}'`);
 
   it("миграция кладёт в базу те же Настройки сайта, что и seed (кроме девиза: его начальное значение сменили на этапе 7)", () => {
@@ -428,7 +429,7 @@ describe("начальные значения и миграция для бое�
   });
 
   it("миграция бегущей строки кладёт те же пункты, что и seed", () => {
-    const marqueeSql = fs.readFileSync("prisma/migrations/20261011000000_marquee/migration.sql", "utf8");
+    const marqueeSql = fs.readFileSync("prisma/archive/postgres-migrations/20261011000000_marquee/migration.sql", "utf8");
     const list = (items: string[]) => `ARRAY[${items.map(quoted).join(", ")}]`;
     expect(marqueeSql).toContain(`"marqueeRu" = ${list(DEFAULT_SETTINGS.marqueeRu)}`);
     expect(marqueeSql).toContain(`"marqueeKk" = ${list(DEFAULT_SETTINGS.marqueeKk)}`);
@@ -443,5 +444,24 @@ describe("начальные значения и миграция для бое�
         .join(", ");
       expect(sql).toContain(`(${row})`);
     }
+  });
+});
+
+describe("списки бегущей строки в базе", () => {
+  it("пишутся JSON-массивом и читаются обратно без потерь, с казахскими буквами и кавычками", () => {
+    const row = settingsToRow({ marqueeRu: ["«ЖИМ»", "{часы}"], marqueeKk: ["ҚҰҒӘҢ", ""] });
+    expect(typeof row.marqueeRu).toBe("string");
+    expect(settingsFromRow(row)).toEqual({ marqueeRu: ["«ЖИМ»", "{часы}"], marqueeKk: ["ҚҰҒӘҢ", ""] });
+  });
+
+  it("часть Настроек без списков проходит как есть", () => {
+    expect(settingsToRow({ heroTitleRu: "СИЛА" })).toEqual({ heroTitleRu: "СИЛА" });
+  });
+
+  it("повреждённый текст — пустой список, не ошибка", () => {
+    expect(decodeTextList("не json")).toEqual([]);
+    expect(decodeTextList('{"a":1}')).toEqual([]);
+    expect(decodeTextList(null)).toEqual([]);
+    expect(decodeTextList('["a", 5]')).toEqual(["a", ""]);
   });
 });

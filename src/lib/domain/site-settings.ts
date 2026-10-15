@@ -338,3 +338,35 @@ export function splitMotto(title: string): { before: string; accent: string; aft
   if (parts.length < 2) return { before: title.trim(), accent: "", after: "" };
   return { before: parts[0], accent: parts[1], after: parts.slice(2).join(" ") };
 }
+
+// ——— Запись в базе ———
+// Списки бегущей строки лежат в базе JSON-массивом в текстовой колонке: массивов у MariaDB нет,
+// а её тип JSON — тот же LONGTEXT, который Prisma на MariaDB отдаёт то строкой, то объектом (ADR 0004).
+
+type ListColumns = "marqueeRu" | "marqueeKk";
+type WithListsAsText<T> = Omit<T, ListColumns> & { [K in Extract<keyof T, ListColumns>]: string };
+type WithListsAsArrays<T> = Omit<T, ListColumns> & { [K in Extract<keyof T, ListColumns>]: string[] };
+
+/** Список строк из базы. Повреждённый текст — пустой список: тогда сайт покажет начальные пункты. */
+export function decodeTextList(raw: string | null | undefined): string[] {
+  try {
+    const value: unknown = JSON.parse(raw ?? "[]");
+    return Array.isArray(value) ? value.map((item) => (typeof item === "string" ? item : "")) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Настройки (целиком или часть) — в вид для записи в базу. */
+export function settingsToRow<T extends Partial<SiteSettingsData>>(data: T): WithListsAsText<T> {
+  const row: Record<string, unknown> = { ...data };
+  for (const key of ["marqueeRu", "marqueeKk"] as const) {
+    if (key in data) row[key] = JSON.stringify(data[key] ?? []);
+  }
+  return row as WithListsAsText<T>;
+}
+
+/** Запись из базы — в Настройки. */
+export function settingsFromRow<T extends { marqueeRu: string; marqueeKk: string }>(row: T): WithListsAsArrays<T> {
+  return { ...row, marqueeRu: decodeTextList(row.marqueeRu), marqueeKk: decodeTextList(row.marqueeKk) } as WithListsAsArrays<T>;
+}

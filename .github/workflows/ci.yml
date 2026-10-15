@@ -16,12 +16,23 @@ jobs:
   check:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    services:
+      # Как на хостинге hoster.kz: MariaDB 10.4 (ADR 0004)
+      mariadb:
+        image: mariadb:10.4
+        env:
+          MARIADB_ROOT_PASSWORD: ci
+          MARIADB_DATABASE: athletics
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci"
+          --health-interval=5s --health-timeout=3s --health-retries=30
     env:
-      # Сборке и тестам база не нужна: страницы с данными рендерятся по запросу.
-      # Значения-заглушки нужны только чтобы Prisma сгенерировала клиент.
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+      DATABASE_URL: mysql://root:ci@127.0.0.1:3306/athletics
+      # Интеграционные тесты удаляют все таблицы — у них своя база
+      TEST_DATABASE_URL: mysql://root:ci@127.0.0.1:3306/athletics_test
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
@@ -40,8 +51,22 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
+      - name: Test database
+        run: |
+          docker exec ${{ job.services.mariadb.id }} mysql -uroot -pci \
+            -e "CREATE DATABASE athletics_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+
+      - name: Test (unit + MariaDB)
         run: npm test
+
+      - name: Migrations and seed on MariaDB
+        run: |
+          node scripts/standalone/migrate.cjs
+          npm run seed
+          npx prisma migrate status
 
       - name: Build
         run: npm run build
+
+      - name: Hosting bundle
+        run: node scripts/standalone/assemble.mjs

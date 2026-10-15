@@ -1,9 +1,7 @@
-// Логотипы подключаются как модули: в адресе картинки появляется хэш содержимого,
-// поэтому после замены файла ни оптимизатор картинок, ни браузер не покажут старую версию.
-import logo from "../../public/logo.png";
-import logoWomen from "../../public/logo-women.png";
-
-export { logo, logoWomen };
+// Логотипы — файлы из public/ (512×512): next/image берёт их уменьшенные копии из public/_img
+// (src/lib/image-loader.ts). Номер версии в адресе меняем при замене файла — иначе браузер покажет старый.
+export const logo = { src: "/logo.png?v=2", width: 512, height: 512 } as const;
+export const logoWomen = { src: "/logo-women.png?v=1", width: 512, height: 512 } as const;
 
 /** Логотип целиком (512 px) — для разметки зала в JSON-LD; номер версии меняем при замене файла. */
 export const logoIconUrl = "/logo.png?v=2";
