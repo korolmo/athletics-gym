@@ -10,7 +10,7 @@
 |---|---|---|---|
 | **Локальная** | MariaDB 10.4 в Docker (`docker-compose.yml`, порт 3307) | `npm run dev`, `npm run seed`, `npm run start:standalone` | `.env` (`DATABASE_URL=mysql://…@localhost:3307/athletics`) |
 | **Тесты** | та же MariaDB, база `athletics_test`; в CI — сервис `mariadb:10.4` | интеграционные тесты (`src/lib/mariadb.integration.test.ts`) — удаляют все таблицы | `TEST_DATABASE_URL` |
-| **Боевая (hoster.kz)** | MariaDB 10.4 на `localhost:3306` хостинга, снаружи недоступна | только сайт на hoster.kz | переменные среды Plesk |
+| **Боевая (hoster.kz)** | MariaDB 10.4 на `127.0.0.1:3306` хостинга (в `DATABASE_URL` — `127.0.0.1`, не `localhost`), снаружи недоступна | только сайт на hoster.kz | переменные среды Plesk |
 | **Боевая до переключения** | Supabase, код проекта `vrvupsqjhyhghgikboif` (Франкфурт) | сайт на Vercel, пока не выполнено переключение; `npm run transfer:*` (только чтение) | `.env.preview` |
 | **Разработка до этапа 8** | Supabase `athletics-gym-dev` (`ptiiovdgxjdcpxlygnrx`) | кодом больше не используется (PostgreSQL) | `.env`, переменные с префиксом `SUPABASE_DEV_` |
 
