@@ -1,0 +1,9 @@
+{
+  "name": "athletics-gym-hosting",
+  "private": true,
+  "description": "Собрано автоматически из main (a87788dbee21aac6c64af5561212c250f83a1a4d). Не править вручную: ветку deploy перезаписывает GitHub Actions.",
+  "scripts": {
+    "start": "node start.cjs",
+    "db:migrate": "node migrate.cjs"
+  }
+}

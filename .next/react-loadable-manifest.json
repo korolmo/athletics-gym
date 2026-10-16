@@ -1,0 +1,14 @@
+{
+  "components/site/Motion.tsx -> ./motion-run": {
+    "id": 7909,
+    "files": [
+      "static/chunks/7909.d56a4d794b48d651.js"
+    ]
+  },
+  "components/site/reviews/ReviewsBoard.tsx -> @/components/site/reviews/ReviewForm": {
+    "id": 2903,
+    "files": [
+      "static/chunks/2903.ed912d99b5446354.js"
+    ]
+  }
+}
