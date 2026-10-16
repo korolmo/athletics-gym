@@ -15,7 +15,7 @@
 | **Разработка до этапа 8** | Supabase `athletics-gym-dev` (`ptiiovdgxjdcpxlygnrx`) | кодом больше не используется (PostgreSQL) | `.env`, переменные с префиксом `SUPABASE_DEV_` |
 
 - Превью Vercel отключены (`vercel.json`: `git.deploymentEnabled: false`): без MariaDB они бы падали. Ветка проверяется локально и в CI.
-- Vercel сайт больше не собирает: production проекта `athletics-gym` — редирект из `ops/vercel-redirect` (308 на `https://athleticsgym.kz/…`). Прежний деплой сайта (`athletics-meaawsu1l-korolmos-projects.vercel.app`) оставлен для отката до 15 ноября — `docs/hosting-plesk.md`, «План отката».
+- Vercel сайт больше не собирает: production проекта `athletics-gym` — редирект из `ops/vercel-redirect` (308 на `https://athleticsgym.kz/…`). Прежний деплой сайта (`athletics-meaawsu1l-korolmos-projects.vercel.app`) оставлен для отката до 15 ноября — `docs/hosting-plesk.md`, «План отката». Сам редирект держать минимум 180 дней — до ~14 апреля 2027, лучше год (до 16 октября 2027): в Search Console идёт «Изменение адреса».
 - Seed откажется работать на боевой базе: на хостинге задано `APP_ENV=production` (и по строке боевой Supabase).
 
 ## Команды
@@ -141,7 +141,7 @@
 |---|---|---|
 | `APP_ENV` | Plesk → Node.js (на Vercel вместо неё — `VERCEL_ENV`) | `production` — сайт открыт поисковикам; любое другое значение или пусто — закрыт |
 | `SITE_URL` | Plesk → Node.js (необязательно) | Адрес сайта для canonical, hreflang, sitemap, превью ссылок и разметки. Без неё — `https://athleticsgym.kz`. Только `https://<домен>`, без пути и без слэша в конце |
-| `GOOGLE_SITE_VERIFICATION` | Plesk → Node.js (необязательно) | Код подтверждения из Google Search Console (способ «Тег HTML», только значение `content`) |
+| `GOOGLE_SITE_VERIFICATION` | Plesk → Node.js (необязательно; сейчас не задана — athleticsgym.kz подтверждён через DNS) | Код подтверждения из Google Search Console (способ «Тег HTML», только значение `content`) |
 
 - После смены переменных — Node.js → **Перезапустить приложение**.
 - **В поиск попадает только production.** Если `APP_ENV` (запасная — `VERCEL_ENV`) не равна `production`, страницы отдают `noindex`, а `robots.txt` — `Disallow: /`. Заголовок `X-Robots-Tag` вычисляется при сборке: ветку `deploy` собирают с `APP_ENV=production`, поэтому на пробном запуске (`APP_ENV=staging`) поисковики останавливает `robots.txt`.
@@ -280,3 +280,4 @@ PR #17. Миграция применена к боевой базе до merge;
 - **9 октября 2026.** Этап 1: миграции `owner_account` и `site_settings` применены к базе разработки, затем к боевой; код выкатан (PR #5). Аккаунт Владельца создан первым входом, пароль сменён, `ADMIN_PASSWORD` удалён из Vercel.
 - **15 октября 2026.** Этап 8, ветка `stage-8-plesk`: схема переведена на MariaDB 10.4 (базовая миграция `20261015000000_init_mariadb`, PostgreSQL-история — в архиве), standalone-сборка и ветка `deploy` для hoster.kz, Фото на диске, превью Vercel отключены. Проверочный перенос боевой базы: 2 Зала, 33 Тарифа, 6 Тренеров, аккаунт Владельца, Настройки, 4 карточки, 5 Направлений; Фото, Отзывов и Обращений нет — совпало значение в значение.
 - **16 октября 2026.** Переключение на hoster.kz: свежая выгрузка боевой Supabase сверена и импортирована в Plesk, в Plesk `APP_ENV=production` и `SITE_URL=https://athleticsgym.kz`, на Vercel выкачен редирект (`ops/vercel-redirect`, PR #32). Запуску мешали `localhost` в `DATABASE_URL` (нужен `127.0.0.1`), «Установка NPM» и выключение Node.js на CloudLinux (подменяют `node_modules`) и спецзнаки в пароле базы — всё описано в `docs/hosting-plesk.md`. Supabase и прежний деплой Vercel — резерв для отката до 15 ноября.
+- **16 октября 2026, позже.** Search Console: `athleticsgym.kz` подтверждён через DNS (ресурс «Домен»), sitemap отправлен, индексирование `/ru` и `/kk` запрошено, «Изменение адреса» с `athletics-gym.vercel.app` запущено — редирект на Vercel держать минимум 180 дней — до ~14 апреля 2027, лучше год (до 16 октября 2027). На домене заведена почта (Plesk, Roundcube, DKIM, SSL на mail и webmail); резервная копия Plesk включает почтовые сообщения.
