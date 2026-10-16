@@ -146,12 +146,19 @@ npm run transfer:export   # читает боевую Supabase (.env.preview) т
 npm run transfer:verify   # импорт в локальную MariaDB (docker compose up -d) и сверка с Supabase
 ```
 
-В папке `transfer-out/` (в git не попадает):
+Файлы пишутся в **`C:\gym-transfer`** — вне папки проекта: она лежит в OneDrive, а хэш пароля Владельца в облако попасть не должен. Другую папку можно задать переменной `TRANSFER_OUT_DIR` (только вне OneDrive). В `C:\gym-transfer`:
 - `athletics-dump.sql` — схема, все данные и отметка о базовой миграции. **В нём хэш пароля Владельца** — никому не пересылайте, после импорта удалите;
 - `athletics-media.zip` — все Фото с уменьшенными копиями (сейчас на боевом сайте Фото нет — архив пустой);
 - `manifest.json` — сколько строк в каждой таблице.
 
 `transfer:verify` должен закончиться строкой «Всё совпадает: строки, значения, Фото, миграции.».
+
+Проверка оставляет в Docker базу `athletics_transfer` — в ней тот же хэш пароля Владельца. После импорта в Plesk удалите её вместе с папкой `C:\gym-transfer`:
+
+```powershell
+docker exec athletics-gym-mariadb mariadb -uroot -proot -e "DROP DATABASE IF EXISTS athletics_transfer"
+Remove-Item -Recurse -Force C:\gym-transfer
+```
 
 ### 4.2. Импортировать дамп в Plesk
 
