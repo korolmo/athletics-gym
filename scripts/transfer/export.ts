@@ -1,6 +1,6 @@
 // Перенос данных с боевой Supabase на MariaDB хостинга hoster.kz (этап 8, шаг 5; ADR 0004).
 // Запуск: npm run transfer:export
-// Результат — в transfer-out/ (в .gitignore, в git не попадает):
+// Результат — в C:\gym-transfer на Windows, вне OneDrive (в других системах — transfer-out/; см. OUT_DIR в common.ts):
 //   athletics-dump.sql — схема (базовая миграция) + все данные + запись о миграции, для MariaDB 10.4;
 //   athletics-media.zip — все Фото из бакета media с уменьшенными копиями, распаковывается в MEDIA_DIR;
 //   manifest.json — сколько строк в каждой таблице и какие Фото — для проверки (npm run transfer:verify).

@@ -30,7 +30,7 @@
 | `npm run build`, затем `node scripts/standalone/assemble.mjs` | Сборка standalone и готовый пакет для хостинга в `dist/hosting` (как в ветке `deploy`) |
 | `npm run start:standalone` | Запуск `dist/hosting` локально, как в Plesk (`NODE_OPTIONS=--max-old-space-size=160`), порт 3100 |
 | `npm run memory:check` | Замер памяти собранного сервера под нагрузкой; с `DOCKER_IMAGE=node:23-bookworm-slim` — в Linux-контейнере с лимитом 256 МБ |
-| `npm run transfer:export`, `npm run transfer:verify` | Перенос данных с боевой Supabase: дамп и фото в `transfer-out/`, проверка на локальной MariaDB (`docs/hosting-plesk.md`, раздел 4) |
+| `npm run transfer:export`, `npm run transfer:verify` | Перенос данных с боевой Supabase: дамп и фото в `C:\gym-transfer` (вне OneDrive), проверка на локальной MariaDB (`docs/hosting-plesk.md`, раздел 4) |
 
 Скриптов `db:status:prod` / `db:migrate:prod` больше нет: схема теперь под MySQL, к боевой Supabase Prisma не подключится, а к MariaDB хостинга снаружи доступа нет.
 

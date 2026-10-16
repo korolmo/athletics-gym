@@ -8,8 +8,13 @@ import { Prisma } from "@prisma/client";
 import dotenv from "dotenv";
 import pg from "pg";
 
-/** Папка результата; TRANSFER_OUT_DIR — для пробного переноса с базы разработки, чтобы не затереть боевой. */
-export const OUT_DIR = path.resolve(process.env.TRANSFER_OUT_DIR ?? "transfer-out");
+/**
+ * Папка результата. На Windows по умолчанию C:\gym-transfer — вне папки проекта, которая лежит в OneDrive:
+ * в дампе хэш пароля Владельца, в облако он попасть не должен. В других системах — transfer-out/ (в .gitignore).
+ * TRANSFER_OUT_DIR — своя папка, например для пробного переноса с базы разработки, чтобы не затереть боевой.
+ */
+const DEFAULT_OUT_DIR = process.platform === "win32" ? "C:\\gym-transfer" : "transfer-out";
+export const OUT_DIR = path.resolve(process.env.TRANSFER_OUT_DIR ?? DEFAULT_OUT_DIR);
 export const DUMP_FILE = path.join(OUT_DIR, "athletics-dump.sql");
 export const MEDIA_OUT = path.join(OUT_DIR, "media");
 export const ZIP_FILE = path.join(OUT_DIR, "athletics-media.zip");
