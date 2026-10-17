@@ -14,6 +14,8 @@ export const BURN_WINDOWS = [
 ];
 /** Быстрое выгорание (Google SRE workbook): за час уходит 2 % месячного бюджета. */
 export const FAST_BURN = 14.4;
+/** Тревога — только когда за час есть хотя бы 6 прогонов по 3 проверки: на одной-двух проверках burn rate — шум. */
+export const MIN_ALERT_CHECKS = 18;
 
 /** Боевой сайт мониторингом не трогаем (ADR 0006): адреса athleticsgym.kz и старого проекта Vercel запрещены. */
 export function assertLabUrl(url) {
@@ -63,10 +65,12 @@ export function summarize(checks, now = Date.now()) {
   const allowed = overall.total * BUDGET;
   /** @type {Record<string, number | null>} */
   const burn = {};
+  let lastHourChecks = 0;
   for (const w of BURN_WINDOWS) {
     const recent = inWindow.filter((c) => Date.parse(c.t) > now - w.ms);
     const errRate = recent.length ? recent.filter((c) => !isGood(c)).length / recent.length : 0;
     burn[w.name] = recent.length ? errRate / BUDGET : null;
+    if (w.name === "1h") lastHourChecks = recent.length;
   }
   /** @type {Record<string, any>} */
   const byTarget = {};
@@ -89,8 +93,9 @@ export function summarize(checks, now = Date.now()) {
       remaining: overall.total ? 1 - bad / allowed : 1,
     },
     burn,
-    // Тревога быстрого выгорания: за последний час бюджет горит в 14,4 раза быстрее и последняя проверка неуспешна
-    fastBurnAlert: (burn["1h"] ?? 0) >= FAST_BURN && lastRunBad,
+    // Тревога быстрого выгорания: за последний час бюджет горит в 14,4 раза быстрее, последняя проверка неуспешна
+    // и данных за час достаточно (MIN_ALERT_CHECKS)
+    fastBurnAlert: (burn["1h"] ?? 0) >= FAST_BURN && lastRunBad && lastHourChecks >= MIN_ALERT_CHECKS,
     byTarget,
   };
 }
