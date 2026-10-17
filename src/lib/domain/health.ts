@@ -5,6 +5,12 @@
 
 /** Сколько ждём каждую зависимость в /api/health/ready: дольше — считаем, что её нет. */
 export const READY_TIMEOUT_MS = 1000;
+/**
+ * Первое обращение процесса к зависимости включает установку соединения (TCP + TLS до TiDB, Supabase):
+ * на холодном старте это легко больше секунды, и readiness ложно отвечала 503 (мониторинг, 17 октября 2026).
+ * Поэтому соединение — со своим, бóльшим тайм-аутом, а сам запрос — с READY_TIMEOUT_MS.
+ */
+export const CONNECT_TIMEOUT_MS = 3000;
 
 export type CheckResult = { ok: true; ms: number } | { ok: false; ms: number; error: string };
 
@@ -30,6 +36,26 @@ export async function runCheck(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Проверка зависимости с учётом холодного старта. connect — явная установка соединения (Prisma $connect);
+ * без него до первого успеха весь запрос получает CONNECT_TIMEOUT_MS. После первого успеха — только READY_TIMEOUT_MS.
+ */
+export function createDependencyCheck(
+  probe: () => Promise<unknown>,
+  { connect, readyMs = READY_TIMEOUT_MS, connectMs = CONNECT_TIMEOUT_MS }: { connect?: () => Promise<unknown>; readyMs?: number; connectMs?: number } = {},
+): () => Promise<CheckResult> {
+  let warm = false;
+  return async () => {
+    if (!warm && connect) {
+      const connected = await runCheck(connect, connectMs);
+      if (!connected.ok) return connected;
+    }
+    const result = await runCheck(probe, warm || connect ? readyMs : connectMs);
+    if (result.ok) warm = true;
+    return result;
+  };
 }
 
 export type ReadyChecks = Record<string, CheckResult>;

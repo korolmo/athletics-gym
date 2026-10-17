@@ -5,7 +5,7 @@ import v8 from "node:v8";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
 import { disk, probeStorage, storageDriver } from "@/lib/storage/client";
-import { runCheck, type ReadyChecks } from "@/lib/domain/health";
+import { createDependencyCheck, type ReadyChecks } from "@/lib/domain/health";
 import { appEnv } from "@/lib/seo";
 import { accessLogStats } from "@/lib/observability/access-log";
 import { release } from "@/lib/observability/log";
@@ -14,9 +14,12 @@ import { release } from "@/lib/observability/log";
 // Только для Владельца: путь к папке Фото и версии программ посторонним знать незачем. Секретов здесь нет.
 // Готовность для /api/health/ready (getReadiness) — без сессии: наружу маршрут отдаёт только ok / fail.
 
-/** База и хранилище Фото, каждая проверка — с тайм-аутом READY_TIMEOUT_MS. */
+/** База и хранилище Фото: запрос — с тайм-аутом READY_TIMEOUT_MS, первое соединение процесса — CONNECT_TIMEOUT_MS. */
+const checkDatabase = createDependencyCheck(() => db.$queryRaw`SELECT 1`, { connect: () => db.$connect() });
+const checkStorage = createDependencyCheck(probeStorage);
+
 export async function getReadiness(): Promise<ReadyChecks> {
-  const [database, storage] = await Promise.all([runCheck(() => db.$queryRaw`SELECT 1`), runCheck(probeStorage)]);
+  const [database, storage] = await Promise.all([checkDatabase(), checkStorage()]);
   return { database, storage };
 }
 

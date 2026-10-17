@@ -75,3 +75,11 @@ describe("SLO 99,5 % за 30 дней: бюджет и burn rate", () => {
     expect(s.burn["1h"]).toBeNull();
   });
 });
+
+describe("тревога на малых данных", () => {
+  it("один-два прогона с ошибкой — burn высокий, но тревоги нет", () => {
+    const s = summarize(runs(2, (i) => i === 0), NOW);
+    expect(s.burn["1h"]).toBeGreaterThanOrEqual(FAST_BURN);
+    expect(s.fastBurnAlert).toBe(false);
+  });
+});

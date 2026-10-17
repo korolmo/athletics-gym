@@ -31,7 +31,11 @@ async function check(target) {
   }
 }
 
-// По очереди: первая проверка может попасть на холодный старт, и это часть SLI
+// Соединение раннера с краем Vercel (DNS, TCP, TLS) — не в счёт: это стоимость машины GitHub в США, а не сайта.
+// /robots.txt отдаёт край из кэша, функцию он не будит — холодный старт остаётся в первой проверке
+await fetch(new URL("/robots.txt", base), { signal: AbortSignal.timeout(10_000) }).then((r) => r.arrayBuffer()).catch(() => {});
+
+// По очереди: первая проверка может попасть на холодный старт, и это часть SLI (ADR 0011)
 const checks = [];
 for (const target of TARGETS) checks.push(await check(target));
 
