@@ -100,6 +100,8 @@ jobs:
 
       - name: Measure and check
         run: npm run twin:measure -- --check
+        env:
+          SENTRY_DSN: http://public@127.0.0.1:9/1
 
       - name: Report
         if: always()

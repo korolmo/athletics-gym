@@ -66,6 +66,7 @@ services:
       STORAGE_DRIVER: local
       MEDIA_DIR: /media
       APP_ENV: twin
+      SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
       - "3300:3000"
     volumes:
