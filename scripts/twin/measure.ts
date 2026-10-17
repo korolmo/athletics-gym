@@ -138,7 +138,13 @@ async function main() {
   const pages = ["/ru", "/kk", "/ru/privacy", "/kk/privacy", "/ru/terms", "/kk/terms", "/robots.txt", "/sitemap.xml", "/api/health/live", "/api/health/ready", "/ru/opengraph-image", "/kk/opengraph-image"];
   const admin = ["/admin", "/admin/site", "/admin/tariffs", "/admin/trainers", "/admin/reviews", "/admin/directions", "/admin/photos", "/admin/account", "/api/health"];
   const assets = new Set<string>();
-  for (const p of ["/ru", "/kk"]) for (const a of assetsOf(await (await fetch(`${BASE}${p}`)).text())) assets.add(a);
+  // Плашка «демо-версия» — только в Лаборатории (APP_ENV=lab); сборка для хостинга её показывать не должна
+  let labBanner = false;
+  for (const p of ["/ru", "/kk"]) {
+    const html = await (await fetch(`${BASE}${p}`)).text();
+    if (html.includes("data-lab-banner")) labBanner = true;
+    for (const a of assetsOf(html)) assets.add(a);
+  }
   const auth = { headers: { cookie } };
   const contact = { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ channel: "whatsapp", source: "hero", locale: "ru" }) };
 
@@ -220,6 +226,7 @@ async function main() {
     peakRss / MB > RSS_LIMIT_MB && `RSS ${report.rssMb.peak} МБ > ${RSS_LIMIT_MB} МБ`,
     report.failures.length > 0 && `5xx/обрывы: ${report.failures.length}`,
     oomKilled && "контейнер убит за превышение памяти",
+    labBanner && "на сайте вне Лаборатории есть плашка «демо-версия»",
     report.coldStartMs.firstPageMedian > COLD_LIMIT_MS && `холодный старт ${report.coldStartMs.firstPageMedian} мс > ${COLD_LIMIT_MS} мс`,
   ].filter(Boolean);
   if (CHECK && problems.length) {
