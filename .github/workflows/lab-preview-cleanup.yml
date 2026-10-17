@@ -1,0 +1,38 @@
+name: Lab preview cleanup
+
+# PR закрыт (смержен или нет) — удалить его эфемерную базу pr_<номер> в TiDB (ADR 0012).
+# База production Лаборатории (athletics) скрипту недоступна: он работает только с именами pr_<число>.
+
+on:
+  pull_request:
+    types: [closed]
+
+concurrency:
+  # Та же группа, что у выкатки превью в lab.yml: недоделанная выкатка отменяется, база не воскреснет
+  group: lab-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  drop:
+    name: Drop preview database pr_${{ github.event.number }}
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Drop
+        env:
+          LAB_DATABASE_URL: ${{ secrets.LAB_DATABASE_URL }}
+        run: |
+          if [ -z "$LAB_DATABASE_URL" ]; then echo "::warning::Нет секрета LAB_DATABASE_URL — удалять нечего"; exit 0; fi
+          npm ci --no-audit --no-fund
+          node scripts/lab/preview-db.mjs drop ${{ github.event.number }}
