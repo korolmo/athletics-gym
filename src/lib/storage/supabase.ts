@@ -33,6 +33,12 @@ export async function signUpload(path: string): Promise<string> {
   return data.signedUrl;
 }
 
+/** Проверка готовности (/api/health/ready): бакет отвечает на самый лёгкий запрос — список из одного файла. */
+export async function probe(): Promise<void> {
+  const { error } = await client().storage.from(MEDIA_BUCKET).list("", { limit: 1 });
+  if (error) throw error;
+}
+
 /** Есть ли файл в хранилище — проверяем перед записью пути в базу. */
 export async function objectExists(path: string): Promise<boolean> {
   const { data, error } = await client().storage.from(MEDIA_BUCKET).exists(path);
