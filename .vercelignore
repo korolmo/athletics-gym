@@ -1,0 +1,13 @@
+# Что не уходит в Vercel при выкатке Лаборатории из CLI (ADR 0008). В Actions — чистый checkout,
+# но при ручной выкатке с рабочей машины секреты и черновики не должны попасть в исходники деплоя.
+.env*
+!.env.example
+.claude
+_plesk-debug
+_to_delete
+dist
+transfer-out
+.media
+design/refs
+docs/owner/**/*.png
+docs/owner/**/*.jpg

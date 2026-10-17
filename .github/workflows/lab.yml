@@ -1,0 +1,70 @@
+name: Lab (Vercel)
+
+# Лаборатория — проект Vercel athletics-gym-lab (ADR 0006, 0008): merge в main → production Лаборатории,
+# каждый PR → превью (адрес — в комментарии к PR). Выкатка из CLI, а не Git-интеграцией Vercel:
+# корневой vercel.json выключает Git-деплои, чтобы старый проект athletics-gym (редирект) не собирал main.
+# Боевой сайт на hoster.kz этот workflow не трогает.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: lab-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deploy:
+    name: Deploy to Lab (${{ github.event_name == 'push' && 'production' || 'preview' }})
+    # PR из форков секретов не получают — им превью не нужно
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_LAB_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Check token
+        id: token
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::warning::Нет секрета VERCEL_TOKEN или переменной VERCEL_LAB_PROJECT_ID — выкатка в Лабораторию пропущена"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.skip != 'true'
+
+      - name: Deploy
+        id: deploy
+        if: steps.token.outputs.skip != 'true'
+        run: |
+          # Проект — только из VERCEL_PROJECT_ID: старый athletics-gym сюда не попадёт ни при каких настройках
+          test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
+          PROD=""; [ "${{ github.event_name }}" = "push" ] && PROD="--prod"
+          URL=$(npx --yes vercel@50.4.9 deploy $PROD --yes --token "$VERCEL_TOKEN" \
+            --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Лаборатория: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment preview URL
+        if: github.event_name == 'pull_request' && steps.deploy.outputs.url
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          MARK="<!-- lab-preview -->"
+          BODY="$MARK
+          Превью Лаборатории: $URL (коммит ${{ github.event.pull_request.head.sha }})"
+          ID=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --jq ".[] | select(.body | startswith(\"$MARK\")) | .id" | head -1)
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$ID" -f body="$BODY" > /dev/null
+          else
+            gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" -f body="$BODY" > /dev/null
+          fi

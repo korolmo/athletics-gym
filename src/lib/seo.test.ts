@@ -143,6 +143,15 @@ describe("индексация: только production", () => {
     expect(robots).toEqual({ rules: [{ userAgent: "*", disallow: "/" }] });
     expect(robots.sitemap).toBeUndefined();
   });
+
+  it("Лаборатория (APP_ENV=lab) закрыта везде, даже на production-деплое Vercel", () => {
+    const lab = readSeoEnv({ APP_ENV: "lab", VERCEL_ENV: "production", SITE_URL: "https://athletics-gym-lab.vercel.app" });
+    expect(lab.deployEnv).toBe("lab");
+    expect(buildRobots(lab)).toEqual({ rules: [{ userAgent: "*", disallow: "/" }] });
+    for (const locale of ["ru", "kk"] as const) {
+      expect(buildMetadata(locale, locale === "ru" ? ru.seo : kk.seo, lab, ICON).robots).toEqual({ index: false, follow: false });
+    }
+  });
 });
 
 describe("sitemap.xml", () => {

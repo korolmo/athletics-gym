@@ -11,6 +11,7 @@
 | **Локальная** | MariaDB 10.4 в Docker (`docker-compose.yml`, порт 3307) | `npm run dev`, `npm run seed`, `npm run start:standalone` | `.env` (`DATABASE_URL=mysql://…@localhost:3307/athletics`) |
 | **Тесты** | та же MariaDB, база `athletics_test`; в CI — сервис `mariadb:10.4` | интеграционные тесты (`src/lib/mariadb.integration.test.ts`) — удаляют все таблицы | `TEST_DATABASE_URL` |
 | **Боевая (hoster.kz)** | MariaDB 10.4 на `127.0.0.1:3306` хостинга (в `DATABASE_URL` — `127.0.0.1`, не `localhost`), снаружи недоступна | только сайт на hoster.kz | переменные среды Plesk |
+| **Лаборатория** | TiDB Cloud Starter (Франкфурт, eu-central-1), база `athletics`, TLS (`sslaccept=strict`) | проект Vercel `athletics-gym-lab` (production и превью); `npm run seed:lab` | `.env.lab`, переменные проекта Vercel |
 | **Прежняя боевая** | Supabase, код проекта `vrvupsqjhyhghgikboif` (Франкфурт) | до 16 октября — сайт на Vercel; теперь резерв для отката до 15 ноября: не пишем, не ставим на паузу; `npm run transfer:*` (только чтение) | `.env.preview` |
 | **Разработка до этапа 8** | Supabase `athletics-gym-dev` (`ptiiovdgxjdcpxlygnrx`) | кодом больше не используется (PostgreSQL) | `.env`, переменные с префиксом `SUPABASE_DEV_` |
 
@@ -41,6 +42,13 @@
 - **Отличия от PostgreSQL**: строки — `VARCHAR(191)`, длинные тексты (описания, текст Отзыва, подзаголовок, тексты Женского зала и карточек, адреса, место хранения данных, ссылка на источник) — `TEXT`; пункты бегущей строки — JSON-массив в `TEXT` (массивов у MariaDB нет; кодирование — `settingsToRow` / `settingsFromRow` в `src/lib/domain/site-settings.ts`); кодировка `utf8mb4`, сравнение строк без учёта регистра (`utf8mb4_unicode_ci`); даты — `DATETIME(3)` в UTC.
 - **На хостинге** миграции применяет `scripts/standalone/migrate.cjs` (без Prisma CLI: у Plesk нет SSH, а CLI с движками под все Linux занял бы ещё ~100 МБ). Он ведёт ту же таблицу `_prisma_migrations`, что и Prisma, — `prisma migrate status` с ним согласен. Запускается сам при старте приложения (`start.cjs`) или вручную (`db:migrate` в «Выполнить сценарий» Plesk).
 - Файлы `*.sql` — всегда с концами строк LF (`.gitattributes`): от их байтов считается контрольная сумма миграции.
+
+## Лаборатория (с 17 октября 2026)
+
+Проект Vercel `athletics-gym-lab`, адрес https://athletics-gym-lab.vercel.app, функции в `fra1` (ADR 0006–0008). Выкатку делает `.github/workflows/lab.yml`: merge в `main` → production Лаборатории, PR → превью. Переменные проекта: `DATABASE_URL`, `SENTRY_DSN`, `AUTH_SECRET` (из `.env.lab`), `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (dev-проект Supabase, из `.env`), `STORAGE_DRIVER=supabase`, `APP_ENV=lab` (noindex и `Disallow: /` везде), `SITE_URL`.
+
+- **Миграции на TiDB** — тем же `scripts/standalone/migrate.cjs`: `npx dotenv -e .env.lab -- node scripts/standalone/migrate.cjs`. На TiDB v8.5 (MySQL 8.0-совместимый) базовая миграция прошла без правок: внешние ключи, `utf8mb4_unicode_ci`, `DATETIME(3)` и `GET_LOCK` поддерживаются; `prisma migrate status` согласен. `prisma migrate dev` к TiDB не применять: ему нужна теневая база, миграции по-прежнему создаём на локальной MariaDB 10.4.
+- **Данные** — `npm run seed:lab` (только при `APP_ENV=lab` из `.env.lab`): бренд, тексты и Тарифы Athletic's Gym, вымышленные Тренеры без плакатов, синтетические Отзывы (с пометкой «(демо)») и Обращения за 30 дней, аккаунт Владельца из `ADMIN_LOGIN` / `ADMIN_PASSWORD` в `.env.lab`. Каждый запуск сбрасывает пароль к значению из файла. Копий боевой базы нет (ADR 0007).
 
 ## Обычная выкатка
 
