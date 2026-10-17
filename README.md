@@ -77,7 +77,7 @@ GitHub Actions на каждый pull request делает то же и ещё: 
 
 ## База и выкатка
 
-Хостинг — hoster.kz (Plesk, MariaDB 10.4, ADR 0004). После merge в `main` GitHub Actions собирает сайт в ветку `deploy`, Plesk забирает её и перезапускает приложение; миграции применяются при запуске. Настройка Plesk, перенос данных, переключение и откат — [docs/hosting-plesk.md](./docs/hosting-plesk.md); базы, миграции и выкатка — [docs/deploy.md](./docs/deploy.md).
+Хостинг — hoster.kz (Plesk, MariaDB 10.4, ADR 0004). Прод заморожен на теге `v1.0.0`: релизный тег выкатывается вручную, с подтверждением ([docs/runbooks/release.md](./docs/runbooks/release.md)) — GitHub Actions собирает сайт в ветку `deploy`, Plesk забирает её и перезапускает приложение; миграции применяются при запуске. Настройка Plesk, перенос данных, переключение и откат — [docs/hosting-plesk.md](./docs/hosting-plesk.md); базы, миграции и выкатка — [docs/deploy.md](./docs/deploy.md).
 
 ## Окружения
 
