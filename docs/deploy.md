@@ -11,7 +11,8 @@
 | **Локальная** | MariaDB 10.4 в Docker (`docker-compose.yml`, порт 3307) | `npm run dev`, `npm run seed`, `npm run start:standalone` | `.env` (`DATABASE_URL=mysql://…@localhost:3307/athletics`) |
 | **Тесты** | та же MariaDB, база `athletics_test`; в CI — сервис `mariadb:10.4` | интеграционные тесты (`src/lib/mariadb.integration.test.ts`) — удаляют все таблицы | `TEST_DATABASE_URL` |
 | **Боевая (hoster.kz)** | MariaDB 10.4 на `127.0.0.1:3306` хостинга (в `DATABASE_URL` — `127.0.0.1`, не `localhost`), снаружи недоступна | только сайт на hoster.kz | переменные среды Plesk |
-| **Лаборатория** | TiDB Cloud Starter (Франкфурт, eu-central-1), база `athletics`, TLS (`sslaccept=strict`) | проект Vercel `athletics-gym-lab` (production и превью); `npm run seed:lab` | `.env.lab`, переменные проекта Vercel |
+| **Лаборатория** | TiDB Cloud Starter (Франкфурт, eu-central-1), база `athletics`, TLS (`sslaccept=strict`) | production проекта Vercel `athletics-gym-lab`; `npm run seed:lab` | `.env.lab`, переменная `DATABASE_URL` проекта Vercel (только Production) |
+| **Превью PR** | тот же кластер TiDB, база `pr_<номер>` на каждый PR (ADR 0012): пересоздаётся при каждой выкатке, удаляется при закрытии PR, не больше 20 | превью Лаборатории этого PR | секрет репозитория `LAB_DATABASE_URL`; деплою — через `vercel deploy --env` |
 | **Прежняя боевая** | Supabase, код проекта `vrvupsqjhyhghgikboif` (Франкфурт) | до 16 октября — сайт на Vercel; теперь резерв для отката до 15 ноября: не пишем, не ставим на паузу; `npm run transfer:*` (только чтение) | `.env.preview` |
 | **Разработка до этапа 8** | Supabase `athletics-gym-dev` (`ptiiovdgxjdcpxlygnrx`) | кодом больше не используется (PostgreSQL) | `.env`, переменные с префиксом `SUPABASE_DEV_` |
 

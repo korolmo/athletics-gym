@@ -4,6 +4,9 @@ name: Lab (Vercel)
 # каждый PR → превью (адрес — в комментарии к PR). Выкатка из CLI, а не Git-интеграцией Vercel:
 # корневой vercel.json выключает Git-деплои, чтобы старый проект athletics-gym (редирект) не собирал main.
 # Боевой сайт на hoster.kz этот workflow не трогает.
+# Базы (ADR 0012): production Лаборатории — база athletics (DATABASE_URL проекта Vercel, только production);
+# превью PR — своя эфемерная база pr_<номер>: пересоздаётся при каждой выкатке, миграции этого PR и seed:lab,
+# адрес передаётся только этому деплою. При закрытии PR базу удаляет lab-preview-cleanup.yml.
 
 on:
   push:
@@ -11,7 +14,8 @@ on:
   pull_request:
 
 concurrency:
-  group: lab-${{ github.ref }}
+  # Та же группа у lab-preview-cleanup.yml: закрытие PR отменяет его недоделанную выкатку
+  group: lab-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -32,14 +36,41 @@ jobs:
     steps:
       - name: Check token
         id: token
+        env:
+          HAS_DB: ${{ secrets.LAB_DATABASE_URL != '' }}
         run: |
           if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "::warning::Нет секрета VERCEL_TOKEN или переменной VERCEL_LAB_PROJECT_ID — выкатка в Лабораторию пропущена"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ] && [ "$HAS_DB" != "true" ]; then
+            # Без своей базы превью не выкатываем: у превью нет DATABASE_URL, а базу production оно трогать не должно
+            echo "::warning::Нет секрета LAB_DATABASE_URL — превью пропущено (ADR 0012)"
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@v4
         if: steps.token.outputs.skip != 'true'
+
+      - uses: actions/setup-node@v4
+        if: github.event_name == 'pull_request' && steps.token.outputs.skip != 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Preview database pr_${{ github.event.number }}
+        if: github.event_name == 'pull_request' && steps.token.outputs.skip != 'true'
+        env:
+          LAB_DATABASE_URL: ${{ secrets.LAB_DATABASE_URL }}
+          ADMIN_LOGIN: ${{ secrets.LAB_ADMIN_LOGIN }}
+          ADMIN_PASSWORD: ${{ secrets.LAB_ADMIN_PASSWORD }}
+        run: |
+          npm ci --no-audit --no-fund
+          # Лимит баз превью, пересоздание pr_<номер>; адрес — в PREVIEW_DATABASE_URL (под маской)
+          node scripts/lab/preview-db.mjs prepare ${{ github.event.number }}
+          DATABASE_URL="$(grep '^PREVIEW_DATABASE_URL=' "$GITHUB_ENV" | tail -1 | cut -d= -f2-)"
+          # Миграции этого PR — тем же migrate.cjs, что на хостинге; данные — seed Лаборатории
+          DATABASE_URL="$DATABASE_URL" node scripts/standalone/migrate.cjs
+          DATABASE_URL="$DATABASE_URL" APP_ENV=lab npx tsx prisma/seed-lab.ts
 
       - name: Deploy
         id: deploy
@@ -47,8 +78,10 @@ jobs:
         run: |
           # Проект — только из VERCEL_PROJECT_ID: старый athletics-gym сюда не попадёт ни при каких настройках
           test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
-          PROD=""; [ "${{ github.event_name }}" = "push" ] && PROD="--prod"
-          URL=$(npx --yes vercel@50.4.9 deploy $PROD --yes --token "$VERCEL_TOKEN" \
+          # production — база athletics из переменных проекта; превью — только своя база pr_<номер>
+          PROD=""; DB=()
+          if [ "${{ github.event_name }}" = "push" ]; then PROD="--prod"; else DB=(--env "DATABASE_URL=$PREVIEW_DATABASE_URL"); fi
+          URL=$(npx --yes vercel@50.4.9 deploy $PROD --yes --token "$VERCEL_TOKEN" "${DB[@]}" \
             --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Лаборатория: $URL" >> "$GITHUB_STEP_SUMMARY"
@@ -68,7 +101,7 @@ jobs:
         run: |
           MARK="<!-- lab-preview -->"
           BODY="$MARK
-          Превью Лаборатории: $URL (коммит ${{ github.event.pull_request.head.sha }})"
+          Превью Лаборатории: $URL (коммит ${{ github.event.pull_request.head.sha }}; база pr_${{ github.event.number }} — seed:lab, удалится при закрытии PR)"
           ID=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --jq ".[] | select(.body | startswith(\"$MARK\")) | .id" | head -1)
           if [ -n "$ID" ]; then
             gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$ID" -f body="$BODY" > /dev/null
