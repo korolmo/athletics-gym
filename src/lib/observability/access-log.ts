@@ -7,6 +7,15 @@ import http from "node:http";
 import { REQUEST_ID_HEADER, log, requestIdFrom } from "./log";
 
 const INSTALLED = Symbol.for("athletics.accessLog");
+const STATS = Symbol.for("athletics.accessLogStats");
+type Stats = { installed: boolean; requests: number };
+const g = globalThis as typeof globalThis & { [STATS]?: Stats };
+const stats = (g[STATS] ??= { installed: false, requests: 0 });
+
+/** Для /api/health: стоит ли перехват и сколько запросов он увидел в этом процессе (проверка, что строки доступа пишутся). */
+export function accessLogStats(): Stats {
+  return { ...stats };
+}
 
 /** Пути, которые не пишем: статика сборки и проверки живости (их дёргает мониторинг каждые минуты). */
 export function skipAccessLog(path: string): boolean {
@@ -17,6 +26,7 @@ export function installAccessLog(): void {
   const proto = http.Server.prototype as http.Server & { [INSTALLED]?: boolean };
   if (proto[INSTALLED]) return;
   proto[INSTALLED] = true;
+  stats.installed = true;
   const emit = proto.emit;
   proto.emit = function (this: http.Server, event: string | symbol, ...args: unknown[]) {
     if (event === "request") {
@@ -33,6 +43,7 @@ export function installAccessLog(): void {
 
 function trackRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
   const started = performance.now();
+  stats.requests++;
   const header = req.headers[REQUEST_ID_HEADER];
   const id = requestIdFrom(Array.isArray(header) ? header[0] : header);
   // Тот же id видит middleware (берёт входящий) и получает клиент
