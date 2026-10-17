@@ -62,6 +62,8 @@ export function logError(msg: string, error: unknown, fields?: Omit<LogFields, "
 // ——— request_id ———
 
 export const REQUEST_ID_HEADER = "x-request-id";
+/** Начало запроса (Date.now() в middleware): на Vercel по ней считается длительность в строке доступа. */
+export const REQUEST_START_HEADER = "x-request-start";
 const REQUEST_ID_RE = /^[A-Za-z0-9._-]{8,64}$/;
 
 /** Входящий X-Request-Id берём, только если он похож на идентификатор (от прокси); иначе — новый. */

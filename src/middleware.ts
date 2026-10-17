@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, readSession } from "@/lib/auth/session";
 import { LOCALE_COOKIE as COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
-import { REQUEST_ID_HEADER, requestIdFrom } from "@/lib/observability/log";
+import { REQUEST_ID_HEADER, REQUEST_START_HEADER, requestIdFrom } from "@/lib/observability/log";
 
 const LOCALES = ["ru", "kk"];
 const LOGIN_PATH = "/admin/login";
@@ -10,6 +10,8 @@ const LOGIN_PATH = "/admin/login";
 function next(req: NextRequest, id: string): NextResponse {
   const headers = new Headers(req.headers);
   headers.set(REQUEST_ID_HEADER, id);
+  // Метку ставим всегда сами: входящую от клиента перезаписываем
+  headers.set(REQUEST_START_HEADER, String(Date.now()));
   return NextResponse.next({ request: { headers } });
 }
 

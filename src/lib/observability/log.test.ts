@@ -122,3 +122,17 @@ describe("строка доступа (http.Server)", () => {
     expect(lines).toHaveLength(0);
   });
 });
+
+describe("длительность в строке доступа", () => {
+  it("точное начало (хостинг) главнее метки middleware", async () => {
+    const { durationMs } = await import("./access-log");
+    expect(durationMs(100, "1", 160, 999)).toBe(60);
+  });
+
+  it("на Vercel — от метки middleware; чужая или странная метка — без длительности", async () => {
+    const { durationMs } = await import("./access-log");
+    expect(durationMs(undefined, "1000", 0, 1250)).toBe(250);
+    for (const bad of [undefined, "", "abc", "-5", "2000"]) expect(durationMs(undefined, bad, 0, 1250)).toBeUndefined();
+    expect(durationMs(undefined, "1000", 0, 1000 + 61_000)).toBeUndefined();
+  });
+});
