@@ -69,3 +69,16 @@ describe("/api/health — подробно, только Владельцу", ()
     expect(await r.json()).toMatchObject({ ok: true, node: "v23.11.0" });
   });
 });
+
+describe("/api/health/error — проверка Sentry", () => {
+  it("без сессии — 401, ошибки нет", async () => {
+    const { POST } = await import("./error/route");
+    expect((await POST()).status).toBe(401);
+  });
+
+  it("Владелец — сервер бросает ошибку (её ловит onRequestError)", async () => {
+    authed.mockResolvedValue(true);
+    const { POST } = await import("./error/route");
+    await expect(POST()).rejects.toThrow("Проверка Sentry");
+  });
+});
