@@ -1,57 +1,13 @@
-import { PrismaClient, type Access, type Audience, type TariffCategory } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { decideSeed } from "../src/lib/db-guard/production";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
 import { settingsToRow } from "../src/lib/domain/site-settings";
 import { DEFAULT_DIRECTIONS } from "../src/lib/domain/direction.defaults";
+import { HALLS, MONTH, ONCE, hallTariffs, type HallId, type TariffSeed } from "./seed-data";
 
 // Реальный прайс и Тренеры от Владельца (7 октября 2026):
 // docs/owner/prices-2026-10.md и docs/owner/trainers-2026-10.md
 const db = new PrismaClient();
-
-type HallId = "general" | "women";
-
-type TariffSeed = {
-  category: TariffCategory;
-  price: number;
-  priceTo?: number;
-  visitsPerMonth?: number;
-  durationMonths?: number;
-  access?: Access;
-  audience?: Audience;
-  titleRu?: string;
-};
-
-// Позиции прайса Зала — в порядке плаката
-const hallTariffs: Record<HallId, TariffSeed[]> = {
-  general: [
-    { category: "SINGLE", price: 3000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "STUDENTS", price: 10000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "STUDENTS", price: 12000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "ALL", price: 12000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "WOMEN", price: 15000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "MEN", price: 17000 },
-    { category: "UNLIMITED", durationMonths: 1, price: 25000 },
-    { category: "UNLIMITED", durationMonths: 3, price: 60000 },
-    { category: "UNLIMITED", durationMonths: 6, price: 120000 },
-    { category: "UNLIMITED", durationMonths: 12, price: 170000 },
-    // Строку «Жеке жаттықтырушы 15 000 – 25 000» не заводим: персональные цены — только у Тренеров
-  ],
-  women: [
-    { category: "SINGLE", price: 3000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "STUDENTS", price: 10000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "STUDENTS", price: 12000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "DAY", audience: "ALL", price: 12000 },
-    { category: "VISITS", visitsPerMonth: 12, access: "FULL", audience: "ALL", price: 15000 },
-    { category: "UNLIMITED", durationMonths: 1, price: 20000 },
-    { category: "UNLIMITED", durationMonths: 3, price: 50000 },
-    { category: "UNLIMITED", durationMonths: 6, price: 105000 },
-    { category: "UNLIMITED", durationMonths: 12, price: 140000 },
-  ],
-};
-
-// «Месяц» персональных = 12 тренировок в месяц (так на карточках Нұрмахана, Батырхана, Бауыржана)
-const MONTH = { category: "PERSONAL" as const, visitsPerMonth: 12 };
-const ONCE = { category: "PERSONAL" as const };
 
 type TrainerSeed = {
   name: string;
@@ -145,10 +101,7 @@ async function main() {
 
   // Залы не удаляем, а обновляем: у Зала может быть загруженный Плакат прайса.
   // Загруженные Плакаты Тренеров пропадают вместе с Тренерами — их файлы уберёт уборка хранилища.
-  for (const hall of [
-    { id: "general", nameRu: "Общий зал", nameKk: "Жалпы зал", sortOrder: 0 },
-    { id: "women", nameRu: "Женский зал", nameKk: "Әйелдер залы", sortOrder: 1 },
-  ]) {
+  for (const hall of HALLS) {
     await db.hall.upsert({ where: { id: hall.id }, update: hall, create: hall });
   }
 
