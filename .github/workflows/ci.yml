@@ -70,3 +70,41 @@ jobs:
 
       - name: Hosting bundle
         run: node scripts/standalone/assemble.mjs
+
+  twin:
+    # Прод-двойник (ADR 0005): собранный пакет для hoster.kz в Docker с лимитами хостинга —
+    # 256 МБ без подкачки, 1 CPU, Node 23.11, MariaDB 10.4, запуск через start.cjs.
+    # Падает, если RSS процесса > 230 МБ, есть 5xx/обрывы или контейнер убит за память.
+    name: Prod twin (256 MB, 1 CPU, MariaDB 10.4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: mysql://build:build@127.0.0.1:3306/build
+      RELEASE: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build hosting bundle
+        run: |
+          npm run build
+          node scripts/standalone/assemble.mjs
+
+      - name: Measure and check
+        run: npm run twin:measure -- --check
+
+      - name: Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: twin-report
+          path: dist/twin-report.json
+          if-no-files-found: ignore

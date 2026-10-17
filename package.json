@@ -26,7 +26,8 @@
     "db:up": "docker compose up -d mariadb",
     "transfer:export": "tsx scripts/transfer/export.ts",
     "transfer:verify": "tsx scripts/transfer/verify.ts",
-    "memory:check": "tsx scripts/standalone/memory-check.ts"
+    "memory:check": "tsx scripts/standalone/memory-check.ts",
+    "twin:measure": "tsx scripts/twin/measure.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
