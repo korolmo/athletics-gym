@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSession, destroySession } from "@/lib/auth";
 import { checkLoginLimit, clearFailedLogins, currentIpHash, recordFailedLogin } from "@/lib/auth/login-limit";
 import { loginOwner } from "@/lib/services/owner-account";
+import { logError } from "@/lib/observability/log";
 
 export type LoginState = { error?: string } | undefined;
 
@@ -31,7 +32,7 @@ async function authenticate(loginValue: string, password: string): Promise<Attem
     await clearFailedLogins(ipHash);
     return result;
   } catch (e) {
-    console.error("Вход в админку: база недоступна, вход отклонён.", e);
+    logError("Вход в админку: база недоступна, вход отклонён.", e);
     return { ok: false, error: UNAVAILABLE };
   }
 }

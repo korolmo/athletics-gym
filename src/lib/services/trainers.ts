@@ -7,6 +7,7 @@ import { sortOrderOnCreate, sortOrderOnUpdate } from "@/lib/domain/trainer";
 import type { TrainerInput } from "@/lib/validation/trainer";
 import { removeObjects } from "@/lib/storage/client";
 import type { ServiceResult } from "./result";
+import { logError } from "@/lib/observability/log";
 
 // Тренеры в админке: правила домена и доступ к базе.
 // Каждая функция сама проверяет сессию Владельца — это и есть граница доступа к данным.
@@ -75,7 +76,7 @@ export async function deleteTrainer(id: string): Promise<{ hallId: string } | nu
   await db.trainer.deleteMany({ where: { id } });
   // Загруженный Плакат Тренера удаляем и из хранилища; если не вышло — файл подберёт уборка
   if (trainer.uploadedPhoto) {
-    await removeObjects([trainer.uploadedPhoto]).catch((e) => console.error("Хранилище фото: плакат удалённого Тренера остался.", e));
+    await removeObjects([trainer.uploadedPhoto]).catch((e) => logError("Хранилище фото: плакат удалённого Тренера остался.", e));
   }
   return { hallId: trainer.hallId };
 }

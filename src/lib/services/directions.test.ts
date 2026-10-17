@@ -229,7 +229,7 @@ describe("удаление Фото вместе с файлом", () => {
   it("хранилище не ответило — Направление всё равно удалено (файл подберёт уборка)", async () => {
     const id = await add("С фото");
     state.rows[0].photo = PHOTO;
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
     storage.removeObjects.mockRejectedValueOnce(new Error("storage down"));
     await expect(directions.deleteDirection(id)).resolves.toBeUndefined();
     expect(state.rows).toEqual([]);

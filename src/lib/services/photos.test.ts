@@ -173,7 +173,7 @@ describe("ссылка на загрузку", () => {
       ok: false,
       error: "Хранилище фото не настроено. Сообщите разработчику.",
     });
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
     storage.uploadUrls.mockRejectedValueOnce(new Error("timeout"));
     const r = await photos.requestUpload("hero", "image/webp", [1000, 1000, 1000]);
     expect(r.ok === false && r.error).toMatch(/не отвечает/);
@@ -270,7 +270,7 @@ describe("привязка загруженного Фото", () => {
     uploaded(first);
     await photos.attachPhoto("hero", first);
     uploaded(second);
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
     storage.removeObjects.mockRejectedValueOnce(new Error("storage down"));
     expect(await photos.attachPhoto("hero", second)).toEqual({ ok: true });
     expect(state.settings.heroPhoto).toBe(second);
@@ -377,7 +377,7 @@ describe("уборка хранилища", () => {
   });
 
   it("сбой уборки загрузке не мешает", async () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
     storage.listObjects.mockRejectedValueOnce(new Error("storage down"));
     const path = `women/${uuid(1)}.webp`;
     uploaded(path);

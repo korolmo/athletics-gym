@@ -7,6 +7,8 @@ import { requireOwner } from "@/lib/admin/guard";
 import { disk, probeStorage, storageDriver } from "@/lib/storage/client";
 import { runCheck, type ReadyChecks } from "@/lib/domain/health";
 import { appEnv } from "@/lib/seo";
+import { accessLogStats } from "@/lib/observability/access-log";
+import { release } from "@/lib/observability/log";
 
 // Состояние сервера для /api/health — проверка хостинга при первом запуске и после выкатки (ADR 0004).
 // Только для Владельца: путь к папке Фото и версии программ посторонним знать незачем. Секретов здесь нет.
@@ -73,6 +75,8 @@ export async function getHealth() {
   return {
     ok: dbState.ok && ready.storage.ok,
     appEnv: appEnv(),
+    release: release(),
+    accessLog: accessLogStats(),
     node: process.version,
     os: { platform: process.platform, arch: process.arch, release: os.release(), name: osName },
     openssl: process.versions.openssl,

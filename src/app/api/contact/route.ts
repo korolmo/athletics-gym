@@ -2,6 +2,7 @@ import { isAuthed } from "@/lib/auth";
 import { currentIpHash } from "@/lib/auth/login-limit";
 import { CONTACT_RATE, acceptContact, createRateLimiter } from "@/lib/domain/contact";
 import { recordContact } from "@/lib/services/contacts";
+import { logError } from "@/lib/observability/log";
 
 // Счётчик Обращений: сайт сообщает сюда о нажатии на кнопку связи (navigator.sendBeacon).
 // Ответ всегда пустой и никогда не ошибка: переход в WhatsApp от этого запроса не зависит.
@@ -25,7 +26,7 @@ export async function POST(request: Request): Promise<Response> {
     });
   } catch (e) {
     // Невалидный JSON или недоступная база — нажатие просто не посчитано
-    if (!(e instanceof SyntaxError)) console.error("Счётчик Обращений: нажатие не записано.", e);
+    if (!(e instanceof SyntaxError)) logError("Счётчик Обращений: нажатие не записано.", e);
   }
   return new Response(null, { status: 204 });
 }

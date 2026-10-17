@@ -4,6 +4,7 @@ import { currentIpHash } from "@/lib/auth/login-limit";
 import { issueFormToken, readFormToken } from "@/lib/reviews/form-token";
 import { parseVisitorReview, type VisitorReviewError } from "@/lib/validation/review";
 import { checkVisitorSubmission, createVisitorReview } from "@/lib/services/reviews";
+import { logError } from "@/lib/observability/log";
 
 // Отзыв Посетителя с сайта. Сессии здесь нет — вместо неё антиспам: ловушка, время заполнения, лимит с адреса.
 // Ошибки возвращаются кодами: текст на языке страницы берётся из словаря.
@@ -49,7 +50,7 @@ export async function submitReview(_prev: ReviewFormState, fd: FormData): Promis
     await createVisitorReview(parsed.data, ipHash);
     return { status: "sent" };
   } catch (e) {
-    console.error("Отзыв с сайта: не удалось принять.", e);
+    logError("Отзыв с сайта: не удалось принять.", e);
     return fail("unavailable");
   }
 }

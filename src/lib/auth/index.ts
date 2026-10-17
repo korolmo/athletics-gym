@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { isSessionCurrent } from "@/lib/domain/owner";
 import { getOwnerSessionVersion } from "@/lib/services/owner-account";
 import { SESSION_COOKIE, SESSION_MAX_AGE_SEC, readSession, signSession } from "./session";
+import { logError } from "@/lib/observability/log";
 
 /** Выдаёт куку сессии с версией из аккаунта Владельца на момент входа. */
 export async function createSession(version: number): Promise<void> {
@@ -36,7 +37,7 @@ export async function isAuthed(): Promise<boolean> {
   try {
     return isSessionCurrent(session, await getOwnerSessionVersion());
   } catch (e) {
-    console.error("Админка: не удалось прочитать версию сессии из базы, сессия не подтверждена.", e);
+    logError("Админка: не удалось прочитать версию сессии из базы, сессия не подтверждена.", e);
     return false;
   }
 }

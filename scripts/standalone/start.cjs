@@ -36,7 +36,17 @@ function removeStaleBuildFiles() {
   }
 }
 
+/** Версия кода для логов (ADR 0009): release.txt пишет сборка (assemble.mjs); переменная Plesk RELEASE главнее. */
+function setRelease() {
+  try {
+    if (!process.env.RELEASE) process.env.RELEASE = fs.readFileSync(path.join(__dirname, "release.txt"), "utf8").trim();
+  } catch {
+    // нет файла — release будет «dev»
+  }
+}
+
 async function main() {
+  setRelease();
   removeStaleBuildFiles();
   if (process.env.MIGRATE_ON_START !== "0") {
     const { PrismaClient } = require("@prisma/client");

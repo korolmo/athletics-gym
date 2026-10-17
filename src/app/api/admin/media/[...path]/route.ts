@@ -1,6 +1,7 @@
 import { isAuthed } from "@/lib/auth";
 import { MAX_FILE_BYTES, basePhotoPath, checkQuota, formatMegabytes, sniffImageType, typeOfPath } from "@/lib/domain/photo";
 import { MediaFileExists, StorageNotConfigured, disk, storageDriver } from "@/lib/storage/client";
+import { logError } from "@/lib/observability/log";
 
 // Приём загруженного Фото на диск хостинга (STORAGE_DRIVER=local, ADR 0004): один файл на запрос (PUT).
 // Путь выдаёт сервер в requestUpload (services/photos); здесь — только Владелец, только путь по правилу имён,
@@ -71,10 +72,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ path
   } catch (e) {
     if (e instanceof MediaFileExists) return fail(409, "Такой файл уже загружен. Обновите страницу.");
     if (e instanceof StorageNotConfigured) {
-      console.error(e);
+      logError("Хранилище фото: ошибка.", e);
       return fail(500, "Хранилище фото не настроено. Сообщите разработчику.");
     }
-    console.error("Хранилище фото: файл не записан.", e);
+    logError("Хранилище фото: файл не записан.", e);
     return fail(500, "Фото не сохранилось на сервере. Попробуйте ещё раз.");
   }
   return new Response(null, { status: 201 });
