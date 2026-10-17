@@ -7,6 +7,8 @@ import { buildMetadata, readSeoEnv } from "@/lib/seo";
 import { siteIcons } from "@/lib/brand";
 import { COOKIES_ANCHOR, legalPath } from "@/lib/legal/meta";
 import { CookieNotice } from "@/components/site/CookieNotice";
+import { LabBanner } from "@/components/LabBanner";
+import { isLab } from "@/lib/lab";
 
 // Пустой список: при сборке страницы не строятся (сборке и CI база не нужна), а собираются при первом запросе
 // и дальше отдаются из кэша. Языки проверяет isLocale — чужой адрес получает 404.
@@ -35,10 +37,13 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  const { cookie } = getDictionary(locale);
+  const { cookie, lab } = getDictionary(locale);
+  const demo = isLab();
   return (
-    <html lang={locale} className={siteFontVars}>
+    <html lang={locale} className={siteFontVars} data-lab={demo ? "" : undefined}>
       <body className="bg-background font-site text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">
+        {/* Лаборатория: плашка «демо-версия» на всех страницах; на боевом сайте её нет */}
+        {demo && <LabBanner texts={lab} path={`/${locale}`} />}
         {/* Без скриптов нижнюю панель на телефоне некому выдвинуть — показываем её сразу */}
         <noscript>
           <style>{'[data-contact-source="mobile-bar"]{transform:none!important;animation:none!important}'}</style>
