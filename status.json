@@ -1,72 +1,72 @@
 {
-  "generatedAt": "2026-10-17T17:59:55.254Z",
+  "generatedAt": "2026-10-17T18:22:26.924Z",
   "slo": {
     "target": 0.995,
     "windowDays": 30,
     "latencyMs": 1000
   },
   "overall": {
-    "total": 6,
-    "good": 4,
-    "availability": 0.6666666666666666,
-    "p50": 652,
+    "total": 9,
+    "good": 7,
+    "availability": 0.7777777777777778,
+    "p50": 550,
     "p95": 1141
   },
   "budget": {
-    "allowedErrors": 0.030000000000000027,
+    "allowedErrors": 0.04500000000000004,
     "errors": 2,
-    "remaining": -65.66666666666661
+    "remaining": -43.44444444444441
   },
   "burn": {
     "1h": 66.6666666666666,
-    "6h": 66.6666666666666,
-    "24h": 66.6666666666666,
-    "30d": 66.6666666666666
+    "6h": 44.4444444444444,
+    "24h": 44.4444444444444,
+    "30d": 44.4444444444444
   },
-  "fastBurnAlert": true,
+  "fastBurnAlert": false,
   "byTarget": {
     "/ru": {
-      "total": 2,
-      "good": 1,
-      "availability": 0.5,
+      "total": 3,
+      "good": 2,
+      "availability": 0.6666666666666666,
       "p50": 652,
       "p95": 1141,
       "last": {
-        "run": "2026-10-17T17:59:51.336Z",
-        "t": "2026-10-17T17:59:52.479Z",
+        "run": "2026-10-17T18:22:24.900Z",
+        "t": "2026-10-17T18:22:25.744Z",
         "target": "/ru",
         "status": 200,
-        "ms": 1141,
+        "ms": 295,
         "cache": "HIT"
       }
     },
     "/kk": {
-      "total": 2,
-      "good": 2,
+      "total": 3,
+      "good": 3,
       "availability": 1,
-      "p50": 422,
+      "p50": 578,
       "p95": 676,
       "last": {
-        "run": "2026-10-17T17:59:51.336Z",
-        "t": "2026-10-17T17:59:53.155Z",
+        "run": "2026-10-17T18:22:24.900Z",
+        "t": "2026-10-17T18:22:26.322Z",
         "target": "/kk",
         "status": 200,
-        "ms": 676,
-        "cache": "HIT"
+        "ms": 578,
+        "cache": "MISS"
       }
     },
     "/api/health/ready": {
-      "total": 2,
-      "good": 1,
-      "availability": 0.5,
+      "total": 3,
+      "good": 2,
+      "availability": 0.6666666666666666,
       "p50": 410,
-      "p95": 410,
+      "p95": 550,
       "last": {
-        "run": "2026-10-17T17:59:51.336Z",
-        "t": "2026-10-17T17:59:55.210Z",
+        "run": "2026-10-17T18:22:24.900Z",
+        "t": "2026-10-17T18:22:26.872Z",
         "target": "/api/health/ready",
-        "status": 503,
-        "ms": 2056,
+        "status": 200,
+        "ms": 550,
         "cache": "MISS"
       }
     }
