@@ -2,6 +2,7 @@
 // Только собранные файлы: без исходников, без .env и секретов, без sharp и typescript (на сервере не нужны).
 // Запуск после `npm run build`: node scripts/standalone/assemble.mjs
 
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -107,6 +108,16 @@ function listFiles(dir, base = dir) {
 }
 const owned = [...listFiles(path.join(OUT, ".next", "static")).map((f) => `.next/static/${f}`), ...listFiles(path.join(OUT, "public", "_img")).map((f) => `public/_img/${f}`)];
 fs.writeFileSync(path.join(OUT, "build-files.txt"), owned.sort().join("\n") + "\n");
+
+// Версия кода для логов (release, ADR 0009): RELEASE из CI или sha текущего коммита; start.cjs кладёт её в RELEASE
+function gitSha() {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  } catch {
+    return "";
+  }
+}
+fs.writeFileSync(path.join(OUT, "release.txt"), (process.env.RELEASE || gitSha() || "unknown") + "\n");
 
 // Проверка: ни одного .env и ни одного исходника TypeScript приложения
 const leaks = [];

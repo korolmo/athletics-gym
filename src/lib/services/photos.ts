@@ -18,6 +18,7 @@ import * as storage from "@/lib/storage/client";
 import type { GalleryCaptionInput } from "@/lib/validation/gallery";
 import { SETTINGS_ID } from "./site";
 import type { ServiceResult } from "./result";
+import { logError } from "@/lib/observability/log";
 
 // Фото в админке: выдача ссылки на загрузку, привязка загруженного файла к месту на сайте, Галерея.
 // Каждая функция сама проверяет сессию Владельца. В базе — только путь к файлу; сам файл — в хранилище.
@@ -29,7 +30,7 @@ const STORAGE_FAILED = "Хранилище фото не отвечает. По�
 
 function storageError(e: unknown): string {
   if (e instanceof storage.StorageNotConfigured) return NOT_CONFIGURED;
-  console.error("Хранилище фото: ошибка.", e);
+  logError("Хранилище фото: ошибка.", e);
   return STORAGE_FAILED;
 }
 
@@ -40,7 +41,7 @@ async function removeQuietly(paths: (string | null | undefined)[]): Promise<void
   try {
     await storage.removeObjects(own);
   } catch (e) {
-    console.error("Хранилище фото: не удалось удалить файлы, останутся до уборки.", own, e);
+    logError(`Хранилище фото: не удалось удалить файлы (${own.length}), останутся до уборки.`, e);
   }
 }
 
@@ -297,7 +298,7 @@ export async function sweepOrphans(): Promise<number> {
     await storage.removeObjects(orphans);
     return orphans.length;
   } catch (e) {
-    console.error("Хранилище фото: уборка не удалась.", e);
+    logError("Хранилище фото: уборка не удалась.", e);
     return 0;
   }
 }

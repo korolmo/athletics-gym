@@ -7,6 +7,7 @@ import { isPhotoPath } from "@/lib/domain/photo";
 import { mediaUrl, removeObjects } from "@/lib/storage/client";
 import type { DirectionInput } from "@/lib/validation/direction";
 import type { ServiceResult } from "./result";
+import { logError } from "@/lib/observability/log";
 
 // Направления. Сайт читает только не скрытые; всё остальное — админка, каждая функция сама проверяет сессию Владельца.
 // Фото Направления загружается общим механизмом этапа 2 (services/photos.ts, место «direction:<id>»).
@@ -73,6 +74,6 @@ export async function deleteDirection(id: string): Promise<void> {
   if (!row) return;
   await db.direction.deleteMany({ where: { id } });
   if (row.photo && isPhotoPath(row.photo)) {
-    await removeObjects([row.photo]).catch((e) => console.error("Хранилище фото: Фото удалённого Направления осталось.", e));
+    await removeObjects([row.photo]).catch((e) => logError("Хранилище фото: Фото удалённого Направления осталось.", e));
   }
 }
