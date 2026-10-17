@@ -100,6 +100,22 @@ section[id] {
   scroll-margin-top: 6rem;
 }
 
+/* Плашка Лаборатории (APP_ENV=lab, components/LabBanner.tsx): полоса сверху, фиксированная шапка сайта
+   и якоря сдвигаются на её высоту. Вне Лаборатории атрибута data-lab нет — правила не действуют. */
+html[data-lab] {
+  --lab-bar: 2rem;
+}
+html[data-lab] body {
+  padding-top: var(--lab-bar);
+}
+html[data-lab] [data-site-header],
+html[data-lab] [data-admin-header] {
+  top: var(--lab-bar);
+}
+html[data-lab] section[id] {
+  scroll-margin-top: calc(6rem + var(--lab-bar));
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }

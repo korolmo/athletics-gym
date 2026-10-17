@@ -51,3 +51,15 @@ export const hallTariffs: Record<HallId, TariffSeed[]> = {
 // «Месяц» персональных = 12 тренировок в месяц (так на карточках Тренеров)
 export const MONTH = { category: "PERSONAL" as const, visitsPerMonth: 12 };
 export const ONCE = { category: "PERSONAL" as const };
+
+/**
+ * Контакты Лаборатории — вымышленные и нерабочие: +7 700 000 00 00; в Instagram имя с двумя точками подряд
+ * (Instagram такие не выдаёт, а наша форма их принимает); почта на зарезервированном домене example.com (RFC 2606).
+ */
+export const LAB_CONTACTS = {
+  phone: "+77000000000",
+  whatsapp: "77000000000",
+  instagram: "https://instagram.com/athletics.gym..demo",
+  womenInstagram: "https://instagram.com/athletics.women..demo",
+  privacyEmail: "demo@example.com",
+};

@@ -6,7 +6,7 @@ import { DEFAULT_DIRECTIONS } from "../src/lib/domain/direction.defaults";
 import { settingsToRow } from "../src/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
 import { LEGAL_UPDATED } from "../src/lib/legal/meta";
-import { HALLS, MONTH, ONCE, hallTariffs, type HallId, type TariffSeed } from "./seed-data";
+import { HALLS, LAB_CONTACTS, MONTH, ONCE, hallTariffs, type HallId, type TariffSeed } from "./seed-data";
 
 // Seed Лаборатории (ADR 0007): бренд, тексты и Тарифы Athletic's Gym; Тренеры вымышленные (без плакатов),
 // Отзывы и Обращения синтетические. Копий боевой базы нет.
@@ -143,9 +143,10 @@ async function main() {
     });
   }
 
-  // Тексты и контакты — Athletic's Gym; место хранения данных — честно для Лаборатории (ЕС), а не hoster.kz
+  // Тексты — Athletic's Gym; контакты — заведомо нерабочие, чтобы нажатия на демо-сайте не уходили в настоящий зал;
+  // место хранения данных — честно для Лаборатории (ЕС), а не hoster.kz
   const settings = {
-    ...settingsToRow(DEFAULT_SETTINGS),
+    ...settingsToRow({ ...DEFAULT_SETTINGS, ...LAB_CONTACTS }),
     dataLocationRu: "на серверах в Европейском союзе (Vercel, TiDB Cloud, Supabase; Франкфурт) — демонстрационный стенд",
     dataLocationKk: "Еуропалық одақтағы серверлерде (Vercel, TiDB Cloud, Supabase; Франкфурт) — демонстрациялық стенд",
   };

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "../globals.css";
 import { fontVars } from "@/lib/admin-fonts";
 import { siteIcons } from "@/lib/brand";
+import { getDictionary } from "@/lib/i18n";
+import { isLab } from "@/lib/lab";
+import { LabBanner } from "@/components/LabBanner";
 
 export const metadata: Metadata = {
   title: "Админка — Athletic's Gym",
@@ -11,8 +14,11 @@ export const metadata: Metadata = {
 
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={fontVars}>
-      <body className="min-h-dvh bg-bg font-sans text-fg antialiased">{children}</body>
+    <html lang="ru" className={fontVars} data-lab={isLab() ? "" : undefined}>
+      <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
+        {isLab() && <LabBanner texts={getDictionary("ru").lab} path="/ru" />}
+        {children}
+      </body>
     </html>
   );
 }
