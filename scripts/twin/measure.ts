@@ -124,7 +124,7 @@ async function main() {
   // Первый запуск: start.cjs применяет миграции к пустой базе, потом поднимает сервер
   const t0 = performance.now();
   compose(["up", "-d", "--no-deps", "twin-app"]);
-  const firstBootMs = await waitFor("/robots.txt", t0);
+  const firstBootMs = await waitFor("/api/health/live", t0);
   const cookie = await prepareData();
 
   const samples: number[] = [];
@@ -132,7 +132,7 @@ async function main() {
   await sleep(2000);
   const idleRss = samples.length ? samples[samples.length - 1] : 0;
 
-  const pages = ["/ru", "/kk", "/ru/privacy", "/kk/privacy", "/ru/terms", "/kk/terms", "/robots.txt", "/sitemap.xml", "/ru/opengraph-image", "/kk/opengraph-image"];
+  const pages = ["/ru", "/kk", "/ru/privacy", "/kk/privacy", "/ru/terms", "/kk/terms", "/robots.txt", "/sitemap.xml", "/api/health/live", "/api/health/ready", "/ru/opengraph-image", "/kk/opengraph-image"];
   const admin = ["/admin", "/admin/site", "/admin/tariffs", "/admin/trainers", "/admin/reviews", "/admin/directions", "/admin/photos", "/admin/account", "/api/health"];
   const assets = new Set<string>();
   for (const p of ["/ru", "/kk"]) for (const a of assetsOf(await (await fetch(`${BASE}${p}`)).text())) assets.add(a);
@@ -162,7 +162,7 @@ async function main() {
     compose(["stop", "twin-app"]);
     const t = performance.now();
     compose(["start", "twin-app"]);
-    const readyMs = await waitFor("/robots.txt", t);
+    const readyMs = await waitFor("/api/health/live", t);
     const r = await hit("/ru", "page");
     cold.push({ readyMs, firstPageMs: performance.now() - t });
     if (r.status >= 500 || r.status === 0) hits.push(r);

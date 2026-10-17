@@ -53,6 +53,11 @@ export async function listObjects(): Promise<{ path: string; createdAt: Date | n
   return storageDriver() === "local" ? local.listObjects() : supabase.listObjects();
 }
 
+/** Отвечает ли хранилище Фото — для /api/health/ready (тайм-аут ставит вызывающий). */
+export async function probeStorage(): Promise<void> {
+  return storageDriver() === "local" ? local.probe() : supabase.probe();
+}
+
 /** Поместятся ли новые файлы в лимит объёма Фото. У Supabase свой лимит, здесь не считаем. */
 export async function checkSpace(incomingBytes: number): Promise<{ ok: true } | { ok: false; error: string }> {
   if (storageDriver() !== "local") return { ok: true };

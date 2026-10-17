@@ -4,11 +4,19 @@ import os from "node:os";
 import v8 from "node:v8";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { disk, storageDriver } from "@/lib/storage/client";
+import { disk, probeStorage, storageDriver } from "@/lib/storage/client";
+import { runCheck, type ReadyChecks } from "@/lib/domain/health";
 import { appEnv } from "@/lib/seo";
 
 // Состояние сервера для /api/health — проверка хостинга при первом запуске и после выкатки (ADR 0004).
 // Только для Владельца: путь к папке Фото и версии программ посторонним знать незачем. Секретов здесь нет.
+// Готовность для /api/health/ready (getReadiness) — без сессии: наружу маршрут отдаёт только ok / fail.
+
+/** База и хранилище Фото, каждая проверка — с тайм-аутом READY_TIMEOUT_MS. */
+export async function getReadiness(): Promise<ReadyChecks> {
+  const [database, storage] = await Promise.all([runCheck(() => db.$queryRaw`SELECT 1`), runCheck(probeStorage)]);
+  return { database, storage };
+}
 
 const MB = 1024 * 1024;
 const mb = (n: number | null) => (n === null ? null : Math.round((n / MB) * 10) / 10);
@@ -61,9 +69,9 @@ async function media() {
 export async function getHealth() {
   await requireOwner();
   const memory = process.memoryUsage();
-  const [osName, dbState, mediaState] = await Promise.all([osRelease(), database(), media()]);
+  const [osName, dbState, mediaState, ready] = await Promise.all([osRelease(), database(), media(), getReadiness()]);
   return {
-    ok: dbState.ok,
+    ok: dbState.ok && ready.storage.ok,
     appEnv: appEnv(),
     node: process.version,
     os: { platform: process.platform, arch: process.arch, release: os.release(), name: osName },
@@ -79,5 +87,6 @@ export async function getHealth() {
     uptimeSec: Math.round(process.uptime()),
     database: dbState,
     media: mediaState,
+    ready,
   };
 }

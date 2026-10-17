@@ -99,6 +99,12 @@ export async function usedBytes(): Promise<number> {
   return total;
 }
 
+/** Проверка готовности (/api/health/ready): папка Фото есть или создаётся, и в неё можно писать. */
+export async function probe(): Promise<void> {
+  await fs.mkdir(mediaDir(), { recursive: true });
+  await fs.access(mediaDir(), fs.constants.W_OK);
+}
+
 /** Свободное место на разделе, где лежит MEDIA_DIR; null — узнать нельзя. */
 export async function freeBytes(): Promise<number | null> {
   try {
