@@ -1,0 +1,65 @@
+name: Monitor Lab
+
+# Синтетический мониторинг Лаборатории (этап 0): каждые ~5 минут /ru, /kk, /api/health/ready.
+# Результаты — в ветку monitoring (не main): data/*.jsonl, status.json, страница статуса для GitHub Pages.
+# SLO: 99,5 % проверок за 30 дней — HTTP 200 быстрее 1 с (scripts/monitor/sli.mjs, docs/runbooks/observability.md).
+# Боевой сайт athleticsgym.kz НЕ проверяется: скрипт отказывается работать с его адресом.
+# Расписание GitHub — «не чаще», а не «точно»: запуски задерживаются и иногда пропускаются.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-lab
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    name: Probe Lab
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      LAB_URL: ${{ vars.LAB_URL || 'https://athletics-gym-lab.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/monitor
+
+      - uses: actions/checkout@v4
+        with:
+          ref: monitoring
+          path: mon
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Probe
+        run: node scripts/monitor/probe.mjs "$LAB_URL" mon
+
+      - name: SLI, budget, status page
+        id: report
+        run: node scripts/monitor/report.mjs mon || echo "alert=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit to monitoring branch
+        run: |
+          cd mon
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Проверка $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push -q origin HEAD:monitoring && break
+            git pull -q --rebase origin monitoring
+          done
+
+      - name: Fast burn alert
+        if: steps.report.outputs.alert == 'true'
+        run: |
+          echo "::error::Быстрое выгорание бюджета ошибок Лаборатории (burn 1h ≥ 14,4), последняя проверка неуспешна"
+          exit 1
