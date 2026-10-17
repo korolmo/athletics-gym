@@ -12,7 +12,7 @@
 | Логи | stdout, одна строка JSON: `level`, `time`, `msg`, `request_id`, `route`, `method`, `status`, `duration_ms`, `release` | ADR 0009 |
 | Ошибки | Sentry, только сервер, только при `SENTRY_DSN` | ADR 0010 |
 | Синтетика | GitHub Actions «Monitor Lab» каждые ~5 мин → ветка `monitoring`, страница https://korolmo.github.io/athletics-gym/ | ниже |
-| Алерты | UptimeRobot → Telegram на `/api/health/ready` | ниже |
+| Алерты | Сейчас — письмо GitHub о красном «Monitor Lab» (быстрое выгорание бюджета). UptimeRobot → Telegram — на этапе 5 | ниже |
 | Прод-двойник | CI job «Prod twin»: RSS ≤ 230 МБ, нет 5xx, нет OOM | ADR 0005 |
 
 ## SLO
@@ -28,7 +28,7 @@
 
 | Сигнал | Действия |
 |---|---|
-| UptimeRobot: `/api/health/ready` down | 1. Открыть `/api/health/live`: если не 200 — проблема платформы или деплоя (Vercel → Deployments, статус Vercel). 2. Если live 200, то упала база или хранилище: `/api/health` под Владельцем покажет, что именно (`ready.database` / `ready.storage`). 3. TiDB Cloud → кластер (лимиты Starter: Request Units, хранилище); Supabase dev → Storage. 4. Если виноват последний деплой — Vercel → Deployments → предыдущий → **Promote to Production**. |
+| `/api/health/ready` не отвечает (красный «Monitor Lab»; с этапа 5 — ещё и UptimeRobot) | 1. Открыть `/api/health/live`: если не 200 — проблема платформы или деплоя (Vercel → Deployments, статус Vercel). 2. Если live 200, то упала база или хранилище: `/api/health` под Владельцем покажет, что именно (`ready.database` / `ready.storage`). 3. TiDB Cloud → кластер (лимиты Starter: Request Units, хранилище); Supabase dev → Storage. 4. Если виноват последний деплой — Vercel → Deployments → предыдущий → **Promote to Production**. |
 | «Monitor Lab» красный (быстрое выгорание) | То же, что выше; посмотреть `status.json` в ветке `monitoring`, какой адрес падает. |
 | Медленно (p95 > 1 с), но 200 | Холодные старты (ADR 0011)? Логи: строки `msg: "request"` с большим `duration_ms`, группировать по `route`. TiDB Starter: задержка первого запроса после простоя. |
 | Ошибка в Sentry | По `release` найти коммит; по `request_id` (заголовок ответа `X-Request-Id`) найти строку в логах Vercel. |
@@ -44,7 +44,10 @@
 - **Хостинг** (когда код дойдёт до релиза): Plesk → Node.js → журнал приложения. Там те же строки JSON.
 - В логах нет IP, cookies, заголовков, тел запросов и полей форм: поля проходят белый список, это проверяет тест `src/lib/observability/log.test.ts`.
 
-## UptimeRobot → Telegram (настраивается вручную, бесплатно)
+## UptimeRobot → Telegram — отложен до этапа 5
+
+Решение от 17 октября 2026: алерты во внешний сервис подключаем на этапе 5 («SLO-панель, алерты, постмортемы»). До этого единственная тревога — письмо GitHub, когда «Monitor Lab» падает на быстром выгорании бюджета. Инструкция ниже — для этапа 5.
+
 
 1. https://uptimerobot.com → **Register** (бесплатный план).
 2. **Integrations & API** → **Telegram** → **Add** → откроется бот `@UptimeRobotBot` → **Start**. Ссылка привяжет чат.
