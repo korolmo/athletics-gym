@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Статус Лаборатории</title>
+<style>
+:root { --bg:#f6f6f4; --fg:#18181b; --muted:#52525b; --card:#fff; --line:#e4e4e7; --ok:#15803d; --warn:#a16207; --bad:#b91c1c; }
+@media (prefers-color-scheme: dark) { :root { --bg:#131315; --fg:#f4f4f5; --muted:#a1a1aa; --card:#1c1c1f; --line:#2e2e33; --ok:#4ade80; --warn:#facc15; --bad:#f87171; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width:860px; margin:0 auto; padding:32px 16px 48px; }
+h1 { font-size:1.6rem; margin:0 0 4px; }
+.sub { color:var(--muted); margin:0 0 24px; }
+.state { display:inline-flex; align-items:center; gap:8px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); }
+.dot { width:10px; height:10px; border-radius:50%; background:var(--ok); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:24px 0; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+.card b { display:block; font-size:1.5rem; font-variant-numeric:tabular-nums; }
+.card span { color:var(--muted); font-size:.875rem; }
+.table { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:12px; font-variant-numeric:tabular-nums; }
+th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); white-space:nowrap; }
+th { color:var(--muted); font-weight:500; font-size:.875rem; }
+tr:last-child td { border-bottom:0; }
+p.note { color:var(--muted); font-size:.875rem; margin-top:24px; }
+a { color:inherit; }
+</style>
+</head>
+<body>
+<main>
+<h1>Лаборатория Athletic's Gym — статус</h1>
+<p class="sub">Синтетические проверки каждые ~5 минут из GitHub Actions: <code>/ru</code>, <code>/kk</code>, <code>/api/health/ready</code>. Обновлено 2026-10-17 17:11 UTC.</p>
+<span class="state"><span class="dot"></span>SLO выполняется</span>
+<div class="grid">
+<div class="card"><span>Доступность за 30 дней</span><b>100,000 %</b><span>SLO 99,5 %, ответ 200 быстрее 1000 мс</span></div>
+<div class="card"><span>Остаток бюджета ошибок</span><b>100,0 %</b><span>ошибок 0 из допустимых 0,02</span></div>
+<div class="card"><span>Задержка p50 / p95</span><b>422 мс / 652 мс</b><span>успешные ответы, полное тело</span></div>
+<div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>0,00 / 0,00 / 0,00</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
+</div>
+<div class="table"><table>
+<thead><tr><th>Адрес</th><th>Доступность</th><th>p50</th><th>p95</th><th>Проверок</th><th>Последняя</th></tr></thead>
+<tbody><tr><td><code>/ru</code></td><td>100,00 %</td><td>652 мс</td><td>652 мс</td><td>1</td><td>200, 652 мс</td></tr><tr><td><code>/kk</code></td><td>100,00 %</td><td>422 мс</td><td>422 мс</td><td>1</td><td>200, 422 мс</td></tr><tr><td><code>/api/health/ready</code></td><td>100,00 %</td><td>410 мс</td><td>410 мс</td><td>1</td><td>200, 410 мс</td></tr></tbody>
+</table></div>
+<p class="note">Проверок за окно: 3. Это демо-стенд с синтетическими данными; боевой сайт клиента здесь не проверяется. Данные — <a href="status.json">status.json</a> и <code>data/*.jsonl</code> в ветке <code>monitoring</code>.</p>
+</main>
+</body>
+</html>
