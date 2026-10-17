@@ -5,7 +5,8 @@
 //
 //   npm run build && node scripts/standalone/assemble.mjs
 //   npm run twin:measure              — замер: отчёт в консоль и dist/twin-report.json
-//   npm run twin:measure -- --check   — то же, но код выхода 1, если RSS > 230 МБ, есть 5xx, сбои или OOM
+//   npm run twin:measure -- --check   — то же, но код выхода 1, если RSS > 230 МБ, есть 5xx, сбои, OOM или холодный старт > 5 с
+//                                       (локально на Windows холодный старт медленнее из-за bind-mount — --check только для CI)
 //
 // Параметры: ROUNDS (8), CONCURRENCY (4), COLD_STARTS (3), KEEP=1 — оставить двойник запущенным.
 
@@ -22,6 +23,8 @@ const ROUNDS = Number(process.env.ROUNDS ?? 8);
 const CONCURRENCY = Number(process.env.CONCURRENCY ?? 4);
 const COLD_STARTS = Number(process.env.COLD_STARTS ?? 3);
 const RSS_LIMIT_MB = 230;
+// Холодный старт — отдельный SLI (ADR 0011): в CI первый /ru после запуска процесса ~2 с; порог ловит регрессию
+const COLD_LIMIT_MS = 5000;
 const BASE = "http://127.0.0.1:3300";
 // Должны совпадать с docker-compose.yml (сервисы twin-db и twin-app)
 const DB_URL = "mysql://root:twin@127.0.0.1:3308/athletics";
@@ -217,6 +220,7 @@ async function main() {
     peakRss / MB > RSS_LIMIT_MB && `RSS ${report.rssMb.peak} МБ > ${RSS_LIMIT_MB} МБ`,
     report.failures.length > 0 && `5xx/обрывы: ${report.failures.length}`,
     oomKilled && "контейнер убит за превышение памяти",
+    report.coldStartMs.firstPageMedian > COLD_LIMIT_MS && `холодный старт ${report.coldStartMs.firstPageMedian} мс > ${COLD_LIMIT_MS} мс`,
   ].filter(Boolean);
   if (CHECK && problems.length) {
     console.error(`\nПроверка двойника не пройдена: ${problems.join("; ")}`);
