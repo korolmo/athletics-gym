@@ -1,72 +1,72 @@
 {
-  "generatedAt": "2026-10-21T00:18:58.494Z",
+  "generatedAt": "2026-10-21T05:01:57.121Z",
   "slo": {
     "target": 0.995,
     "windowDays": 30,
     "latencyMs": 1000
   },
   "overall": {
-    "total": 75,
-    "good": 52,
-    "availability": 0.6933333333333334,
-    "p50": 311,
+    "total": 78,
+    "good": 54,
+    "availability": 0.6923076923076923,
+    "p50": 317,
     "p95": 1903
   },
   "budget": {
-    "allowedErrors": 0.37500000000000033,
-    "errors": 23,
-    "remaining": -60.33333333333328
+    "allowedErrors": 0.39000000000000035,
+    "errors": 24,
+    "remaining": -60.53846153846148
   },
   "burn": {
     "1h": 66.6666666666666,
     "6h": 66.6666666666666,
     "24h": 66.6666666666666,
-    "30d": 61.33333333333327
+    "30d": 61.53846153846149
   },
   "fastBurnAlert": false,
   "byTarget": {
     "/ru": {
-      "total": 25,
-      "good": 24,
-      "availability": 0.96,
+      "total": 26,
+      "good": 25,
+      "availability": 0.9615384615384616,
       "p50": 264,
       "p95": 652,
       "last": {
-        "run": "2026-10-21T00:18:53.807Z",
-        "t": "2026-10-21T00:18:56.234Z",
+        "run": "2026-10-21T05:01:53.057Z",
+        "t": "2026-10-21T05:01:55.364Z",
         "target": "/ru",
         "status": 200,
-        "ms": 414,
+        "ms": 328,
         "cache": "STALE"
       }
     },
     "/kk": {
-      "total": 25,
-      "good": 24,
-      "availability": 0.96,
+      "total": 26,
+      "good": 25,
+      "availability": 0.9615384615384616,
       "p50": 266,
       "p95": 676,
       "last": {
-        "run": "2026-10-21T00:18:53.807Z",
-        "t": "2026-10-21T00:18:56.551Z",
+        "run": "2026-10-21T05:01:53.057Z",
+        "t": "2026-10-21T05:01:55.672Z",
         "target": "/kk",
         "status": 200,
-        "ms": 317,
+        "ms": 308,
         "cache": "STALE"
       }
     },
     "/api/health/ready": {
-      "total": 25,
+      "total": 26,
       "good": 4,
-      "availability": 0.16,
+      "availability": 0.15384615384615385,
       "p50": 1425,
       "p95": 2334,
       "last": {
-        "run": "2026-10-21T00:18:53.807Z",
-        "t": "2026-10-21T00:18:58.454Z",
+        "run": "2026-10-21T05:01:53.057Z",
+        "t": "2026-10-21T05:01:57.075Z",
         "target": "/api/health/ready",
         "status": 200,
-        "ms": 1903,
+        "ms": 1403,
         "cache": "MISS"
       }
     }
