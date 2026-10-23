@@ -1,11 +1,12 @@
 // Прод-двойник (ADR 0005): docker compose --profile twin — сервер из dist/hosting в контейнере с лимитами
 // hoster.kz «Эконом-1» (256 МБ без подкачки, 1 CPU, Node 23.11, запуск через start.cjs) и MariaDB 10.4.
-// Скрипт поднимает двойник с чистой базой, наполняет её seed, обходит сайт и админку и снимает:
-// RSS процесса Node в контейнере, задержки p50/p95, холодный старт (остановка → первый ответ /ru).
+// Скрипт поднимает двойник с чистой базой, наполняет её seed, обходит сайт и админку (и их страницы 404) и снимает:
+// RSS процесса Node в контейнере, задержки p50/p95, холодный старт (остановка → первый ответ /ru), RSS на страницах 500 и 404.
 //
 //   npm run build && node scripts/standalone/assemble.mjs
 //   npm run twin:measure              — замер: отчёт в консоль и dist/twin-report.json
-//   npm run twin:measure -- --check   — то же, но код выхода 1, если RSS > 230 МБ, есть 5xx, сбои, OOM или холодный старт > 5 с
+//   npm run twin:measure -- --check   — то же, но код выхода 1, если RSS > 230 МБ (и на страницах ошибок), есть 5xx, сбои, OOM,
+//                                       холодный старт > 5 с или страницы ошибок отдали не 500/404
 //                                       (локально на Windows холодный старт медленнее из-за bind-mount — --check только для CI)
 //
 // Параметры: ROUNDS (8), CONCURRENCY (4), COLD_STARTS (3), KEEP=1 — оставить двойник запущенным.
@@ -17,6 +18,7 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../../src/lib/auth/password";
 import { SESSION_COOKIE, signSession } from "../../src/lib/auth/session";
+import { LOCALE_COOKIE } from "../../src/lib/locale-cookie";
 
 const CHECK = process.argv.includes("--check");
 const ROUNDS = Number(process.env.ROUNDS ?? 8);
@@ -135,8 +137,8 @@ async function main() {
   await sleep(2000);
   const idleRss = samples.length ? samples[samples.length - 1] : 0;
 
-  const pages = ["/ru", "/kk", "/ru/privacy", "/kk/privacy", "/ru/terms", "/kk/terms", "/robots.txt", "/sitemap.xml", "/api/health/live", "/api/health/ready", "/ru/opengraph-image", "/kk/opengraph-image"];
-  const admin = ["/admin", "/admin/site", "/admin/tariffs", "/admin/trainers", "/admin/reviews", "/admin/directions", "/admin/photos", "/admin/account", "/api/health"];
+  const pages = ["/ru", "/kk", "/ru/privacy", "/kk/privacy", "/ru/terms", "/kk/terms", "/robots.txt", "/sitemap.xml", "/api/health/live", "/api/health/ready", "/ru/opengraph-image", "/kk/opengraph-image", "/ru/nope", "/abc"];
+  const admin = ["/admin", "/admin/site", "/admin/tariffs", "/admin/trainers", "/admin/reviews", "/admin/directions", "/admin/photos", "/admin/account", "/admin/nope", "/api/health"];
   const assets = new Set<string>();
   // Плашка «демо-версия» — только в Лаборатории (APP_ENV=lab); сборка для хостинга её показывать не должна
   let labBanner = false;
@@ -182,6 +184,38 @@ async function main() {
   await sleep(1500);
   stopWatch();
 
+  // Ошибки (ADR 0013): страницу, упавшую при первой сборке в кэш (/ru, документы), Next отдаёт через Pages Router
+  // (src/pages/500.tsx) — его код грузится только тогда, в обычном обходе его нет. Ломаем таблицу Настроек в одноразовой
+  // базе и убираем страницы из кэша. Процесс тот же, что после холодных стартов: без перезапуска и без нового прогрева.
+  // 404 — заодно, уже с упавшей базой.
+  const errorUrls = ["/ru", "/kk", "/ru/privacy", "/kk/terms"];
+  const db = new PrismaClient({ datasourceUrl: DB_URL });
+  await db.$executeRawUnsafe("RENAME TABLE `SiteSettings` TO `SiteSettings_off`");
+  await db.$disconnect();
+  // Кэш страниц Next 15.5 на диске — .next/server/route-cache (в памяти его нет: cacheMaxMemorySize: 0). Удаляем изнутри
+  // контейнера: файлы созданы от root (в CI с хоста их не удалить), а Docker Desktop показывает удаление с хоста не сразу.
+  const rm = spawnSync("docker", ["exec", containerId(), "rm", "-rf", "/app/.next/server/route-cache"], { encoding: "utf8" });
+  if (rm.status !== 0) throw new Error(`кэш страниц не удалён: ${rm.stderr}`);
+  const errorSamples: number[] = [];
+  stopWatch = watchRss((b) => errorSamples.push(b));
+  const errorHits: Hit[] = [];
+  for (let r = 0; r < ROUNDS; r++) {
+    errorHits.push(...(await pool(errorUrls, (p) => hit(p, "page"))));
+    errorHits.push(...(await pool(["/ru/nope", "/abc", "/kk/nope"], (p) => hit(p, "page"))));
+    errorHits.push(...(await pool(["/admin/nope", "/admin/site"], (p) => hit(p, "page", auth))));
+  }
+  await sleep(1000);
+  stopWatch();
+  const errorStatuses = Object.fromEntries([...new Set(errorHits.map((h) => h.url))].map((u) => [u, [...new Set(errorHits.filter((h) => h.url === u).map((h) => h.status))].join("/")]));
+  // Страницы ошибок должны отдать именно 500 и 404, а не обрыв (обрыв — сбой, как и прежде)
+  const errorPageBroken = errorUrls.some((u) => errorStatuses[u] !== "500") || ["/ru/nope", "/abc", "/kk/nope"].some((u) => errorStatuses[u] !== "404");
+  hits.push(...errorHits.filter((h) => h.status === 0));
+  // 404 без языка берёт язык из cookie: ответ не должен оседать ни в каком кэше (Vary из middleware Next для страниц
+  // App Router перезаписывает — защищает no-store)
+  const kk404 = await fetch(`${BASE}/abc`, { headers: { cookie: `${LOCALE_COOKIE}=kk` }, redirect: "manual" });
+  const kk404Html = await kk404.text();
+  const abcCacheable = kk404.status !== 404 || !/no-store/.test(kk404.headers.get("cache-control") ?? "") || !kk404Html.includes('lang="kk"');
+
   const inspect = spawnSync("docker", ["inspect", "-f", "{{.State.OOMKilled}} {{.RestartCount}}", containerId()], { encoding: "utf8" }).stdout.trim();
   const oomKilled = inspect.startsWith("true");
 
@@ -193,7 +227,8 @@ async function main() {
     requests: warm.length + hits.length,
     rounds: ROUNDS,
     concurrency: CONCURRENCY,
-    rssMb: { idle: +(idleRss / MB).toFixed(1), peak: +(peakRss / MB).toFixed(1), afterColdStart: +(Math.max(0, ...afterCold) / MB).toFixed(1), limit: RSS_LIMIT_MB },
+    rssMb: { idle: +(idleRss / MB).toFixed(1), peak: +(peakRss / MB).toFixed(1), afterColdStart: +(Math.max(0, ...afterCold) / MB).toFixed(1), errorPages: +(Math.max(0, ...errorSamples) / MB).toFixed(1), limit: RSS_LIMIT_MB },
+    errorPages: errorStatuses,
     latencyMs: { p50: Math.round(pct(pageMs, 50)), p95: Math.round(pct(pageMs, 95)), max: Math.round(pageMs[pageMs.length - 1] ?? 0) },
     coldStartMs: {
       firstBootWithMigrations: Math.round(firstBootMs),
@@ -214,6 +249,7 @@ async function main() {
     "|---|---|",
     `| RSS после запуска / пик / после холодного старта | ${report.rssMb.idle} / **${report.rssMb.peak}** / ${report.rssMb.afterColdStart} МБ (порог ${RSS_LIMIT_MB}) |`,
     `| Задержка страниц и API p50 / p95 / макс | ${report.latencyMs.p50} / **${report.latencyMs.p95}** / ${report.latencyMs.max} мс |`,
+    `| RSS на страницах ошибок (500 через pages/500, 404 сайта и админки) | **${report.rssMb.errorPages}** МБ; коды: ${Object.entries(errorStatuses).map(([u, s]) => `${u} ${s}`).join(", ")} |`,
     `| Холодный старт: готов / первый /ru (медиана из ${COLD_STARTS}) | ${report.coldStartMs.readyMedian} / **${report.coldStartMs.firstPageMedian}** мс |`,
     `| Первый запуск с миграциями | ${report.coldStartMs.firstBootWithMigrations} мс |`,
     `| Запросов / 5xx и обрывы / OOM | ${report.requests} / ${report.failures.length} / ${oomKilled ? "да" : "нет"} |`,
@@ -224,6 +260,9 @@ async function main() {
 
   const problems = [
     peakRss / MB > RSS_LIMIT_MB && `RSS ${report.rssMb.peak} МБ > ${RSS_LIMIT_MB} МБ`,
+    report.rssMb.errorPages > RSS_LIMIT_MB && `RSS на страницах ошибок ${report.rssMb.errorPages} МБ > ${RSS_LIMIT_MB} МБ`,
+    errorPageBroken && `страницы ошибок отдали не тот код: ${JSON.stringify(errorStatuses)}`,
+    abcCacheable && `/abc с cookie kk: ${kk404.status}, Cache-Control «${kk404.headers.get("cache-control")}» — ждём 404 на казахском и no-store`,
     report.failures.length > 0 && `5xx/обрывы: ${report.failures.length}`,
     oomKilled && "контейнер убит за превышение памяти",
     labBanner && "на сайте вне Лаборатории есть плашка «демо-версия»",

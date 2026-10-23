@@ -1,4 +1,5 @@
 import type { Dictionary } from "./ru";
+import { errorsKk } from "./errors/kk";
 
 // Перевод черновой — перед запуском показать носителю языка
 export const kk: Dictionary = {
@@ -206,4 +207,5 @@ export const kk: Dictionary = {
     demo: "ДЕМО",
   },
   lang: { ru: "RU", kk: "KZ" },
+  errors: errorsKk,
 };

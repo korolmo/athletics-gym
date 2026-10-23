@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "images:build": "node scripts/images/build-variants.mjs",
+    "errors:build": "tsx scripts/errors/build-offline-page.ts",
     "predev": "npm run images:build",
     "dev": "next dev",
     "prebuild": "npm run images:build",

@@ -1,3 +1,5 @@
+import { errorsRu } from "./errors/ru";
+
 export const ru = {
   meta: {
     title: "Athletic's Gym — тренажёрный зал в Кызылорде",
@@ -221,6 +223,8 @@ export const ru = {
     demo: "ДЕМО",
   },
   lang: { ru: "RU", kk: "KZ" },
+  // Страницы ошибок — в своём файле (src/dictionaries/errors): его берёт и клиентская страница 500
+  errors: errorsRu,
 };
 
 export type Dictionary = typeof ru;

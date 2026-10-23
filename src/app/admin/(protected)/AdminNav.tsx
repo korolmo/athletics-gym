@@ -15,7 +15,8 @@ const items = [
 ];
 
 export function AdminNav({ newReviews = 0 }: { /** Сколько Отзывов ждут решения Владельца */ newReviews?: number }) {
-  const pathname = usePathname();
+  // С папкой pages/ (pages/500.tsx) хук типизирован как «может быть null»
+  const pathname = usePathname() ?? "";
   return (
     <nav className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 pb-2 text-sm [&>a]:shrink-0 [&>a]:whitespace-nowrap">
       {items.map((item) => {
