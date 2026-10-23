@@ -1,4 +1,4 @@
-// Рисунки страниц ошибок — линии жёлтым по макетам Stitch: блин штанги вместо нуля (404), треснувший блин (500),
+// Рисунки страниц ошибок — линии жёлтым по макетам Stitch: блин штанги вместо нуля (404),
 // блин с гантелью и ключом (503). Только украшение: код ошибки назван текстом в плашке над рисунком.
 
 const Y = "#F5E642";
@@ -39,29 +39,6 @@ export function Art404() {
         </text>
       </g>
     </svg>
-  );
-}
-
-export function Art500() {
-  return (
-    <div aria-hidden="true" className="relative flex items-center justify-center">
-      <svg viewBox="0 0 240 240" fill="none" className="h-56 w-56 text-surface-container-high md:h-64 md:w-64">
-        <circle cx="120" cy="120" r="108" stroke="currentColor" strokeWidth="5" strokeDasharray="14 6" opacity="0.6" />
-        <circle cx="120" cy="120" r="96" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-        <circle cx="120" cy="120" r="82" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
-        <circle cx="120" cy="120" r="46" fill="#1b1b1d" stroke="currentColor" strokeWidth="3" />
-        <circle cx="120" cy="120" r="22" fill="#0e0e10" stroke="currentColor" strokeWidth="2.5" />
-        <path d="M120 16v12M120 212v12M16 120h12M212 120h12M46 46l9 9M185 185l9 9M46 194l9-9M185 55l9-9" stroke="currentColor" strokeWidth="2" opacity="0.6" />
-        {/* Трещина */}
-        <path d="M40 30 84 78l-6 18 34 30 12-10 24 36-8 26 34 36" stroke={Y} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="m84 78 16-6M112 126l-8 14M148 152l14-4" stroke={Y} strokeWidth="1.2" strokeLinecap="round" opacity="0.75" />
-        <circle cx="112" cy="126" r="2" fill={Y} />
-        <circle cx="148" cy="152" r="1.5" fill={Y} />
-      </svg>
-      <span className="absolute text-[88px] font-extrabold leading-none tracking-tighter text-text-primary [text-shadow:0_10px_20px_rgb(0_0_0/0.85)] md:text-[104px]">
-        500
-      </span>
-    </div>
   );
 }
 

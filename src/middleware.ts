@@ -21,9 +21,14 @@ function next(req: NextRequest, id: string): NextResponse {
   return NextResponse.next({ request: { headers: forwardHeaders(req, id) } });
 }
 
-/** Адрес под языком без своей страницы: тот же адрес рисует маршрут [locale]/[...rest], код ответа — 404. */
-function notFound(req: NextRequest, id: string): NextResponse {
-  return NextResponse.rewrite(req.nextUrl, { status: 404, request: { headers: forwardHeaders(req, id) } });
+/**
+ * Адрес без своей страницы: его рисует маршрут [locale]/[...rest] (адрес в браузере не меняется), код ответа — 404.
+ * `pathname` — путь с языком, если в адресе его нет.
+ */
+function notFound(req: NextRequest, id: string, pathname = req.nextUrl.pathname): NextResponse {
+  const url = req.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.rewrite(url, { status: 404, request: { headers: forwardHeaders(req, id) } });
 }
 
 /** Технические работы: вместо любой страницы сайта — страница 503 на языке адреса. */
@@ -78,9 +83,18 @@ async function route(req: NextRequest, id: string): Promise<NextResponse> {
 
   const preferred = req.cookies.get(COOKIE)?.value ?? "";
   const locale = LOCALES.includes(preferred) ? preferred : "ru";
-  const url = req.nextUrl.clone();
-  url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
-  return NextResponse.redirect(url);
+  // Без языка на язык переадресуем только главную и страницы сайта («/privacy»). Неизвестный адрес («/abc») — сразу 404:
+  // переадресация на «/ru/abc» и уже там 404 — лишний шаг для поисковика и адрес «с переадресацией» в его отчётах.
+  let res: NextResponse;
+  if (!isSitePage(pathname)) res = isMaintenance() ? maintenance(req, id, locale) : notFound(req, id, `/${locale}${pathname}`);
+  else {
+    const url = req.nextUrl.clone();
+    url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
+    res = NextResponse.redirect(url);
+  }
+  // Язык ответа взят из cookie: кэш (CDN Vercel, браузер) не должен отдать русский ответ казахскому посетителю
+  res.headers.append("Vary", "Cookie");
+  return res;
 }
 
 export async function middleware(req: NextRequest) {
