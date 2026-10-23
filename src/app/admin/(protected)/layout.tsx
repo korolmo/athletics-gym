@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { isAuthed } from "@/lib/auth";
 import { logout } from "../actions";
@@ -34,7 +35,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         </div>
         <AdminNav newReviews={newReviews} />
       </header>
-      <div className="mx-auto max-w-3xl px-4 pb-28 pt-6">{children}</div>
+      {/* Suspense — ради страниц ошибок раздела. У проекта два корневых layout без общего, и Next 15 не может отрисовать
+          notFound() или ошибку раздела на сервере: без границы падала вся оболочка (пустая страница и global-error).
+          С ней шапка и меню отрисованы сервером, а not-found.tsx / error.tsx раздела показывает браузер. */}
+      <div className="mx-auto max-w-3xl px-4 pb-28 pt-6">
+        <Suspense>{children}</Suspense>
+      </div>
     </div>
   );
 }
