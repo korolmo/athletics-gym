@@ -18,6 +18,7 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../../src/lib/auth/password";
 import { SESSION_COOKIE, signSession } from "../../src/lib/auth/session";
+import { LOCALE_COOKIE } from "../../src/lib/locale-cookie";
 
 const CHECK = process.argv.includes("--check");
 const ROUNDS = Number(process.env.ROUNDS ?? 8);
@@ -185,17 +186,16 @@ async function main() {
 
   // Ошибки (ADR 0013): страницу, упавшую при первой сборке в кэш (/ru, документы), Next отдаёт через Pages Router
   // (src/pages/500.tsx) — его код грузится только тогда, в обычном обходе его нет. Ломаем таблицу Настроек в одноразовой
-  // базе, убираем страницы из кэша на диске и перезапускаем процесс; 404 — заодно, уже с упавшей базой.
+  // базе и убираем страницы из кэша; процесс не перезапускаем — пик меряется поверх прогретого обходом, как на хостинге.
+  // 404 — заодно, уже с упавшей базой.
   const errorUrls = ["/ru", "/kk", "/ru/privacy", "/kk/terms"];
   const db = new PrismaClient({ datasourceUrl: DB_URL });
   await db.$executeRawUnsafe("RENAME TABLE `SiteSettings` TO `SiteSettings_off`");
   await db.$disconnect();
-  compose(["stop", "twin-app"]);
-  // Кэш страниц Next 15.5 на диске — .next/server/route-cache (в памяти его нет: cacheMaxMemorySize: 0)
-  fs.rmSync(path.join(APP, ".next", "server", "route-cache"), { recursive: true, force: true });
-  const tErr = performance.now();
-  compose(["start", "twin-app"]);
-  await waitFor("/api/health/live", tErr);
+  // Кэш страниц Next 15.5 на диске — .next/server/route-cache (в памяти его нет: cacheMaxMemorySize: 0). Удаляем изнутри
+  // контейнера: файлы созданы от root (в CI с хоста их не удалить), а Docker Desktop показывает удаление с хоста не сразу.
+  const rm = spawnSync("docker", ["exec", containerId(), "rm", "-rf", "/app/.next/server/route-cache"], { encoding: "utf8" });
+  if (rm.status !== 0) throw new Error(`кэш страниц не удалён: ${rm.stderr}`);
   const errorSamples: number[] = [];
   stopWatch = watchRss((b) => errorSamples.push(b));
   const errorHits: Hit[] = [];
@@ -210,6 +210,11 @@ async function main() {
   // Страницы ошибок должны отдать именно 500 и 404, а не обрыв (обрыв — сбой, как и прежде)
   const errorPageBroken = errorUrls.some((u) => errorStatuses[u] !== "500") || ["/ru/nope", "/abc", "/kk/nope"].some((u) => errorStatuses[u] !== "404");
   hits.push(...errorHits.filter((h) => h.status === 0));
+  // 404 без языка берёт язык из cookie: ответ не должен оседать ни в каком кэше (Vary из middleware Next для страниц
+  // App Router перезаписывает — защищает no-store)
+  const kk404 = await fetch(`${BASE}/abc`, { headers: { cookie: `${LOCALE_COOKIE}=kk` }, redirect: "manual" });
+  const kk404Html = await kk404.text();
+  const abcCacheable = kk404.status !== 404 || !/no-store/.test(kk404.headers.get("cache-control") ?? "") || !kk404Html.includes('lang="kk"');
 
   const inspect = spawnSync("docker", ["inspect", "-f", "{{.State.OOMKilled}} {{.RestartCount}}", containerId()], { encoding: "utf8" }).stdout.trim();
   const oomKilled = inspect.startsWith("true");
@@ -257,6 +262,7 @@ async function main() {
     peakRss / MB > RSS_LIMIT_MB && `RSS ${report.rssMb.peak} МБ > ${RSS_LIMIT_MB} МБ`,
     report.rssMb.errorPages > RSS_LIMIT_MB && `RSS на страницах ошибок ${report.rssMb.errorPages} МБ > ${RSS_LIMIT_MB} МБ`,
     errorPageBroken && `страницы ошибок отдали не тот код: ${JSON.stringify(errorStatuses)}`,
+    abcCacheable && `/abc с cookie kk: ${kk404.status}, Cache-Control «${kk404.headers.get("cache-control")}» — ждём 404 на казахском и no-store`,
     report.failures.length > 0 && `5xx/обрывы: ${report.failures.length}`,
     oomKilled && "контейнер убит за превышение памяти",
     labBanner && "на сайте вне Лаборатории есть плашка «демо-версия»",

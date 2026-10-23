@@ -92,7 +92,9 @@ async function route(req: NextRequest, id: string): Promise<NextResponse> {
     url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
     res = NextResponse.redirect(url);
   }
-  // Язык ответа взят из cookie: кэш (CDN Vercel, браузер) не должен отдать русский ответ казахскому посетителю
+  // Язык ответа взят из cookie: кэш (CDN Vercel, браузер) не должен отдать русский ответ казахскому посетителю.
+  // У переадресаций Vary доходит до браузера; у страниц (404, 503) Next 15.5 ставит свой Vary поверх, их защищает
+  // Cache-Control: no-store (динамическая страница 404, no-store у 503) — проверяет прод-двойник.
   res.headers.append("Vary", "Cookie");
   return res;
 }
