@@ -18,7 +18,6 @@ const ru = getDictionary("ru");
 const kk = getDictionary("kk");
 
 export const metadata: Metadata = {
-  title: ru.errors.notFound.title,
   robots: { index: false, follow: false },
   icons: { icon: siteIcons.small },
 };

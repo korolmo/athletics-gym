@@ -23,7 +23,7 @@ export function NotFoundView({ locale }: { locale: Locale }) {
   return (
     <ErrorShell locale={locale} texts={e}>
       <ErrorChip>{e.notFound.chip}</ErrorChip>
-      <Art404 />
+      <Art404 id={locale} />
       <ErrorHeading heading={e.notFound.heading} text={e.notFound.text} />
       <ErrorActions>
         <Link href={home} prefetch={false} className={errorButton.primary}>

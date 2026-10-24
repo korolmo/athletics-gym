@@ -15,11 +15,12 @@ export function NotFoundLanguage({ ru, kk, titles }: { ru: React.ReactNode; kk: 
     const chosen = notFoundLocale(window.location.pathname, document.cookie);
     setLocale(chosen);
     document.documentElement.lang = chosen;
-    document.title = titles[chosen];
-  }, [titles]);
+  }, []);
 
   return (
     <>
+      {/* Заголовок вкладки — здесь, а не в metadata: тот Next после оживления страницы ставит заново, и он оставался бы русским */}
+      <title>{titles[locale]}</title>
       <div data-error-page="404" lang="ru" hidden={locale !== "ru"}>
         {ru}
       </div>
