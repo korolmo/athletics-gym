@@ -117,7 +117,7 @@ jobs:
         if: steps.deploy.outputs.url
         env:
           URL: ${{ steps.deploy.outputs.url }}
-          LAB_URL: ${{ vars.LAB_URL || https://athletics-gym-lab.vercel.app }}
+          LAB_URL: ${{ vars.LAB_URL || 'https://athletics-gym-lab.vercel.app' }}
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             node scripts/lab/smoke.mjs "$LAB_URL"
@@ -158,7 +158,7 @@ jobs:
         if: steps.token.outputs.skip != true
         run: |
           test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
-          URL=$(npx --yes vercel@50.4.9 deploy --yes --token "$VERCEL_TOKEN" --env MAINTENANCE_MODE=1             --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
+          URL=$(npx --yes vercel@50.4.9 deploy --yes --token "$VERCEL_TOKEN" --env MAINTENANCE_MODE=1 --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Превью с техническими работами: $URL" >> "$GITHUB_STEP_SUMMARY"
 
