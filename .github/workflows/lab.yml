@@ -7,6 +7,7 @@ name: Lab (Vercel)
 # Базы (ADR 0012): production Лаборатории — база athletics (DATABASE_URL проекта Vercel, только production);
 # превью PR — своя эфемерная база pr_<номер>: пересоздаётся при каждой выкатке, миграции этого PR и seed:lab,
 # адрес передаётся только этому деплою. При закрытии PR базу удаляет lab-preview-cleanup.yml.
+# После выкатки — смоук живого адреса (scripts/lab/smoke.mjs); для PR — ещё превью с MAINTENANCE_MODE=1 и смоук 503.
 
 on:
   push:
@@ -108,3 +109,61 @@ jobs:
           else
             gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" -f body="$BODY" > /dev/null
           fi
+
+      - name: Smoke (ADR 0005, 0013)
+        # Живой адрес после выкатки: CDN Vercel и её встроенные страницы ошибок прод-двойник не видит. Красный смоук —
+        # выкатка неуспешна. production — алиас Лаборатории (после замера холодного старта, чтобы его не прогреть);
+        # превью — через vercel curl: уникальные адреса закрыты защитой Vercel
+        if: steps.deploy.outputs.url
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+          LAB_URL: ${{ vars.LAB_URL || https://athletics-gym-lab.vercel.app }}
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            node scripts/lab/smoke.mjs "$LAB_URL"
+          else
+            SMOKE_VERCEL_CURL=1 node scripts/lab/smoke.mjs "$URL"
+          fi
+
+  maintenance:
+    # Технические работы (MAINTENANCE_MODE=1) — только на отдельном превью PR, не на production Лаборатории.
+    # Без базы: страница 503 из middleware её не читает, а базу production превью трогать не должно (ADR 0012)
+    name: Lab preview — maintenance 503
+    if: github.event_name == pull_request && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_LAB_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Check token
+        id: token
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::warning::Нет секрета VERCEL_TOKEN или переменной VERCEL_LAB_PROJECT_ID — превью с техническими работами пропущено"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.skip != true
+
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.skip != true
+        with:
+          node-version: 22
+
+      - name: Deploy preview (MAINTENANCE_MODE=1)
+        id: deploy
+        if: steps.token.outputs.skip != true
+        run: |
+          test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
+          URL=$(npx --yes vercel@50.4.9 deploy --yes --token "$VERCEL_TOKEN" --env MAINTENANCE_MODE=1             --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Превью с техническими работами: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke --maintenance
+        if: steps.deploy.outputs.url
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+        run: SMOKE_VERCEL_CURL=1 node scripts/lab/smoke.mjs "$URL" --maintenance

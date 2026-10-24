@@ -2,10 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, readSession } from "@/lib/auth/session";
 import { LOCALE_COOKIE as COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 import { REQUEST_ID_HEADER, REQUEST_START_HEADER, requestIdFrom } from "@/lib/observability/log";
-import { MAINTENANCE_PATH, MAINTENANCE_RETRY_AFTER_SEC, isMaintenance } from "@/lib/maintenance";
-import { isSitePage } from "@/lib/site-pages";
+import { MAINTENANCE_RETRY_AFTER_SEC, isMaintenance } from "@/lib/maintenance";
+import { offlinePage } from "@/lib/errors/offline-page";
 
 const LOCALES = ["ru", "kk"];
+
+/** Страницы, которые без языка в адресе ведут на язык из cookie («/privacy» → «/ru/privacy»). Проверяет тест. */
+export const LOCALE_REDIRECTS = ["/", "/privacy", "/terms"];
 const LOGIN_PATH = "/admin/login";
 
 /** Заголовки запроса дальше по цепочке: request_id видят сервер, строка доступа и логи (ADR 0009). */
@@ -22,24 +25,13 @@ function next(req: NextRequest, id: string): NextResponse {
 }
 
 /**
- * Адрес без своей страницы: его рисует маршрут [locale]/[...rest] (адрес в браузере не меняется), код ответа — 404.
- * `pathname` — путь с языком, если в адресе его нет.
+ * Технические работы: вместо любой страницы сайта — готовая двуязычная страница с кодом 503 прямо из middleware.
+ * Не переписывание адреса с кодом: такой ответ Vercel подменяет своей страницей платформы (ADR 0013).
  */
-function notFound(req: NextRequest, id: string, pathname = req.nextUrl.pathname): NextResponse {
-  const url = req.nextUrl.clone();
-  url.pathname = pathname;
-  return NextResponse.rewrite(url, { status: 404, request: { headers: forwardHeaders(req, id) } });
-}
-
-/** Технические работы: вместо любой страницы сайта — страница 503 на языке адреса. */
-function maintenance(req: NextRequest, id: string, locale: string): NextResponse {
-  const url = req.nextUrl.clone();
-  url.pathname = `/${locale}${MAINTENANCE_PATH}`;
-  url.search = "";
-  return NextResponse.rewrite(url, {
+function maintenance(): NextResponse {
+  return new NextResponse(offlinePage("maintenance"), {
     status: 503,
-    request: { headers: forwardHeaders(req, id) },
-    headers: { "Retry-After": String(MAINTENANCE_RETRY_AFTER_SEC), "Cache-Control": "no-store" },
+    headers: { "Content-Type": "text/html; charset=utf-8", "Retry-After": String(MAINTENANCE_RETRY_AFTER_SEC), "Cache-Control": "no-store" },
   });
 }
 
@@ -68,10 +60,9 @@ async function route(req: NextRequest, id: string): Promise<NextResponse> {
 
   const first = pathname.split("/")[1] ?? "";
 
-  // Всё под /ru и /kk — страницы сайта (и «/ru/abc.php» тоже: его поймал бы маршрут [...rest])
+  // Всё под /ru и /kk — страницы сайта. Адрес без своей страницы («/ru/abc») Next отдаёт сам: app/global-not-found.tsx, код 404
   if (LOCALES.includes(first)) {
-    if (isMaintenance()) return maintenance(req, id, first);
-    if (!isSitePage(pathname.slice(first.length + 1))) return notFound(req, id);
+    if (isMaintenance()) return maintenance();
     const res = next(req, id);
     if (req.cookies.get(COOKIE)?.value !== first) {
       res.cookies.set(COOKIE, first, { path: "/", maxAge: LOCALE_COOKIE_MAX_AGE_SEC });
@@ -80,21 +71,22 @@ async function route(req: NextRequest, id: string): Promise<NextResponse> {
   }
 
   if (!isPage(pathname)) return next(req, id);
+  if (isMaintenance()) return maintenance();
 
-  const preferred = req.cookies.get(COOKIE)?.value ?? "";
-  const locale = LOCALES.includes(preferred) ? preferred : "ru";
-  // Без языка на язык переадресуем только главную и страницы сайта («/privacy»). Неизвестный адрес («/abc») — сразу 404:
-  // переадресация на «/ru/abc» и уже там 404 — лишний шаг для поисковика и адрес «с переадресацией» в его отчётах.
-  let res: NextResponse;
-  if (!isSitePage(pathname)) res = isMaintenance() ? maintenance(req, id, locale) : notFound(req, id, `/${locale}${pathname}`);
-  else {
+  const path = pathname.replace(/(.)\/+$/, "$1");
+  if (!LOCALE_REDIRECTS.includes(path)) {
+    // Неизвестный адрес без языка («/abc») — сразу 404, без переадресации (иначе у поисковика лишний шаг и адрес
+    // «с переадресацией» в отчётах). Переписываем под /ru: так он не попадёт в [locale] как язык «abc» и получит ту же
+    // страницу global-not-found. Она одна на всех (язык выбирает браузер), поэтому от cookie ответ не зависит.
     const url = req.nextUrl.clone();
-    url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
-    res = NextResponse.redirect(url);
+    url.pathname = `/ru${pathname}`;
+    return NextResponse.rewrite(url, { request: { headers: forwardHeaders(req, id) } });
   }
-  // Язык ответа взят из cookie: кэш (CDN Vercel, браузер) не должен отдать русский ответ казахскому посетителю.
-  // У переадресаций Vary доходит до браузера; у страниц (404, 503) Next 15.5 ставит свой Vary поверх, их защищает
-  // Cache-Control: no-store (динамическая страница 404, no-store у 503) — проверяет прод-двойник.
+  const preferred = req.cookies.get(COOKIE)?.value ?? "";
+  const url = req.nextUrl.clone();
+  url.pathname = `/${LOCALES.includes(preferred) ? preferred : "ru"}${pathname === "/" ? "" : pathname}`;
+  const res = NextResponse.redirect(url);
+  // Адрес переадресации взят из cookie: кэш (CDN, браузер) не должен отдать казахскому посетителю русскую
   res.headers.append("Vary", "Cookie");
   return res;
 }

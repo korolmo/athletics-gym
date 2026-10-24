@@ -4,8 +4,6 @@ import type { ErrorTexts } from "./ru";
 export const errorsKk: ErrorTexts = {
   home: "Басты бетке",
   contacts2gis: "Залдың байланыстары 2ГИС-те",
-  address: "Мекенжай",
-  hours: "Жұмыс уақыты",
   notFound: {
     title: "Бет табылмады — Athletic's Gym",
     chip: "404 қатесі",
@@ -15,12 +13,8 @@ export const errorsKk: ErrorTexts = {
     quick: "Жылдам өту",
   },
   maintenance: {
-    title: "Техникалық жұмыстар — Athletic's Gym",
-    chip: "Техникалық жұмыстар · 503",
     heading: "Техникалық жұмыстар жүріп жатыр",
     text: "Сайт жақында қайта ашылады. Зал әдеттегідей жұмыс істейді.",
-    whatsapp: "WhatsApp-қа жазу",
-    call: "Қоңырау шалу",
   },
   offline: {
     heading: "Сайт уақытша қолжетімсіз",

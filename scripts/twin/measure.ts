@@ -210,11 +210,13 @@ async function main() {
   // Страницы ошибок должны отдать именно 500 и 404, а не обрыв (обрыв — сбой, как и прежде)
   const errorPageBroken = errorUrls.some((u) => errorStatuses[u] !== "500") || ["/ru/nope", "/abc", "/kk/nope"].some((u) => errorStatuses[u] !== "404");
   hits.push(...errorHits.filter((h) => h.status === 0));
-  // 404 без языка берёт язык из cookie: ответ не должен оседать ни в каком кэше (Vary из middleware Next для страниц
-  // App Router перезаписывает — защищает no-store)
-  const kk404 = await fetch(`${BASE}/abc`, { headers: { cookie: `${LOCALE_COOKIE}=kk` }, redirect: "manual" });
-  const kk404Html = await kk404.text();
-  const abcCacheable = kk404.status !== 404 || !/no-store/.test(kk404.headers.get("cache-control") ?? "") || !kk404Html.includes('lang="kk"');
+  // Страница 404 — наша (маркер) и одна на всех: с cookie kk и без неё HTML тот же, кэшу нечего перепутать
+  const abc = async (cookie?: string) => {
+    const r = await fetch(`${BASE}/abc`, { headers: cookie ? { cookie } : {}, redirect: "manual" });
+    return { status: r.status, html: await r.text() };
+  };
+  const [abcRu, abcKk] = [await abc(), await abc(`${LOCALE_COOKIE}=kk`)];
+  const abcBroken = abcKk.status !== 404 || !abcKk.html.includes('data-error-page="404"') || abcKk.html !== abcRu.html;
 
   const inspect = spawnSync("docker", ["inspect", "-f", "{{.State.OOMKilled}} {{.RestartCount}}", containerId()], { encoding: "utf8" }).stdout.trim();
   const oomKilled = inspect.startsWith("true");
@@ -262,7 +264,7 @@ async function main() {
     peakRss / MB > RSS_LIMIT_MB && `RSS ${report.rssMb.peak} МБ > ${RSS_LIMIT_MB} МБ`,
     report.rssMb.errorPages > RSS_LIMIT_MB && `RSS на страницах ошибок ${report.rssMb.errorPages} МБ > ${RSS_LIMIT_MB} МБ`,
     errorPageBroken && `страницы ошибок отдали не тот код: ${JSON.stringify(errorStatuses)}`,
-    abcCacheable && `/abc с cookie kk: ${kk404.status}, Cache-Control «${kk404.headers.get("cache-control")}» — ждём 404 на казахском и no-store`,
+    abcBroken && `/abc: ${abcKk.status} — ждём 404 с нашим маркером и один HTML с cookie kk и без неё`,
     report.failures.length > 0 && `5xx/обрывы: ${report.failures.length}`,
     oomKilled && "контейнер убит за превышение памяти",
     labBanner && "на сайте вне Лаборатории есть плашка «демо-версия»",
