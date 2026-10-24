@@ -129,7 +129,7 @@ jobs:
     # Технические работы (MAINTENANCE_MODE=1) — только на отдельном превью PR, не на production Лаборатории.
     # Без базы: страница 503 из middleware её не читает, а базу production превью трогать не должно (ADR 0012)
     name: Lab preview — maintenance 503
-    if: github.event_name == pull_request && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
