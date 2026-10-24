@@ -2,11 +2,13 @@
 
 const Y = "#F5E642";
 
-export function Art404() {
+/** `id` — своё у каждого рисунка на странице: у 404 их два (ru и kk), и ссылка на градиент скрытой версии не рисуется. */
+export function Art404({ id }: { id: string }) {
+  const stroke = `err-404-stroke-${id}`;
   return (
     <svg viewBox="0 0 680 240" fill="none" aria-hidden="true" className="h-auto w-full max-w-[680px]">
       <defs>
-        <linearGradient id="err-404-stroke" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id={stroke} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={Y} stopOpacity="0.95" />
           <stop offset="100%" stopColor={Y} stopOpacity="0.3" />
         </linearGradient>
@@ -16,10 +18,10 @@ export function Art404() {
         <line x1="80" y1="102" x2="80" y2="138" strokeWidth="2.5" />
         <line x1="600" y1="102" x2="600" y2="138" strokeWidth="2.5" />
       </g>
-      <text x="50" y="195" className="font-site" fontSize="220" fontWeight="800" stroke="url(#err-404-stroke)" strokeWidth="2.5">
+      <text x="50" y="195" className="font-site" fontSize="220" fontWeight="800" stroke={`url(#${stroke})`} strokeWidth="2.5">
         4
       </text>
-      <text x="440" y="195" className="font-site" fontSize="220" fontWeight="800" stroke="url(#err-404-stroke)" strokeWidth="2.5">
+      <text x="440" y="195" className="font-site" fontSize="220" fontWeight="800" stroke={`url(#${stroke})`} strokeWidth="2.5">
         4
       </text>
       <g transform="translate(340 120)">
