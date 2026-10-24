@@ -1,7 +1,9 @@
+import fs from "node:fs";
+import path from "node:path";
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LOCALE_COOKIE } from "@/lib/locale-cookie";
-import { middleware } from "./middleware";
+import { LOCALE_REDIRECTS, middleware } from "./middleware";
 
 const call = (path: string, cookie?: string) =>
   middleware(new NextRequest(`https://athleticsgym.kz${path}`, { headers: cookie ? { cookie } : {} }));
@@ -12,60 +14,59 @@ const rewrite = (res: Response) => new URL(res.headers.get("x-middleware-rewrite
 describe("middleware: язык и страницы ошибок", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("главная и страницы сайта без языка — переадресация на язык", async () => {
-    for (const [path, to] of [
+  it("главная и страницы сайта без языка — переадресация на язык из cookie, с Vary: Cookie", async () => {
+    for (const [p, to] of [
       ["/", "/ru"],
       ["/privacy", "/ru/privacy"],
       ["/terms/", "/ru/terms/"],
     ]) {
-      const res = await call(path);
-      expect(res.status, path).toBe(307);
-      expect(new URL(res.headers.get("location")!).pathname, path).toBe(to);
+      const res = await call(p);
+      expect(res.status, p).toBe(307);
+      expect(new URL(res.headers.get("location")!).pathname, p).toBe(to);
+      expect(res.headers.get("vary"), p).toContain("Cookie");
     }
     expect(new URL((await call("/terms", `${LOCALE_COOKIE}=kk`)).headers.get("location")!).pathname).toBe("/kk/terms");
   });
 
-  it("неизвестный адрес без языка — сразу 404, без переадресации", async () => {
-    for (const path of ["/abc", "/abc/def", "/ru-ru"]) {
-      const res = await call(path);
-      expect(res.status, path).toBe(404);
-      expect(res.headers.get("location"), path).toBeNull();
-      expect(rewrite(res), path).toBe(`/ru${path}`);
+  it("страницы из LOCALE_REDIRECTS есть в src/app/[locale]", () => {
+    for (const p of LOCALE_REDIRECTS) expect(fs.existsSync(path.join("src/app/[locale]", p, "page.tsx")), p).toBe(true);
+  });
+
+  it("неизвестный адрес без языка — без переадресации: под /ru, где его встретит global-not-found", async () => {
+    for (const p of ["/abc", "/abc/def", "/ru-ru"]) {
+      const res = await call(p);
+      expect(res.headers.get("location"), p).toBeNull();
+      expect(rewrite(res), p).toBe(`/ru${p}`);
     }
-    expect(rewrite(await call("/abc", `${LOCALE_COOKIE}=kk`))).toBe("/kk/abc");
+    // Страница 404 одна на всех (язык выбирает браузер) — ответ от cookie не зависит
+    expect(rewrite(await call("/abc", `${LOCALE_COOKIE}=kk`))).toBe("/ru/abc");
   });
 
-  it("ответы без языка зависят от cookie — Vary: Cookie", async () => {
-    for (const path of ["/abc", "/", "/privacy"]) expect((await call(path)).headers.get("vary"), path).toContain("Cookie");
+  it("адреса под языком отдаёт Next как есть: код 404 у неизвестных ставит он сам, не middleware", async () => {
+    for (const p of ["/kk/abc", "/ru/privacy"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(200);
+      expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
+    }
+  });
+
+  it("технические работы — готовая страница 503 из middleware, без переписывания адреса", async () => {
     vi.stubEnv("MAINTENANCE_MODE", "1");
-    expect((await call("/abc")).headers.get("vary")).toContain("Cookie");
-    vi.unstubAllEnvs();
-    // Под языком язык в адресе — кэшу cookie не важен
-    expect((await call("/ru/abc")).headers.get("vary") ?? "").not.toContain("Cookie");
-  });
-
-  it("неизвестный адрес под языком — 404 на том же адресе", async () => {
-    const res = await call("/kk/abc");
-    expect(res.status).toBe(404);
-    expect(rewrite(res)).toBe("/kk/abc");
-    expect((await call("/ru/privacy")).status).toBe(200);
-  });
-
-  it("технические работы — 503 и для адресов без языка", async () => {
-    vi.stubEnv("MAINTENANCE_MODE", "1");
-    for (const path of ["/abc", "/ru/abc", "/ru"]) {
-      const res = await call(path);
-      expect(res.status, path).toBe(503);
-      expect(res.headers.get("retry-after"), path).toBe("600");
+    for (const p of ["/abc", "/ru/abc", "/ru", "/kk/privacy", "/"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(503);
+      expect(res.headers.get("retry-after"), p).toBe("600");
+      expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
+      expect(await res.text(), p).toContain('data-error-page="503"');
     }
     expect((await call("/api/health/live")).status).toBe(200);
   });
 
   it("файлы, API и Фото не трогает", async () => {
-    for (const path of ["/logo.png", "/api/health/live", "/media/gallery/a.webp"]) {
-      const res = await call(path);
-      expect(res.status, path).toBe(200);
-      expect(res.headers.get("x-middleware-rewrite"), path).toBeNull();
+    for (const p of ["/logo.png", "/api/health/live", "/media/gallery/a.webp"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(200);
+      expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
     }
   });
 });

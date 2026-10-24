@@ -129,6 +129,8 @@ Error pages for the same Athletic's Gym site, same dark style and tokens as the 
 
 ```
 503 maintenance page (the app is up, the site is closed for works). Illustration: a plate with a crossed dumbbell and wrench drawn in yellow lines, a small "503" badge under it. Chip "Технические работы · 503". Headline "Идут технические работы". Text "Сайт скоро снова откроется. Зал работает как обычно." Buttons: green WhatsApp "Написать в WhatsApp" (dark text and icon on green), dark "Позвонить" with a phone icon. Card with two columns: "Часы работы" (green dot + hours) and "Адрес".
+
+> Реализация (24 октября, ADR 0013): этот макет не сверстан. На Vercel страницу 503 приложения подменяет платформа, поэтому технические работы показывает та же двуязычная страница, что и «503 Статическая», с текстом «Идут технические работы». Её отдаёт middleware, WhatsApp и часов на ней нет. Страница 404 тоже без часов работы: она статическая, без базы.
 ```
 
 ### 503 — статическая страница веб-сервера

@@ -79,6 +79,8 @@ const nextConfig = {
     imageSizes: [64, 128, 256],
   },
   poweredByHeader: false,
+  // Страница 404 для адресов без маршрута — app/global-not-found.tsx (ADR 0013)
+  experimental: { globalNotFound: true },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

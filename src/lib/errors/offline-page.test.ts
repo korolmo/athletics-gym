@@ -27,6 +27,16 @@ describe("статическая страница 503", () => {
     expect(html).not.toContain(DEFAULT_SETTINGS.phone);
   });
 
+  it("технические работы — свой заголовок на обоих языках, маркер 503", () => {
+    const html = offlinePage("maintenance");
+    for (const text of [errorsRu.maintenance.heading, errorsRu.maintenance.text, errorsKk.maintenance.heading, errorsKk.maintenance.text]) {
+      expect(html).toContain(text);
+    }
+    expect(html).toContain(`<title>${errorsRu.maintenance.heading}`);
+    expect(html).toContain('data-error-page="503"');
+    expect(html).not.toContain(errorsRu.offline.heading);
+  });
+
   it("код в странице — тот, что передали", () => {
     expect(offlineBody(500)).toContain(">500<");
     expect(offlineBody(503)).toContain(">503<");

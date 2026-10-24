@@ -1,7 +1,9 @@
 // Страница «Сайт временно недоступен» на двух языках сразу — по макету Stitch «503 Статическая».
 // 1) public/errors/503.html — её отдаёт веб-сервер хостинга, когда приложение не запущено (docs/hosting-plesk.md).
 //    Файл собирает `npm run errors:build` из словарей; что он не устарел, проверяет тест.
-// 2) app/global-error.tsx — та же страница с кодом 500, если упал сам layout сайта или админки.
+// 2) app/global-error.tsx и src/pages/500.tsx — та же страница с кодом 500 (упал layout, не собралась страница).
+// 3) middleware при MAINTENANCE_MODE=1 — с текстом «Идут технические работы» (src/lib/maintenance.ts).
+// Корневой элемент помечен data-error-page=<код>: по нему смоук после выкатки отличает её от страниц платформы.
 // Без скриптов, шрифтов и базы: только встроенные стили и логотип из public/. Номера зала здесь нет
 // (он в Настройках сайта, в базе) — контакты ведут в карточку зала в 2ГИС.
 
@@ -34,12 +36,14 @@ body{margin:0;min-height:100vh;min-height:100dvh;display:flex;align-items:center
 
 const BAR = `<svg class="e-bar" viewBox="0 0 180 20" fill="none" aria-hidden="true"><line x1="10" y1="10" x2="170" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="35" y="4" width="6" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="43" y="2" width="6" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="131" y="2" width="6" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="139" y="4" width="6" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="90" cy="10" r="2.5" fill="currentColor"/></svg>`;
 
+export type OfflineKind = "offline" | "maintenance";
+
 /** Содержимое <body>: код, тексты на русском и казахском, «Обновить страницу» и 2ГИС. */
-export function offlineBody(code: 500 | 503): string {
-  const ru = errorsRu.offline;
-  const kk = errorsKk.offline;
+export function offlineBody(code: 500 | 503, kind: OfflineKind = "offline"): string {
+  const ru = { ...errorsRu.offline, ...errorsRu[kind] };
+  const kk = { ...errorsKk.offline, ...errorsKk[kind] };
   return [
-    `<main class="e">`,
+    `<main class="e" data-error-page="${code}">`,
     `<img class="e-logo" src="${esc(logoIconUrl)}" alt="${esc(site.name)}" width="96" height="96">`,
     `<div class="e-code">${code}</div>`,
     BAR,
@@ -58,8 +62,8 @@ export function offlineBody(code: 500 | 503): string {
   ].join("\n");
 }
 
-/** Готовый файл для веб-сервера. */
-export function offlinePage(): string {
+/** Готовая страница 503: файл для веб-сервера ("offline") или ответ middleware на время технических работ. */
+export function offlinePage(kind: OfflineKind = "offline"): string {
   return [
     "<!doctype html>",
     `<html lang="ru">`,
@@ -67,11 +71,11 @@ export function offlinePage(): string {
     `<meta charset="utf-8">`,
     `<meta name="viewport" content="width=device-width, initial-scale=1">`,
     `<meta name="robots" content="noindex">`,
-    `<title>${esc(errorsRu.offline.heading)} — ${esc(site.name)}</title>`,
+    `<title>${esc(errorsRu[kind].heading)} — ${esc(site.name)}</title>`,
     `<style>${OFFLINE_CSS.trim()}</style>`,
     "</head>",
     "<body>",
-    offlineBody(503),
+    offlineBody(503, kind),
     "</body>",
     "</html>",
     "",
