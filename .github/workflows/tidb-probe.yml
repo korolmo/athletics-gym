@@ -1,0 +1,51 @@
+name: TiDB probe
+
+# Замер холодного подключения к TiDB Лаборатории по фазам (ADR 0015) с раннера GitHub — там же, где seed превью.
+# Только вручную: замер идёт до двух часов (паузы между холодными подключениями), и кластер должен простаивать —
+# не запускать одновременно с выкатками Лаборатории. Адрес базы — секрет LAB_DATABASE_URL, в вывод не попадает.
+
+on:
+  push:
+    branches: [tidb-probe-run]
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "Сколько холодных подключений"
+        default: "8"
+      pause:
+        description: "Пауза между ними, минут (не меньше 10)"
+        default: "12"
+      parallel:
+        description: "Параллельных подключений после тёплого"
+        default: "4"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: TiDB cold connect
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/lab
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Probe
+        env:
+          LAB_DATABASE_URL: ${{ secrets.LAB_DATABASE_URL }}
+          COUNT: ${{ inputs.count || '5' }}
+          PAUSE: ${{ inputs.pause || '25' }}
+          PARALLEL: ${{ inputs.parallel || '4' }}
+        run: node scripts/lab/tidb-probe.mjs "$COUNT" "$PAUSE" "$PARALLEL" | tee tidb-probe.jsonl
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tidb-probe
+          path: tidb-probe.jsonl
