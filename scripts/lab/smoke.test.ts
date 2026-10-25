@@ -30,6 +30,16 @@ describe("смоук Лаборатории", () => {
     expect(c.verify([res(503, '<main data-error-page="503">')])).toMatch(/Retry-After/);
   });
 
+  it("превью ссылок: свой язык — картинка, чужой — 404 без картинки", () => {
+    const png = { "content-type": "image/png" };
+    expect(check("превью ссылок /ru").verify([res(200, "", png), res(200, "", png)])).toBeNull();
+    expect(check("превью ссылок /ru").verify([res(200, "", png), res(404)])).toMatch(/код 404/);
+    const foreign = check("превью ссылок с чужим");
+    expect(foreign.requests.map((r) => r.path)).toEqual(["/api/opengraph-image", "/_img/twitter-image"]);
+    expect(foreign.verify([res(404, "", { "content-type": "text/html" }), res(404)])).toBeNull();
+    expect(foreign.verify([res(200, "", png), res(404)])).toMatch(/код 200/);
+  });
+
   it("разбор вывода curl --include", () => {
     const out = "HTTP/1.1 100 Continue\r\n\r\nHTTP/2 404\r\nX-Vercel-Cache: MISS\r\nRetry-After: 600\r\n\r\n<html>\r\n\r\nтело</html>";
     expect(parseCurlInclude(out)).toEqual({ status: 404, headers: { "x-vercel-cache": "MISS", "retry-after": "600" }, body: "<html>\r\n\r\nтело</html>" });

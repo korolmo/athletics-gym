@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { notFound } from "next/navigation";
 import { ImageResponse } from "next/og";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { getSiteSettings } from "@/lib/services/site";
@@ -21,7 +22,10 @@ const asset = (path: string) => readFile(join(process.cwd(), path));
 
 export default async function OpengraphImage({ params }: { params: Promise<{ locale: string }> | { locale: string } }) {
   const { locale: raw } = await params;
-  const locale: Locale = isLocale(raw) ? raw : "ru";
+  // Чужой «язык» — 404, а не русская картинка с кодом 200: сюда попадают адреса, которые middleware пропускает
+  // без языка (/api/opengraph-image, /_img/twitter-image)
+  if (!isLocale(raw)) notFound();
+  const locale: Locale = raw;
   const t = getDictionary(locale);
   // База недоступна — рисуем с начальным адресом: превью ссылки не должно ломаться
   const { settings, cards } = await getSiteSettings().catch(() => ({ settings: DEFAULT_SETTINGS, cards: DEFAULT_ABOUT_CARDS }));
