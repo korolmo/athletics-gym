@@ -30,6 +30,10 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      # contents: write — замер холодного старта дописывается в ветку monitoring (ADR 0014)
+      contents: write
+      pull-requests: write
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_LAB_PROJECT_ID }}
@@ -87,12 +91,33 @@ jobs:
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Лаборатория: $URL" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Cold start (ADR 0011)
-        # Сразу после выкатки production первый запрос поднимает новый экземпляр функции.
+      - uses: actions/checkout@v4
+        if: github.event_name == 'push' && steps.deploy.outputs.url
+        continue-on-error: true
+        with:
+          ref: monitoring
+          path: mon
+
+      - name: Cold start (ADR 0011, 0014)
+        # Сразу после выкатки production первый запрос поднимает новый экземпляр функции; X-Cold-Start подтверждает,
+        # что он холодный. Строка — в ветку monitoring, data/cold-start.jsonl: из неё считается SLI холодного старта.
         # Адрес — алиас Лаборатории: уникальные адреса деплоев закрыты защитой Vercel
         if: github.event_name == 'push' && steps.deploy.outputs.url
         continue-on-error: true
-        run: node scripts/monitor/cold-start.mjs "${{ vars.LAB_URL || 'https://athletics-gym-lab.vercel.app' }}" | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          RELEASE: ${{ github.sha }}
+        run: |
+          mkdir -p mon/data
+          node scripts/monitor/cold-start.mjs "${{ vars.LAB_URL || 'https://athletics-gym-lab.vercel.app' }}" --out mon/data/cold-start.jsonl | tee -a "$GITHUB_STEP_SUMMARY"
+          cd mon
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cold-start.jsonl
+          git commit -q -m "Холодный старт ${GITHUB_SHA::7}"
+          for _ in 1 2 3; do
+            git push -q origin HEAD:monitoring && break
+            git pull -q --rebase origin monitoring
+          done
 
       - name: Comment preview URL
         if: github.event_name == 'pull_request' && steps.deploy.outputs.url

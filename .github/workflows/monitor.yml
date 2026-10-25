@@ -1,14 +1,14 @@
 name: Monitor Lab
 
-# Синтетический мониторинг Лаборатории (этап 0): каждые ~5 минут /ru, /kk, /api/health/ready.
-# Результаты — в ветку monitoring (не main): data/*.jsonl, status.json, страница статуса для GitHub Pages.
-# SLO: 99,5 % проверок за 30 дней — HTTP 200 быстрее 1 с (scripts/monitor/sli.mjs, docs/runbooks/observability.md).
-# Боевой сайт athleticsgym.kz НЕ проверяется: скрипт отказывается работать с его адресом.
-# Расписание GitHub — «не чаще», а не «точно»: запуски задерживаются и иногда пропускаются.
+# Мониторинг Лаборатории (ADR 0014): проверки делает UptimeRobot каждые 5 минут (/ru и /kk с ключевым словом —
+# SLO, /api/health/ready — диагностика). Раз в сутки этот workflow забирает их через API и пересчитывает status.json
+# и страницу статуса в ветке monitoring (не main). От расписания GitHub SLO больше не зависит: окно выборки — 72 часа,
+# пропущенный запуск доберёт следующий. Красный запуск — тревога (выгорание бюджета, мало проверок, старые данные):
+# GitHub присылает письмо. Боевой сайт athleticsgym.kz не проверяется: скрипты отказываются работать с его адресом.
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -19,12 +19,13 @@ permissions:
   contents: write
 
 jobs:
-  probe:
-    name: Probe Lab
+  report:
+    name: UptimeRobot → status
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     env:
       LAB_URL: ${{ vars.LAB_URL || 'https://athletics-gym-lab.vercel.app' }}
+      UPTIMEROBOT_API_KEY: ${{ secrets.UPTIMEROBOT_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,8 +40,14 @@ jobs:
         with:
           node-version: 22
 
-      - name: Probe
-        run: node scripts/monitor/probe.mjs "$LAB_URL" mon
+      - name: Fetch UptimeRobot
+        run: |
+          if [ -z "$UPTIMEROBOT_API_KEY" ]; then
+            # Без ключа данных нет: отчёт ниже покажет «данные устарели» и сделает запуск красным
+            echo "::error::Нет секрета UPTIMEROBOT_API_KEY — проверки UptimeRobot не получены"
+          else
+            node scripts/monitor/uptimerobot-fetch.mjs mon 72
+          fi
 
       - name: SLI, budget, status page
         id: report
@@ -52,14 +59,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "Проверка $(date -u +%Y-%m-%dT%H:%MZ)"
-          for i in 1 2 3; do
+          git diff --cached --quiet && exit 0
+          git commit -q -m "Отчёт $(date -u +%Y-%m-%dT%H:%MZ)"
+          for _ in 1 2 3; do
             git push -q origin HEAD:monitoring && break
             git pull -q --rebase origin monitoring
           done
 
-      - name: Fast burn alert
+      - name: Alert
         if: steps.report.outputs.alert == 'true'
         run: |
-          echo "::error::Быстрое выгорание бюджета ошибок Лаборатории (burn 1h ≥ 14,4), последняя проверка неуспешна"
+          echo "::error::Тревога мониторинга Лаборатории — причины в сводке шага «SLI, budget, status page»"
           exit 1
