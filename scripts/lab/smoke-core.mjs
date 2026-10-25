@@ -70,6 +70,23 @@ export function smokeChecks({ maintenance, nonce }) {
         return kk.body === plain.body ? null : "HTML зависит от cookie — кэш CDN может перепутать языки";
       },
     },
+    {
+      name: "превью ссылок /ru и /kk — 200, картинка",
+      requests: [{ path: "/ru/opengraph-image" }, { path: "/kk/twitter-image" }],
+      verify: (rs) => {
+        const bad = rs.find((r) => r.status !== 200 || !(r.headers["content-type"] ?? "").startsWith("image/png"));
+        return bad ? `код ${bad.status}, тип «${bad.headers["content-type"] ?? ""}», ждём 200 image/png` : null;
+      },
+    },
+    {
+      // Адреса без языка, которые middleware пропускает в [locale] (API, копии картинок): не мягкая 404 с картинкой
+      name: "превью ссылок с чужим языком — 404",
+      requests: [{ path: "/api/opengraph-image" }, { path: "/_img/twitter-image" }],
+      verify: (rs) => {
+        const bad = rs.find((r) => r.status !== 404 || (r.headers["content-type"] ?? "").startsWith("image/"));
+        return bad ? `код ${bad.status}, тип «${bad.headers["content-type"] ?? ""}», ждём 404 без картинки` : null;
+      },
+    },
     { name: "/api/health/ready — 200", requests: [{ path: "/api/health/ready" }], verify: ([r]) => (r.status === 200 ? null : `код ${r.status}`) },
   ];
 }
