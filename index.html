@@ -14,7 +14,7 @@ main { max-width:860px; margin:0 auto; padding:32px 16px 48px; }
 h1 { font-size:1.6rem; margin:0 0 4px; }
 .sub { color:var(--muted); margin:0 0 24px; }
 .state { display:inline-flex; align-items:center; gap:8px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); }
-.dot { width:10px; height:10px; border-radius:50%; background:var(--warn); }
+.dot { width:10px; height:10px; border-radius:50%; background:var(--bad); }
 .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:24px 0; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
 .card b { display:block; font-size:1.5rem; font-variant-numeric:tabular-nums; }
@@ -24,26 +24,38 @@ table { width:100%; border-collapse:collapse; background:var(--card); border:1px
 th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); white-space:nowrap; }
 th { color:var(--muted); font-weight:500; font-size:.875rem; }
 tr:last-child td { border-bottom:0; }
-p.note { color:var(--muted); font-size:.875rem; margin-top:24px; }
+ul.alerts { margin:16px 0 0; padding-left:20px; color:var(--bad); }
+p.note, p.stale { color:var(--muted); font-size:.875rem; margin-top:24px; }
+p.stale { color:var(--bad); font-weight:600; }
 a { color:inherit; }
 </style>
 </head>
 <body>
 <main>
 <h1>Лаборатория Athletic's Gym — статус</h1>
-<p class="sub">Синтетические проверки каждые ~5 минут из GitHub Actions: <code>/ru</code>, <code>/kk</code>, <code>/api/health/ready</code>. Обновлено 2026-10-25 06:58 UTC.</p>
-<span class="state"><span class="dot"></span>SLO нарушен</span>
+<p class="sub">Проверки UptimeRobot каждые 5 минут: страницы <code>/ru</code> и <code>/kk</code> (SLO), <code>/api/health/ready</code> (диагностика). Пересчёт раз в сутки, обновлено <span id="gen">2026-10-25 11:58</span> UTC.</p>
+<p class="stale" id="stale" hidden>Данные старше 36 часов: суточный пересчёт не запускался.</p>
+<span class="state"><span class="dot"></span>Тревога</span>
+<ul class="alerts"><li>мало проверок за сутки: /ru — 0, /kk — 0, /api/health/ready — 0 (нужно ≥ 260)</li><li>последняя проверка — нет данных (допустимо 120)</li></ul>
 <div class="grid">
-<div class="card"><span>Доступность за 30 дней</span><b>67,949 %</b><span>SLO 99,5 %, ответ 200 быстрее 1000 мс</span></div>
-<div class="card"><span>Остаток бюджета ошибок</span><b>-100,0 %</b><span>ошибок 50 из допустимых 0,78</span></div>
-<div class="card"><span>Задержка p50 / p95</span><b>328 мс / 2402 мс</b><span>успешные ответы, полное тело</span></div>
-<div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>66,67 / 66,67 / 66,67</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
+<div class="card"><span>Доступность страниц за 30 дней</span><b>—</b><span>SLO 99,5 %: ответ 200 со страницей быстрее 1000 мс</span></div>
+<div class="card"><span>Остаток бюджета ошибок</span><b>100,0 %</b><span>ошибок 0 из допустимых 0,00</span></div>
+<div class="card"><span>Задержка p50 / p95</span><b>— / —</b><span>страницы, успешные ответы</span></div>
+<div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>— / — / —</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
+<div class="card"><span>Холодный старт (после выкаток)</span><b>100 %</b><span>1 из 1 быстрее 1500 мс, цель 90 %; p50 743 мс</span></div>
 </div>
 <div class="table"><table>
-<thead><tr><th>Адрес</th><th>Доступность</th><th>p50</th><th>p95</th><th>Проверок</th><th>Последняя</th></tr></thead>
-<tbody><tr><td><code>/ru</code></td><td>98,08 %</td><td>281 мс</td><td>587 мс</td><td>52</td><td>200, 285 мс</td></tr><tr><td><code>/kk</code></td><td>94,23 %</td><td>272 мс</td><td>2927 мс</td><td>52</td><td>200, 239 мс</td></tr><tr><td><code>/api/health/ready</code></td><td>11,54 %</td><td>1425 мс</td><td>2424 мс</td><td>52</td><td>200, 2424 мс</td></tr></tbody>
+<thead><tr><th>Адрес</th><th>Роль</th><th>Доступность</th><th>p50</th><th>p95</th><th>За сутки</th><th>Последняя</th></tr></thead>
+<tbody><tr><td><code>/ru</code></td><td>SLO</td><td>—</td><td>—</td><td>—</td><td>0</td><td>—</td></tr><tr><td><code>/kk</code></td><td>SLO</td><td>—</td><td>—</td><td>—</td><td>0</td><td>—</td></tr><tr><td><code>/api/health/ready</code></td><td>диагностика</td><td>—</td><td>—</td><td>—</td><td>0</td><td>—</td></tr></tbody>
 </table></div>
-<p class="note">Проверок за окно: 156. Это демо-стенд с синтетическими данными; боевой сайт клиента здесь не проверяется. Данные — <a href="status.json">status.json</a> и <code>data/*.jsonl</code> в ветке <code>monitoring</code>.</p>
+<p class="note">Проверок страниц за окно: 0. Опрос раз в 5 минут сам держит функцию Vercel тёплой, поэтому холодный старт меряется отдельно — сразу после выкатки, по заголовку <code>X-Cold-Start</code>. Синтетика GitHub Actions до 25 октября 2026 в расчёт не входит: cron запускался в 40 раз реже плана, измерение невалидно (ADR 0014). Это демо-стенд с синтетическими данными; боевой сайт клиента здесь не проверяется. Данные — <a href="status.json">status.json</a> и <code>data/</code> в ветке <code>monitoring</code>.</p>
 </main>
+<script>
+// Суточный пересчёт может не запуститься (cron GitHub) — тогда страница сама скажет, что данные старые
+(function () {
+  var gen = Date.parse("2026-10-25T11:58:04.584Z");
+  if (Date.now() - gen > 36 * 3600 * 1000) document.getElementById("stale").hidden = false;
+})();
+</script>
 </body>
 </html>
