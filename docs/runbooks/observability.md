@@ -6,31 +6,34 @@
 
 | Сигнал | Где | Решение |
 |---|---|---|
-| Живость | `GET /api/health/live` → `{"status":"ok"}`, без зависимостей | — |
+| Живость | `GET /api/health/live` → `{"status":"ok"}`, без зависимостей; заголовок `X-Cold-Start` (1 — первый ответ экземпляра) | — |
 | Готовность | `GET /api/health/ready` → 200 `ok` / 503 `fail`; база и хранилище Фото, тайм-аут 1 с на каждую | — |
 | Подробности | `GET /api/health` — только с сессией Владельца: версии, память, `release`, `accessLog`, детали готовности | — |
 | Логи | stdout, одна строка JSON: `level`, `time`, `msg`, `request_id`, `route`, `method`, `status`, `duration_ms`, `release` | ADR 0009 |
 | Ошибки | Sentry, только сервер, только при `SENTRY_DSN` | ADR 0010 |
-| Синтетика | GitHub Actions «Monitor Lab» каждые ~5 мин → ветка `monitoring`, страница https://korolmo.github.io/athletics-gym/ | ниже |
-| Алерты | Сейчас — письмо GitHub о красном «Monitor Lab» (быстрое выгорание бюджета). UptimeRobot → Telegram — на этапе 5 | ниже |
+| Проверки | UptimeRobot каждые 5 мин: `/ru`, `/kk` (ключевое слово `id="top"`) и `/api/health/ready`; мониторы — `scripts/monitor/uptimerobot-setup.mjs`. Раз в сутки «Monitor Lab» забирает их в ветку `monitoring`, страница https://korolmo.github.io/athletics-gym/ | ADR 0014 |
+| Алерты | Письмо UptimeRobot при падении адреса (сразу). Письмо GitHub о красном «Monitor Lab» (раз в сутки): выгорание бюджета, мало проверок, старые данные. Telegram — на этапе 5 | ADR 0014 |
 | Прод-двойник | CI job «Prod twin»: RSS ≤ 230 МБ, нет 5xx, нет OOM | ADR 0005 |
 
 ## SLO
 
-**99,5 % проверок за 30 дней успешны; успех — HTTP 200 и полный ответ быстрее 1 с** (`/ru`, `/kk`, `/api/health/ready`). Код — `scripts/monitor/sli.mjs`.
+**99,5 % проверок страниц `/ru` и `/kk` за 30 дней успешны; успех — HTTP 200 со страницей (ключевое слово) быстрее 1 с.** `/api/health/ready` — диагностика, бюджет не тратит. Код — `scripts/monitor/sli.mjs`, решение — ADR 0014.
 
-- **Бюджет ошибок** — 0,5 % проверок окна. При 3 адресах и запуске раз в 5 минут это ~26 000 проверок и ~130 допустимых ошибок за 30 дней: около 10,8 часа простоя одного адреса или 3,6 часа — всех трёх.
+- **Бюджет ошибок** — 0,5 % проверок окна: при 2 страницах раз в 5 минут это ~17 300 проверок и ~86 допустимых сбоев за 30 дней, около 7 часов простоя одной страницы или 3,6 часа — обеих.
 - **Burn rate** — доля ошибок в окне, делённая на 0,5 %: 1 значит, что бюджет закончится ровно за 30 дней. Окна — 1 ч, 6 ч, 24 ч, 30 дней.
-- **Тревога быстрого выгорания** — burn rate за час ≥ 14,4 (за час сгорает 2 % месячного бюджета) и последняя проверка неуспешна. Тогда workflow «Monitor Lab» красный, и GitHub присылает письмо.
-- **Холодный старт** Vercel входит в SLI, но отдельно вынесен в ADR 0011.
+- **Тревоги** (отчёт раз в сутки смотрит худшее окно за последние сутки): быстрое выгорание — burn за час ≥ 14,4 (2 сбоя из 24 проверок); медленное — burn за 6 часов ≥ 6 (5 из 144); окно с данными меньше 75 % ожидаемых не считается.
+- **Мониторинг мониторинга**: за сутки по адресу меньше 260 проверок из 288, или последняя проверка старше 2 часов — тревога. Суточный отчёт не запускался 36 часов — страница статуса сама покажет «данные устарели».
+- **Холодный старт** — отдельный SLI: первый запрос экземпляра (`X-Cold-Start: 1`) быстрее 1,5 с в 90 % случаев. Меряется после каждой выкатки `main` (`lab.yml` → `data/cold-start.jsonl`). Опрос раз в 5 минут держит функцию тёплой, поэтому в SLO страниц холодных стартов почти нет.
 
 ## Что делать, если…
 
 | Сигнал | Действия |
 |---|---|
-| `/api/health/ready` не отвечает (красный «Monitor Lab»; с этапа 5 — ещё и UptimeRobot) | 1. Открыть `/api/health/live`: если не 200 — проблема платформы или деплоя (Vercel → Deployments, статус Vercel). 2. Если live 200, то упала база или хранилище: `/api/health` под Владельцем покажет, что именно (`ready.database` / `ready.storage`). 3. TiDB Cloud → кластер (лимиты Starter: Request Units, хранилище); Supabase dev → Storage. 4. Если виноват последний деплой — Vercel → Deployments → предыдущий → **Promote to Production**. |
-| «Monitor Lab» красный (быстрое выгорание) | То же, что выше; посмотреть `status.json` в ветке `monitoring`, какой адрес падает. |
-| Медленно (p95 > 1 с), но 200 | Холодные старты (ADR 0011)? Логи: строки `msg: "request"` с большим `duration_ms`, группировать по `route`. TiDB Starter: задержка первого запроса после простоя. |
+| Письмо UptimeRobot «down» или `/api/health/ready` не отвечает | 1. Открыть `/api/health/live`: если не 200 — проблема платформы или деплоя (Vercel → Deployments, статус Vercel). 2. Если live 200, то упала база или хранилище: `/api/health` под Владельцем покажет, что именно (`ready.database` / `ready.storage`). 3. TiDB Cloud → кластер (лимиты Starter: Request Units, хранилище); Supabase dev → Storage. 4. Если виноват последний деплой — Vercel → Deployments → предыдущий → **Promote to Production**. |
+| «Monitor Lab» красный: выгорание бюджета | Причина — в сводке шага «SLI, budget, status page» и в `status.json` (`alerts`, `byTarget`). Дальше — как в строке выше. |
+| «Monitor Lab» красный: мало проверок или старые данные | UptimeRobot не опрашивает адрес или не отдаёт данные: `node --env-file=.env.lab scripts/monitor/uptimerobot-setup.mjs --check` (монитор на паузе, удалён, ключ отозван). Нет секрета `UPTIMEROBOT_API_KEY` — шаг «Fetch UptimeRobot» скажет об этом. |
+| Страница открывается, а UptimeRobot считает её «down» | Нет ключевого слова `id="top"`: проверить HTML `/ru`. Если оно есть — перевёрнут смысл `keyword_type` (ADR 0014, «Consequences»). |
+| Медленно (p95 > 1 с), но 200 | Холодные старты (ADR 0011, 0014)? `X-Cold-Start: 1` у ответа health — новый экземпляр. Логи: строки `msg: "request"` с большим `duration_ms`, группировать по `route`. TiDB Starter: задержка первого запроса после простоя. |
 | Ошибка в Sentry | По `release` найти коммит; по `request_id` (заголовок ответа `X-Request-Id`) найти строку в логах Vercel. |
 | Нужно проверить, что Sentry работает | Войти в админку Лаборатории → в консоли браузера `fetch("/api/health/error", { method: "POST" })` → 500, в Sentry появится «Проверка Sentry…». |
 | Нужно проверить, что пишутся строки доступа | `/api/health` под Владельцем: `accessLog.requests` растёт с каждым запросом. |
@@ -44,24 +47,14 @@
 - **Хостинг** (когда код дойдёт до релиза): Plesk → Node.js → журнал приложения. Там те же строки JSON.
 - В логах нет IP, cookies, заголовков, тел запросов и полей форм: поля проходят белый список, это проверяет тест `src/lib/observability/log.test.ts`.
 
-## UptimeRobot → Telegram — отложен до этапа 5
+## UptimeRobot
 
-Решение от 17 октября 2026: алерты во внешний сервис подключаем на этапе 5 («SLO-панель, алерты, постмортемы»). До этого единственная тревога — письмо GitHub, когда «Monitor Lab» падает на быстром выгорании бюджета. Инструкция ниже — для этапа 5.
-
-
-1. https://uptimerobot.com → **Register** (бесплатный план).
-2. **Integrations & API** → **Telegram** → **Add** → откроется бот `@UptimeRobotBot` → **Start**. Ссылка привяжет чат.
-3. **Monitors** → **New monitor**:
-   - Type: **HTTP(s)**;
-   - Friendly name: `Athletic's Gym Lab — ready`;
-   - URL: `https://athletics-gym-lab.vercel.app/api/health/ready`;
-   - Interval: **5 minutes** (минимум бесплатного плана);
-   - Timeout: 30 s (холодный старт не должен давать ложных тревог; задержку меряет SLO);
-   - (если доступно) Advanced → **Keyword** `"status":"ok"` — тип «exists»;
-   - Alert contacts: Telegram.
-4. Сохранить и проверить: monitor → **Test notification**.
-5. Адрес боевого сайта в UptimeRobot **не добавлять** (ADR 0006).
+1. Аккаунт UptimeRobot (бесплатный план) → **Integrations & API** → **Main API Key**. Ключ — в секрет GitHub `UPTIMEROBOT_API_KEY` и в `.env.lab` (`UPTIMEROBOT_API_KEY=…`). Значение не печатать и не вставлять в чаты.
+2. Мониторы — только из репозитория: `node --env-file=.env.lab scripts/monitor/uptimerobot-setup.mjs --dry-run` (план), потом без `--dry-run`. Повторный запуск ничего не меняет. Через 10 минут — `--check`: все три «up».
+3. Первый отчёт — **Actions → Monitor Lab → Run workflow**. Дальше — сам, раз в сутки.
+4. Адрес боевого сайта в UptimeRobot **не добавлять** (ADR 0006): скрипт его и не примет.
+5. Telegram (этап 5): **Integrations** → **Telegram** → бот `@UptimeRobotBot` → **Start**, потом привязать контакт к мониторам.
 
 ## Ветка monitoring
 
-Данные — `data/ГГГГ-ММ.jsonl` (по строке на проверку: `run`, `t`, `target`, `status`, `ms`, `cache`), сводка — `status.json`, страница — `index.html`. Ветку пишет только workflow. В `main` её не сливать. Если история разрастётся, её можно пересоздать orphan-коммитом с последними двумя файлами `data/`. Расписание GitHub Actions выключается после 60 дней без активности в репозитории: тогда «Monitor Lab» → **Enable workflow**.
+Данные — `data/uptimerobot/ГГГГ-ММ.jsonl` (по строке на проверку: `t`, `target`, `status`, `ms`, `source`) и `data/cold-start.jsonl` (замер после выкатки), сводка — `status.json`, страница — `index.html`. `data/ГГГГ-ММ.jsonl` в корне — синтетика GitHub Actions до 25 октября 2026: хранится как история, в отчёт не входит (измерение невалидно, ADR 0014). Ветку пишет только workflow. В `main` её не сливать. Если история разрастётся, её можно пересоздать orphan-коммитом с последними двумя файлами `data/`. Расписание GitHub Actions выключается после 60 дней без активности в репозитории: тогда «Monitor Lab» → **Enable workflow**.

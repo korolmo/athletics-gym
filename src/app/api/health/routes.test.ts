@@ -22,6 +22,16 @@ beforeEach(() => {
   authed.mockReset().mockResolvedValue(false);
 });
 
+describe("X-Cold-Start", () => {
+  it("первый ответ процесса — 1, дальше 0, на любом health-маршруте", async () => {
+    readiness.mockResolvedValue({ database: ok, storage: ok });
+    const first = live().headers.get("x-cold-start");
+    expect(first).toBe("1");
+    expect((await ready()).headers.get("x-cold-start")).toBe("0");
+    expect(live().headers.get("x-cold-start")).toBe("0");
+  });
+});
+
 describe("/api/health/live", () => {
   it("200 ok без обращения к зависимостям, не кэшируется", async () => {
     const r = live();
