@@ -146,3 +146,82 @@ Two mobile admin screens inside the admin shell (top bar with logo, "Админ�
 404: headline "Раздел не найден", text "Возможно, запись удалили, раздел переименовали или в адресе опечатка.", the current path in a monospace strip, yellow button "К разделам админки".
 Error: headline "Не удалось загрузить раздел", text "Сохранённые данные на месте. Попробуйте ещё раз; если ошибка повторится — сообщите код разработчику.", a dark strip "Код ошибки" with a monospace code and a copy button, yellow "Попробовать снова", dark "К разделам".
 ```
+
+---
+
+## Личный кабинет Клиента и запись к Тренеру (этап 1, ноябрь 2026)
+
+Экраны в том же проекте Stitch (4810510334939218653). Генерировать **рядом с готовыми экранами главной** («generate another screen»), чтобы Stitch взял их стиль. План этапа — `docs/stages/stage-1-cabinet.md`, термины — `GLOSSARY.md`: **Клиент** (человек с входом в кабинет), **Запись** (персональная тренировка у Тренера на время), **Окно** (время, на которое можно записаться). В интерфейсе не писать «бронь», «слот», «пользователь».
+
+Что в кабинете есть и чего нет (не рисовать лишнего):
+- Вход — телефон и одноразовый код. В Лаборатории код показывается на экране, номера — только тестовые.
+- Записывается Клиент только на **персональную тренировку у Тренера**. Групповых занятий, Расписания и лимита мест в зале нет.
+- Оплаты онлайн нет: «оплата в зале». Абонементов, баланса, визитов, бонусов, QR-пропуска нет.
+- Отменить Запись Клиент может сам не позже чем за 12 часов, позже — только через зал (WhatsApp). Будущих Записей — не больше 3.
+- Тренеры в Лаборатории вымышленные: в макете — имена-заглушки и серый силуэт вместо фото.
+- Сверху на всех страницах Лаборатории — тонкая плашка «Демо-версия» (она уже есть на сайте).
+
+### Общее для кабинета (добавлять к общему стилю сайта)
+
+```
+Client cabinet pages for the same Athletic's Gym website. Reuse EXACTLY the look of the existing landing page screens in this project: background #131315, cards #1F1F23 with 1px border #2E2E33 and 12px radius, primary accent yellow #F5E642 (text on yellow #363100) only for the main action, selected states and small highlights; text #F4F4F5, muted #A1A1AA; Manrope for everything (bold uppercase headings with letter-spacing, like the landing page section titles), Material Symbols Outlined icons. Same sticky header as the landing page (logo, "ATHLETIC'S GYM", "RU | KZ") but with a round person icon button "Кабинет" on the right instead of the CTA. Mobile 390px first, plus a desktop 1440px version where the content sits in a centered 560–720px column. Large touch targets (min 48px), calm and clear, no promo clutter, no photos except trainer avatars. All interface text in Russian.
+```
+
+### К1 — Вход: номер телефона
+
+```
+Cabinet login, step 1. Title "ВХОД В КАБИНЕТ", subtitle "Записывайтесь к тренеру и смотрите свои записи". One field "Номер телефона" with a fixed "+7" prefix and placeholder "700 000 00 01". Yellow full-width button "Получить код". Muted note "Код придёт на этот номер. Пароль не нужен." Below the card, a small dashed-border info box with a flask icon: "Демо-версия: войти можно только с тестовыми номерами +7 700 000 00 01 … 09, код покажем на экране."
+```
+
+### К2 — Вход: код и первый вход
+
+```
+Cabinet login, step 2. Title "ВВЕДИТЕ КОД", text "Отправили на +7 700 000 00 01 · Изменить номер". Six large separate digit boxes for a one-time code. A yellow-outlined demo box: "Демо: ваш код 482 913". Link "Отправить код ещё раз (через 0:45)".
+Second variant of the same screen for the first login: under the code add field "Как вас зовут" (placeholder "Имя"), and a required checkbox "Согласен на обработку данных по Политике конфиденциальности" (underlined link). Yellow button "Войти". An inline error example under the code: red text "Неверный код. Осталось попыток: 3".
+```
+
+### К3 — Мои Записи
+
+```
+Cabinet home "МОИ ЗАПИСИ". Greeting line "Здравствуйте, Айгерим". Yellow button "Записаться к тренеру" with a plus icon. Section "Будущие" with up to 3 booking cards: date block on the left (big "12", "НОЯ", "ВТ"), then "19:00–20:00", trainer avatar + "Тренер Арман", hall chip "Общий зал", and a text button "Отменить". One card shows instead of the cancel button a muted note "Отменить можно только через зал" with a small green WhatsApp link "Написать в зал". Section "Прошедшие" with compact greyed rows. Small counter "2 из 3 будущих записей". Also an empty-state variant: line-art barbell icon in thin yellow strokes, "Записей пока нет", button "Записаться к тренеру".
+Bottom tab bar on mobile with three items: "Записи", "Записаться", "Профиль".
+```
+
+### К4 — Запись к Тренеру
+
+```
+Booking flow on one screen, step by step from top to bottom. Title "ЗАПИСЬ К ТРЕНЕРУ".
+1) Hall switch as two segmented pills "Общий зал" / "Женский зал" (same switch style as the prices section of the landing page).
+2) Trainer cards in a horizontal scroll: grey silhouette avatar, name "Тренер Арман", directions as small tags, the selected one with a yellow border.
+3) Days as a horizontal strip of 14 day chips ("ПН 10", "ВТ 11"...), days without free time greyed out, selected day filled yellow.
+4) Free times as a grid of time chips "08:00", "09:00", "19:00"... (taken times are not shown at all); one selected chip filled yellow.
+Sticky bottom summary card: "Вт, 11 ноября · 19:00–20:00 · Тренер Арман · Общий зал", muted "Оплата в зале по тарифу тренера", yellow button "Записаться".
+```
+
+### К5 — Результат записи
+
+```
+Two small result screens. Success: a yellow check in a thin circle, headline "ВЫ ЗАПИСАНЫ", the booking card from "Мои Записи", note "Отменить можно до 07:00 11 ноября — за 12 часов", buttons "К моим записям" (yellow) and "Записаться ещё" (dark). Conflict: an amber clock icon, headline "ЭТО ВРЕМЯ УЖЕ ЗАНЯЛИ", text "Пока вы выбирали, на это время записался другой клиент. Выберите другое.", yellow button "Выбрать другое время". Also a limit variant: "У вас уже 3 будущие записи" with button "К моим записям".
+```
+
+### К6 — Профиль
+
+```
+Cabinet "ПРОФИЛЬ". Card with field "Имя" (editable, "Сохранить" button) and read-only "Телефон +7 700 000 00 01". Card "Безопасность": dark buttons "Выйти" and "Выйти на всех устройствах". Danger zone card with thin red border: "Удалить аккаунт", text "Удалим имя и телефон. Прошедшие записи останутся без ваших данных.", muted red button "Удалить аккаунт". Show the confirmation dialog too: "Удалить аккаунт?", "Это нельзя отменить", buttons "Удалить" (red) and "Отмена". Footer links "Политика конфиденциальности · Пользовательское соглашение".
+```
+
+### Админка — Записи и Окна Тренера
+
+Админка в своём стиле (Oswald + Inter, фон #141416), как экраны 3–5 выше.
+
+```
+Admin screens in the existing admin style (background #141416, cards #1F1F23, accent #F5E642, headings Oswald uppercase, body Inter), mobile 390px and desktop 1440px.
+A) "ЗАПИСИ": a new admin section tab "Записи". Week view: day selector at the top, then columns per trainer (on mobile — one trainer at a time with a trainer switcher). Each booking block: time, client name "Айгерим", masked phone "+7 700 *** ** 01", status. Tapping a booking opens a sheet with "Отменить запись" (muted red) and the note "Клиент увидит отмену в кабинете". Filter chips "Общий зал / Женский зал". A small badge in the header "Не доставлено: 2" linking to C.
+B) Trainer edit page, new card "ЧАСЫ РАБОТЫ": seven rows Пн–Вс, each with a toggle and "с 09:00 до 13:00" + "+ ещё интервал"; field "Длительность тренировки: 60 мин". Card "ИСКЛЮЧЕНИЯ": list "15–20 ноября — отпуск", "25 ноября — выходной", button "+ Добавить исключение". Note "Свободные окна считаются сами: часы работы минус исключения и уже сделанные записи."
+C) "НЕ ДОСТАВЛЕННЫЕ УВЕДОМЛЕНИЯ": list of failed Telegram notifications: event "Новая запись · Айгерим · 11 ноя 19:00", "Попыток: 8", last error in monospace, button "Отправить ещё раз".
+```
+
+### Что прислать
+
+- Скриншоты всех экранов (мобильная и десктоп) и экспорт HTML — в `design/stitch/cabinet/`.
+- Тексты в макетах — черновые: окончательные будут в словарях (`src/dictionaries`), казахские — там же.
