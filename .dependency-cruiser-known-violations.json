@@ -47,7 +47,7 @@
   },
   {
     "type": "dependency",
-    "from": "src/lib/services/photos.ts",
+    "from": "src/lib/services/site-settings.ts",
     "to": "src/lib/services/site.ts",
     "unresolvedTo": "./site",
     "dependencyTypes": [
@@ -61,16 +61,19 @@
   },
   {
     "type": "dependency",
-    "from": "src/lib/services/site-settings.ts",
-    "to": "src/lib/services/site.ts",
-    "unresolvedTo": "./site",
+    "from": "src/modules/photos/domain/photo.ts",
+    "to": "src/lib/domain/tariff.ts",
+    "unresolvedTo": "@/lib/domain/tariff",
     "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
       "local",
       "import"
     ],
     "rule": {
       "severity": "error",
-      "name": "no-cross-entity-services"
+      "name": "photos-knows-no-one"
     }
   }
 ]

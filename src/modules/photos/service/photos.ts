@@ -13,12 +13,15 @@ import {
   PHOTO_VARIANTS,
   pathMatchesKind,
   type PhotoTarget,
-} from "@/lib/domain/photo";
-import * as storage from "@/lib/storage/client";
-import type { GalleryCaptionInput } from "@/lib/validation/gallery";
-import { SETTINGS_ID } from "./site";
-import type { ServiceResult } from "./result";
+} from "../domain/photo";
+import * as storage from "../storage/client";
+import type { GalleryCaptionInput } from "../validation/gallery";
+import type { ServiceResult } from "@/lib/services/result";
 import { logError } from "@/lib/observability/log";
+
+// Строка Настроек сайта (id «site»). Места hero/women уходят в модуль Сайт в его PR — тогда исчезнет и это знание
+// (тест tables.test.ts держит список чужих таблиц, которые трогает Фото).
+const SETTINGS_ID = "site";
 
 // Фото в админке: выдача ссылки на загрузку, привязка загруженного файла к месту на сайте, Галерея.
 // Каждая функция сама проверяет сессию Владельца. В базе — только путь к файлу; сам файл — в хранилище.

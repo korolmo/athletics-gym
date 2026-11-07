@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { MEDIA_BUCKET, PHOTO_KINDS, photoUrl, storageOrigin } from "@/lib/domain/photo";
+import { MEDIA_BUCKET, PHOTO_KINDS, photoUrl, storageOrigin } from "../domain/photo";
 import { StorageNotConfigured } from "./errors";
 
 // Драйвер Supabase Storage (STORAGE_DRIVER=supabase) — как до переезда на hoster.kz (ADR 0002, 0004).

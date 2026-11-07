@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getSinglePhotos, listGallery } from "@/lib/services/photos";
-import { GALLERY_FIRST, MAX_FILE_BYTES, formatMegabytes } from "@/lib/domain/photo";
+import { getSinglePhotos, listGallery } from "@/modules/photos";
+import { GALLERY_FIRST, MAX_FILE_BYTES, formatMegabytes } from "@/modules/photos";
 import { HALLS } from "@/lib/domain/tariff";
 import { HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
 import { PencilIcon } from "@/components/icons";

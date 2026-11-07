@@ -8,6 +8,7 @@ const { readiness, authed, health } = vi.hoisted(() => ({
   health: vi.fn(async () => ({ ok: true, node: "v23.11.0" })),
 }));
 vi.mock("@/lib/services/health", () => ({ getReadiness: readiness, getHealth: health }));
+vi.mock("@/modules/photos", () => ({ photoStorageHealth: {} }));
 vi.mock("@/lib/auth", () => ({ isAuthed: authed }));
 
 import { GET as detailed } from "./route";

@@ -1,5 +1,5 @@
-import { basePhotoPath, typeOfPath } from "@/lib/domain/photo";
-import { disk, storageDriver } from "@/lib/storage/client";
+import { basePhotoPath, typeOfPath } from "@/modules/photos";
+import { disk, storageDriver } from "@/modules/photos";
 
 // Раздача Фото с диска хостинга (STORAGE_DRIVER=local, ADR 0004). Имена файлов уникальные и не меняются,
 // поэтому браузер хранит их год. Отдаём только файлы по правилу имён Фото — никаких других путей.

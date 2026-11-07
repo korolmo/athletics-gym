@@ -1,7 +1,7 @@
 // Сжатие фото в браузере перед загрузкой: длинная сторона до ~1600 px и копии 400 и 800 px, формат WebP.
 // Фото с телефона весит 3–12 МБ, после сжатия — обычно 150–500 КБ.
 
-import { MAX_SIDE_PX, PHOTO_VARIANTS } from "@/lib/domain/photo";
+import { MAX_SIDE_PX, PHOTO_VARIANTS } from "@/modules/photos/client";
 
 const UNREADABLE = "Не удалось открыть фото. Попробуйте другое или сделайте снимок экрана.";
 

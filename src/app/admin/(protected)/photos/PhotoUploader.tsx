@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { checkSource, checkUpload } from "@/lib/domain/photo";
-import { compressPhotoSet } from "@/lib/photo/compress";
+import { checkSource, checkUpload } from "@/modules/photos/client";
+import { compressPhotoSet } from "./compress";
 import { attachPhoto, discardUpload, requestUpload } from "./actions";
 
 type Stage =

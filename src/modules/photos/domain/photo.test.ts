@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { fitSize } from "@/lib/photo/compress";
-import { parseGalleryCaptionForm } from "@/lib/validation/gallery";
+import { fitSize } from "@/app/admin/(protected)/photos/compress";
+import { parseGalleryCaptionForm } from "../validation/gallery";
 import { LIMITS } from "@/lib/admin/limits";
 import {
   MAX_FILE_BYTES,

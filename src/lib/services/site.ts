@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { ABOUT_CARD_COUNT, settingsFromRow, type AboutCardData, type SiteSettingsData } from "@/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
-import { mediaUrl } from "@/lib/storage/client";
+import { mediaUrl } from "@/modules/photos";
 
 /** В базе одна запись Настроек сайта. */
 export const SETTINGS_ID = "site";

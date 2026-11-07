@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { GALLERY_FIRST } from "@/lib/domain/photo";
+import { GALLERY_FIRST } from "@/modules/photos/client";
 import { label } from "@/components/ui/styles";
 
 export type GalleryView = { id: string; url: string; caption: string | null };

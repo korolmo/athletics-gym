@@ -6,7 +6,7 @@ import { PlusIcon } from "@/components/icons";
 import { TariffRow } from "../../tariffs/TariffRow";
 import { DeleteTrainerButton, TrainerForm } from "../TrainerForm";
 import { PhotoSlot } from "../../photos/PhotoSlot";
-import { isStorageConfigured, mediaUrl } from "@/lib/storage/client";
+import { isStorageConfigured, mediaUrl } from "@/modules/photos";
 
 export const dynamic = "force-dynamic";
 

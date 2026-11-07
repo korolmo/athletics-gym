@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getGalleryPhoto } from "@/lib/services/photos";
+import { getGalleryPhoto } from "@/modules/photos";
 import { DeleteGalleryPhotoButton, GalleryPhotoForm } from "../GalleryPhotoForm";
 
 export const dynamic = "force-dynamic";

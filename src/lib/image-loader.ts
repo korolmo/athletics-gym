@@ -8,7 +8,7 @@
 
 import widths from "./image-widths.json";
 
-/** Ширины копий Фото — как PHOTO_VARIANTS в src/lib/domain/photo.ts (проверяет тест). */
+/** Ширины копий Фото — как PHOTO_VARIANTS в src/modules/photos/domain/photo.ts (проверяет тест). */
 export const MEDIA_VARIANT_WIDTHS = [400, 800] as const;
 
 const MEDIA = /^(\/media\/[a-z]+\/[0-9a-f-]{36})\.(webp|jpg|png)$/;

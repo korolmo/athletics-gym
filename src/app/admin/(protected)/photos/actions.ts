@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/admin/guard";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/lib/admin/revalidate";
-import { parseGalleryCaptionForm } from "@/lib/validation/gallery";
-import * as photos from "@/lib/services/photos";
+import { parseGalleryCaptionForm } from "@/modules/photos";
+import * as photos from "@/modules/photos";
 
 // Действия — тонкие: права → сервис → обновить страницы. Проверки файла и путей — в сервисе.
 

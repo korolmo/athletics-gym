@@ -3,7 +3,7 @@
 // Повторный запуск безопасен: файлы в бакете не трогает, только сверяет настройки.
 
 import { createClient } from "@supabase/supabase-js";
-import { ALLOWED_TYPES, MAX_FILE_BYTES, MEDIA_BUCKET, storageOrigin } from "../src/lib/domain/photo";
+import { ALLOWED_TYPES, MAX_FILE_BYTES, MEDIA_BUCKET, storageOrigin } from "../src/modules/photos/domain/photo";
 
 async function main() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
