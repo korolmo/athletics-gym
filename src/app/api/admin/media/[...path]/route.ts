@@ -1,6 +1,6 @@
 import { isAuthed } from "@/lib/auth";
-import { MAX_FILE_BYTES, basePhotoPath, checkQuota, formatMegabytes, sniffImageType, typeOfPath } from "@/lib/domain/photo";
-import { MediaFileExists, StorageNotConfigured, disk, storageDriver } from "@/lib/storage/client";
+import { MAX_FILE_BYTES, basePhotoPath, checkQuota, formatMegabytes, sniffImageType, typeOfPath } from "@/modules/photos";
+import { MediaFileExists, StorageNotConfigured, disk, storageDriver } from "@/modules/photos";
 import { logError } from "@/lib/observability/log";
 
 // Приём загруженного Фото на диск хостинга (STORAGE_DRIVER=local, ADR 0004): один файл на запрос (PUT).

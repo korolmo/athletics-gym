@@ -4,7 +4,7 @@ import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
-import { DEFAULT_MEDIA_QUOTA_MB, PHOTO_KINDS, basePhotoPath, photoFiles } from "@/lib/domain/photo";
+import { DEFAULT_MEDIA_QUOTA_MB, PHOTO_KINDS, basePhotoPath, photoFiles } from "../domain/photo";
 import { MediaFileExists, StorageNotConfigured } from "./errors";
 
 // Драйвер «диск хостинга» (STORAGE_DRIVER=local, ADR 0004). Фото лежат в папке MEDIA_DIR — вне папки приложения,

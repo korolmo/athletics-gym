@@ -1,8 +1,8 @@
 import sharp from "sharp";
-import { PHOTO_VARIANTS, variantPath } from "../../src/lib/domain/photo";
+import { PHOTO_VARIANTS, variantPath } from "../../src/modules/photos/domain/photo";
 
 /**
- * Фото из Supabase и его уменьшенные копии по ширине (как делает браузер при загрузке, src/lib/photo/compress.ts):
+ * Фото из Supabase и его уменьшенные копии по ширине (как делает браузер при загрузке, src/app/admin/(protected)/photos/compress.ts):
  * до этапа 8 копий не было, а загрузчик картинок на хостинге их ждёт. Формат копий — как у самого Фото.
  */
 export async function photoWithVariants(photo: string, bytes: Uint8Array): Promise<Record<string, Uint8Array>> {

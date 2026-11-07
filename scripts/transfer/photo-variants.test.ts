@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { sniffImageType } from "../../src/lib/domain/photo";
+import { sniffImageType } from "../../src/modules/photos/domain/photo";
 import { photoWithVariants } from "./photo-variants";
 
 describe("перенос Фото: уменьшенные копии", () => {

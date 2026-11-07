@@ -1,5 +1,5 @@
 import "server-only";
-import { checkQuota, localPhotoUrl, photoFiles } from "@/lib/domain/photo";
+import { checkQuota, localPhotoUrl, photoFiles } from "../domain/photo";
 import * as local from "./local";
 import * as supabase from "./supabase";
 

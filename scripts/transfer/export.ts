@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { zipSync } from "fflate";
-import { MEDIA_BUCKET, isPhotoPath, storageOrigin } from "../../src/lib/domain/photo";
+import { MEDIA_BUCKET, isPhotoPath, storageOrigin } from "../../src/modules/photos/domain/photo";
 import { photoWithVariants } from "./photo-variants";
 import { BASELINE, DUMP_FILE, MANIFEST_FILE, MEDIA_OUT, OUT_DIR, ZIP_FILE, PHOTO_COLUMNS, loadSource, openSource, quoteName, removeDir, sqlValue, tables } from "./common";
 

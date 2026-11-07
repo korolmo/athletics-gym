@@ -9,7 +9,7 @@ import { site } from "@/lib/site";
 import { logoIconUrl } from "@/lib/brand";
 import { ContactTracker } from "@/components/site/ContactTracker";
 import { Motion } from "@/components/site/Motion";
-import { mediaUrl } from "@/lib/storage/client";
+import { mediaUrl } from "@/modules/photos";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
 import {

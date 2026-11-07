@@ -71,8 +71,11 @@ module.exports = {
     {
       name: "lib-no-modules",
       severity: "error",
-      comment: "Платформа под модулями: src/lib модули не импортирует.",
-      from: { path: "^src/lib/" },
+      comment:
+        "Платформа под модулями: src/lib модули не импортирует. Временно (до PR «Главная»): сервисы сущностей, ещё " +
+        "не перенесённых в модули (src/lib/services/*), — это модули в ожидании, им можно импортировать модули через " +
+        "index.ts. health.ts — платформа: хранилище ему передают маршруты.",
+      from: { path: "^src/lib/", pathNot: "^src/lib/services/(?!health\\.ts$)" },
       to: { path: "^src/modules/" },
     },
     {
@@ -85,16 +88,30 @@ module.exports = {
     {
       name: "module-via-index-outside",
       severity: "error",
-      comment: "Снаружи модуль виден только через свой index.ts (`@/modules/<имя>`).",
+      comment:
+        "Снаружи модуль виден только через свой index.ts (`@/modules/<имя>`) или, для браузера, client.ts " +
+        "(`@/modules/<имя>/client`: index.ts серверный, с ним клиентская сборка падает на server-only).",
       from: { pathNot: "^src/modules/" },
-      to: { path: "^src/modules/[^/]+/.+", pathNot: "^src/modules/[^/]+/index\\.ts$" },
+      to: { path: "^src/modules/[^/]+/.+", pathNot: "^src/modules/[^/]+/(index|client)\\.ts$" },
     },
     {
       name: "module-via-index-between",
       severity: "error",
-      comment: "Другой модуль виден только через свой index.ts.",
+      comment: "Другой модуль виден только через свой index.ts (или client.ts).",
       from: { path: "^src/modules/([^/]+)/" },
-      to: { path: "^src/modules/[^/]+/", pathNot: ["^src/modules/$1/", "^src/modules/[^/]+/index\\.ts$"] },
+      to: { path: "^src/modules/[^/]+/", pathNot: ["^src/modules/$1/", "^src/modules/[^/]+/(index|client)\\.ts$"] },
+    },
+    {
+      name: "photos-knows-no-one",
+      severity: "error",
+      comment:
+        "Фото — базовый модуль (решение 8 этапа 6): не импортирует ни другие модули, ни сущности, ещё лежащие в " +
+        "src/lib. Связь по данным (чужие таблицы) этим правилом не видна — её держит src/modules/photos/tables.test.ts.",
+      from: { path: "^src/modules/photos/" },
+      to: {
+        path: ["^src/modules/(?!photos/)", "^src/lib/(domain|validation|services|presentation)/"],
+        pathNot: ["^src/lib/services/result\\.ts$", "^src/lib/validation/shared\\.ts$"],
+      },
     },
     {
       name: "home-is-top",

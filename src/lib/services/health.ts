@@ -4,7 +4,6 @@ import os from "node:os";
 import v8 from "node:v8";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { disk, probeStorage, storageDriver } from "@/lib/storage/client";
 import { createDependencyCheck, type ReadyChecks } from "@/lib/domain/health";
 import { appEnv } from "@/lib/seo";
 import { accessLogStats } from "@/lib/observability/access-log";
@@ -16,11 +15,22 @@ import { release } from "@/lib/observability/log";
 
 /** База и хранилище Фото: запрос — с тайм-аутом READY_TIMEOUT_MS, первое соединение процесса — CONNECT_TIMEOUT_MS. */
 const checkDatabase = createDependencyCheck(() => db.$queryRaw`SELECT 1`, { connect: () => db.$connect() });
-const checkStorage = createDependencyCheck(probeStorage);
 
-export async function getReadiness(): Promise<ReadyChecks> {
-  const [database, storage] = await Promise.all([checkDatabase(), checkStorage()]);
-  return { database, storage };
+/**
+ * Хранилище Фото — модуль, а это платформа: она о модулях не знает (ADR 0015). Маршруты /api/health*
+ * берут проверку из `@/modules/photos` (photoStorageHealth) и передают сюда.
+ */
+export type StorageHealth = { probe: () => Promise<void>; status: () => Promise<Record<string, unknown>> };
+
+// Проверка хранилища запоминает первое успешное соединение процесса — поэтому одна на процесс
+let checkStorage: ReturnType<typeof createDependencyCheck> | null = null;
+function storageCheck(storage: StorageHealth) {
+  return (checkStorage ??= createDependencyCheck(storage.probe));
+}
+
+export async function getReadiness(storage: StorageHealth): Promise<ReadyChecks> {
+  const [database, storageState] = await Promise.all([checkDatabase(), storageCheck(storage)()]);
+  return { database, storage: storageState };
 }
 
 const MB = 1024 * 1024;
@@ -57,24 +67,10 @@ async function database() {
   }
 }
 
-async function media() {
-  if (storageDriver() !== "local") return { driver: storageDriver() };
-  const [used, free] = await Promise.all([disk.usedBytes().catch(() => null), disk.freeBytes()]);
-  let writable = false;
-  try {
-    await fs.mkdir(disk.dir(), { recursive: true });
-    await fs.access(disk.dir(), fs.constants.W_OK);
-    writable = true;
-  } catch {
-    writable = false;
-  }
-  return { driver: "local", dir: disk.dir(), writable, usedMb: mb(used), quotaMb: mb(disk.quotaBytes()), freeOnDiskMb: mb(free) };
-}
-
-export async function getHealth() {
+export async function getHealth(storage: StorageHealth) {
   await requireOwner();
   const memory = process.memoryUsage();
-  const [osName, dbState, mediaState, ready] = await Promise.all([osRelease(), database(), media(), getReadiness()]);
+  const [osName, dbState, mediaState, ready] = await Promise.all([osRelease(), database(), storage.status(), getReadiness(storage)]);
   return {
     ok: dbState.ok && ready.storage.ok,
     appEnv: appEnv(),

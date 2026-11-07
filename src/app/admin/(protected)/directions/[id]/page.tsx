@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getDirection } from "@/lib/services/directions";
 import { DIRECTION_ICONS, isDirectionIcon } from "@/lib/domain/direction";
-import { isStorageConfigured } from "@/lib/storage/client";
+import { isStorageConfigured } from "@/modules/photos";
 import { PhotoSlot } from "../../photos/PhotoSlot";
 import { DeleteDirectionButton, DirectionForm } from "../DirectionForm";
 

@@ -13,7 +13,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { unzipSync } from "fflate";
-import { photoFiles } from "../../src/lib/domain/photo";
+import { photoFiles } from "../../src/modules/photos/domain/photo";
 import { DUMP_FILE, MANIFEST_FILE, PHOTO_COLUMNS, ZIP_FILE, loadSource, openSource, quoteName, tables } from "./common";
 
 const require = createRequire(import.meta.url);

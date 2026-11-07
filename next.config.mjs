@@ -10,7 +10,7 @@ function storageOrigin() {
   if (process.env.STORAGE_DRIVER !== "supabase") return null;
   try {
     const url = new URL(process.env.SUPABASE_URL ?? "");
-    // То же правило, что в src/lib/domain/photo.ts (storageOrigin)
+    // То же правило, что в src/modules/photos/domain/photo.ts (storageOrigin)
     return url.protocol === "https:" && /^[a-z0-9.-]+$/.test(url.hostname) ? url : null;
   } catch {
     return null;

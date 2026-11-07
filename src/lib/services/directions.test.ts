@@ -54,12 +54,13 @@ const { state, db, storage, requireOwner } = vi.hoisted(() => {
 });
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
-vi.mock("@/lib/storage/client", () => storage);
+// Модуль Фото: правила — настоящие (client.ts без хранилища), хранилище — подмена
+vi.mock("@/modules/photos", async () => ({ ...(await vi.importActual<object>("@/modules/photos/client")), ...storage }));
 vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
 
 import { DIRECTION_ICONS, DIRECTION_LIMITS, toDirectionViews } from "@/lib/domain/direction";
 import { DEFAULT_DIRECTIONS } from "@/lib/domain/direction.defaults";
-import { parsePhotoTarget, pathMatchesKind } from "@/lib/domain/photo";
+import { parsePhotoTarget, pathMatchesKind } from "@/modules/photos/client";
 import { DIRECTION_ICON_LABEL_RU } from "@/lib/presentation/direction-labels";
 import { parseDirectionForm } from "@/lib/validation/direction";
 import * as directions from "./directions";

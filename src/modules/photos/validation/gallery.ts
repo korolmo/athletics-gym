@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { checked, text } from "@/lib/admin/form";
 import { LIMITS } from "@/lib/admin/limits";
-import { toParsed, type Parsed } from "./shared";
+import { toParsed, type Parsed } from "@/lib/validation/shared";
 
 const caption = (lang: string) =>
   z

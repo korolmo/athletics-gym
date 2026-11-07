@@ -101,7 +101,7 @@ const { state, db, storage, requireOwner } = vi.hoisted(() => {
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
-vi.mock("@/lib/storage/client", () => storage);
+vi.mock("../storage/client", () => storage);
 vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
 
 import * as photos from "./photos";
