@@ -4,7 +4,7 @@ import type { CabinetDictionary } from "./ru";
 export const cabinetKk: CabinetDictionary = {
   meta: { title: "Жеке кабинет — Athletic's Gym" },
   badge: "Athletic Club ID",
-  badgeFirst: "Athletic Club ID · алғашқы кіру",
+  badgeFirst: "Алғашқы кіру",
   step: "Қадам {n} / 02",
   login: {
     title: "Кабинетке кіру",
