@@ -14,6 +14,7 @@ export {
   type PhotoSlot,
   type PhotoSlots,
   listGallery,
+  listVisibleGallery,
   moveGalleryPhoto,
   removePhoto,
   requestUpload,

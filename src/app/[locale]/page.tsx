@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPriceListAndTrainers, getSitePhotos } from "@/lib/services/site";
+import { getPriceListAndTrainers, getSitePhotos } from "@/modules/home";
 import { getSiteSettings } from "@/modules/site";
 import { listPublishedReviews } from "@/modules/reviews";
 import { listVisibleDirections } from "@/modules/directions";

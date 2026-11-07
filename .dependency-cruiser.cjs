@@ -1,14 +1,13 @@
 // Границы кода (этап 6, ADR 0015). Проверка — `npm run deps:check` (CI, job «Dependency boundaries»).
-// Нарушения, которые уже есть, записаны в .dependency-cruiser-known-violations.json (`npm run deps:baseline`)
-// и не валят проверку; новое нарушение — ошибка. Каждый перенесённый модуль убирает свои строки из списка,
-// в конце этапа список пуст.
+// Список известных нарушений (.dependency-cruiser-known-violations.json, `npm run deps:baseline`) с 7 ноября 2026
+// пуст: любое нарушение — ошибка. Перезаписывать его, чтобы «пропустить» новое нарушение, нельзя.
 //
-// Модули — src/modules/<имя>/ (Фото — photos, Тарифы — tariffs, Тренеры — trainers, Направления — directions,
-// Юридические документы — legal,
-// Отзывы — reviews, Обращения — contacts, Сайт — site, Аккаунт Владельца — owner, Главная — home).
-// Внутри модуля — те же слои: domain → validation → service. Снаружи модуль виден только через свой index.ts.
-// Платформа (src/lib: db, логи, i18n, SEO, юридические тексты, помощники админки) — под модулями: модули её
-// импортируют, она модули — нет.
+// Модули — src/modules/<имя>/. Базовые: Фото — photos, Аккаунт Владельца — owner. Сущности: Тарифы — tariffs,
+// Тренеры — trainers, Направления — directions, Отзывы — reviews, Обращения — contacts, Сайт — site.
+// Поверх всех: Главная — home, Юридические документы — legal.
+// Внутри модуля — те же слои: domain → validation → service. Снаружи модуль виден только через index.ts (сервер)
+// и client.ts (браузер, middleware). Платформа (src/lib: db, логи, i18n, SEO, health, хэш адреса, помощники
+// форм) — под модулями: модули её импортируют, она модули — нет.
 
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
@@ -73,10 +72,10 @@ module.exports = {
       name: "lib-no-modules",
       severity: "error",
       comment:
-        "Платформа под модулями: src/lib модули не импортирует. Временно (до PR «Главная»): слои сущностей, ещё " +
-        "не перенесённых в модули (src/lib/{domain,validation,presentation,services}/*), — это модули в ожидании, им " +
-        "можно импортировать модули через index.ts / client.ts. health.ts — платформа: хранилище ему передают маршруты.",
-      from: { path: "^src/lib/", pathNot: "^src/lib/(domain|validation|presentation|services)/(?!health\\.ts$)" },
+        "Платформа под модулями: src/lib модули не импортирует. Что платформе нужно от модуля (хранилище Фото и " +
+        "проверка Владельца для health), передаёт слой приложения; что ей нужно от данных модуля (поля Настроек для " +
+        "SEO) — она описывает своим типом.",
+      from: { path: "^src/lib/" },
       to: { path: "^src/modules/" },
     },
     {
@@ -124,17 +123,6 @@ module.exports = {
         "остальным от них (дата редакции Политики для Согласия) — передаёт слой приложения.",
       from: { path: "^src/modules/([^/]+)/", pathNot: "^src/modules/(home|legal)/" },
       to: { path: "^src/modules/(home|legal)/" },
-    },
-
-    // --- До переноса в модули: связи сервисов разных сущностей ---
-    {
-      name: "no-cross-entity-services",
-      severity: "error",
-      comment:
-        "Сервис одной сущности не импортирует сервис другой. Пока файлы лежат в src/lib/services, это единственная " +
-        "проверяемая граница сущностей; после переноса её заменяют правила модулей.",
-      from: { path: "^src/lib/services/([^/]+)\\.ts$" },
-      to: { path: "^src/lib/services/", pathNot: ["^src/lib/services/(result|$1)\\.ts$"] },
     },
   ],
 
