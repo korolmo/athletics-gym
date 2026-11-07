@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { listTrainers } from "@/lib/services/trainers";
+import { listTrainers } from "@/modules/trainers";
 import { isHall } from "@/modules/tariffs/client";
 import { formatPrice } from "@/modules/tariffs/client";
 import { PencilIcon, PlusIcon } from "@/components/icons";

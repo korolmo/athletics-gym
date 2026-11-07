@@ -6,6 +6,7 @@ import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/lib/admin/revalidate";
 import { parseTariffForm } from "@/modules/tariffs";
 import * as tariffs from "@/modules/tariffs";
+import { trainerHall } from "@/modules/trainers";
 
 // Действия — тонкие: права → валидация → сервис → обновить страницы и вернуть Владельца в список
 
@@ -22,7 +23,7 @@ export async function saveTariff(_prev: TariffFormState, fd: FormData): Promise<
   const parsed = parseTariffForm(fd);
   if (!parsed.ok) return { error: parsed.error };
 
-  const result = await tariffs.saveTariff(parsed.data);
+  const result = await tariffs.saveTariff(parsed.data, trainerHall);
   if (!result.ok) return { error: result.error };
 
   revalidateSite();

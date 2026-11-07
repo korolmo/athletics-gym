@@ -26,22 +26,28 @@ export async function listHallTariffs(hallId: HallId) {
 
 export async function getTariff(id: string) {
   await requireOwner();
-  return db.tariff.findUnique({ where: { id }, include: { trainer: true } });
+  return db.tariff.findUnique({ where: { id } });
 }
+
+/**
+ * Зал Тренера по его id (или null, если Тренера нет). Тарифы о Тренерах не знают (ADR 0015): эту функцию
+ * берут из модуля Тренеры (`trainerHall`) и передают сюда действия админки.
+ */
+export type TrainerHallLookup = (trainerId: string) => Promise<string | null>;
 
 /**
  * Создаёт или обновляет Тариф.
  * Правило: Тариф Тренера всегда лежит в Зале Тренера, что бы ни пришло из формы.
  */
-export async function saveTariff(input: TariffInput): Promise<ServiceResult<TariffPlace>> {
+export async function saveTariff(input: TariffInput, trainerHall: TrainerHallLookup): Promise<ServiceResult<TariffPlace>> {
   await requireOwner();
   const { id, ...fields } = input;
 
   let hallId: string = fields.hallId;
   if (fields.trainerId) {
-    const trainer = await db.trainer.findUnique({ where: { id: fields.trainerId } });
-    if (!trainer) return { ok: false, error: "Персональный тариф добавляется в карточке тренера" };
-    hallId = trainer.hallId;
+    const trainerHallId = await trainerHall(fields.trainerId);
+    if (!trainerHallId) return { ok: false, error: "Персональный тариф добавляется в карточке тренера" };
+    hallId = trainerHallId;
   }
   const data = { ...fields, hallId };
 
@@ -60,6 +66,14 @@ export async function saveTariff(input: TariffInput): Promise<ServiceResult<Tari
   }
 
   return { ok: true, hallId, trainerId: data.trainerId };
+}
+
+/**
+ * Тарифы Тренера переезжают в его новый Зал. Возвращает запрос Prisma, не выполняя его: модуль Тренеры
+ * кладёт его в одну транзакцию со сменой Зала Тренера — таблицу Тарифов при этом пишет только этот модуль.
+ */
+export function moveTrainerTariffs(trainerId: string, hallId: string) {
+  return db.tariff.updateMany({ where: { trainerId }, data: { hallId } });
 }
 
 /** Удаляет Тариф; если его уже нет — ничего не делает. Возвращает, где он был. */

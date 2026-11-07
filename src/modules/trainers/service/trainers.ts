@@ -3,10 +3,11 @@ import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import type { HallId } from "@/modules/tariffs/client";
-import { sortOrderOnCreate, sortOrderOnUpdate } from "@/lib/domain/trainer";
-import type { TrainerInput } from "@/lib/validation/trainer";
+import { moveTrainerTariffs } from "@/modules/tariffs";
+import { sortOrderOnCreate, sortOrderOnUpdate } from "../domain/trainer";
+import type { TrainerInput } from "../validation/trainer";
 import { removeObjects } from "@/modules/photos";
-import type { ServiceResult } from "./result";
+import type { ServiceResult } from "@/lib/services/result";
 import { logError } from "@/lib/observability/log";
 
 // Тренеры в админке: правила домена и доступ к базе.
@@ -50,7 +51,8 @@ export async function saveTrainer(input: TrainerInput): Promise<ServiceResult<{ 
     try {
       await db.$transaction([
         db.trainer.update({ where: { id }, data: { ...data, ...sortOrderOnUpdate(sortOrder) } }),
-        db.tariff.updateMany({ where: { trainerId: id }, data: { hallId: data.hallId } }),
+        // Таблицу Тарифов пишет модуль Тарифы; здесь — только его запрос в общей транзакции
+        moveTrainerTariffs(id, data.hallId),
       ]);
     } catch (e) {
       // Тренера могли удалить в другой вкладке — сообщаем, а не падаем с ошибкой сервера
@@ -79,6 +81,12 @@ export async function deleteTrainer(id: string): Promise<{ hallId: string } | nu
     await removeObjects([trainer.uploadedPhoto]).catch((e) => logError("Хранилище фото: плакат удалённого Тренера остался.", e));
   }
   return { hallId: trainer.hallId };
+}
+
+/** Зал Тренера (или null) — для Тарифов: персональный Тариф лежит в Зале Тренера (TrainerHallLookup). */
+export async function trainerHall(trainerId: string): Promise<string | null> {
+  await requireOwner();
+  return (await db.trainer.findUnique({ where: { id: trainerId }, select: { hallId: true } }))?.hallId ?? null;
 }
 
 export async function toggleTrainerVisibility(id: string): Promise<void> {

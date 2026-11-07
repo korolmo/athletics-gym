@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTariff } from "@/modules/tariffs";
+import { getTrainer } from "@/modules/trainers";
 import { isAccess, isAudience, isCategory, isHall } from "@/modules/tariffs/client";
 import { tariffLabelRu } from "@/modules/tariffs/client";
 import { TariffForm } from "../TariffForm";
@@ -11,15 +12,17 @@ export default async function EditTariffPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const t = await getTariff(id);
   if (!t || !isCategory(t.category) || !isHall(t.hallId) || !isAccess(t.access) || !isAudience(t.audience)) notFound();
+  // Тарифы о Тренерах не знают: имя Тренера берём у модуля Тренеры
+  const trainer = t.trainerId ? await getTrainer(t.trainerId) : null;
 
   return (
     <>
       <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">Редактировать тариф</h1>
       <p className="mb-6 text-sm text-muted">
-        {t.trainer ? `Персональные тренировки · тренер ${t.trainer.name}` : "Позиция прайса зала"}
+        {trainer ? `Персональные тренировки · тренер ${trainer.name}` : "Позиция прайса зала"}
       </p>
       <TariffForm
-        trainer={t.trainer ? { id: t.trainer.id, name: t.trainer.name } : undefined}
+        trainer={trainer ? { id: trainer.id, name: trainer.name } : undefined}
         cancelHref={t.trainerId ? `/admin/trainers/${t.trainerId}` : `/admin/tariffs?hall=${t.hallId}`}
         initial={{
           id: t.id,

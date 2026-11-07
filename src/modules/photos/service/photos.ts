@@ -70,14 +70,13 @@ export type PhotoSlots = readonly PhotoSlot[];
 const slotFor = (target: PhotoTarget, slots: PhotoSlots) => slots.find((s) => s.kind === target.kind) ?? null;
 const targetId = (target: PhotoTarget) => ("id" in target ? target.id : undefined);
 /** Места, которые ведут модули-владельцы: без переданного места такая загрузка не принимается. */
-const OWNED_KINDS: readonly PhotoKind[] = ["hall"];
+const OWNED_KINDS: readonly PhotoKind[] = ["hall", "trainer"];
 
 /** Есть ли место, к которому привязывается Фото: Тренер мог быть удалён в другой вкладке. */
 async function targetExists(target: PhotoTarget, slots: PhotoSlots): Promise<boolean> {
   const slot = slotFor(target, slots);
   if (slot) return slot.exists(targetId(target));
   if (OWNED_KINDS.includes(target.kind)) return false;
-  if (target.kind === "trainer") return (await db.trainer.count({ where: { id: target.id } })) > 0;
   if (target.kind === "direction") return (await db.direction.count({ where: { id: target.id } })) > 0;
   return true;
 }
@@ -129,14 +128,11 @@ async function saveToTarget(target: PhotoTarget, path: string, slots: PhotoSlots
       await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: { [column]: path } });
       return (before as Record<string, string | null> | null)?.[column] ?? null;
     }
-    case "trainer": {
-      const before = await db.trainer.findUnique({ where: { id: target.id }, select: { uploadedPhoto: true } });
-      await db.trainer.update({ where: { id: target.id }, data: { uploadedPhoto: path } });
-      return before?.uploadedPhoto ?? null;
-    }
+    case "trainer":
     case "hall":
-      // Место ведёт модуль Тарифы; сюда попадаем, только если его не передали — attachPhoto это отсекает
-      throw new Error("Место «Плакат прайса» ведёт модуль Тарифы: передайте его в slots");
+      // Места ведут модули-владельцы (Тренеры, Тарифы); сюда попадаем, только если место не передали —
+      // attachPhoto это отсекает
+      throw new Error(`Место «${target.kind}» ведёт модуль-владелец: передайте его в slots`);
     case "direction": {
       const before = await db.direction.findUnique({ where: { id: target.id }, select: { photo: true } });
       await db.direction.update({ where: { id: target.id }, data: { photo: path } });
@@ -165,7 +161,7 @@ export async function attachPhoto(targetRaw: string, path: string, slots: PhotoS
   // Место владельца: id из браузера проверяет сам владелец (у Зала — ещё и по списку Залов)
   const slot = slotFor(target, slots);
   if (slot && !(await slot.exists(targetId(target)))) {
-    // Место удалили, пока шла загрузка (Зал — маловероятно, но так же, как у Тренера): файл без записи не оставляем
+    // Место удалили, пока шла загрузка (Тренера — в другой вкладке): файл без записи в базе не оставляем
     await removeQuietly([path]);
     return { ok: false, error: NOT_FOUND_MESSAGE };
   }
@@ -217,9 +213,6 @@ export async function removePhoto(targetRaw: string, slots: PhotoSlots = []): Pr
       const before = await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { [column]: true } });
       previous = (before as Record<string, string | null> | null)?.[column] ?? null;
       if (previous) await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: { [column]: null } });
-    } else if (target.kind === "trainer") {
-      previous = (await db.trainer.findUnique({ where: { id: target.id }, select: { uploadedPhoto: true } }))?.uploadedPhoto ?? null;
-      if (previous) await db.trainer.update({ where: { id: target.id }, data: { uploadedPhoto: null } });
     } else if (target.kind === "direction") {
       previous = (await db.direction.findUnique({ where: { id: target.id }, select: { photo: true } }))?.photo ?? null;
       if (previous) await db.direction.update({ where: { id: target.id }, data: { photo: null } });
@@ -307,9 +300,8 @@ export async function getSinglePhotos() {
  * Если место владельца не передали, его файлы считались бы брошенными — поэтому без всех мест уборка не идёт.
  */
 async function referencedPaths(slots: PhotoSlots): Promise<Set<string>> {
-  const [settings, trainers, gallery, directions, owned] = await Promise.all([
+  const [settings, gallery, directions, owned] = await Promise.all([
     db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } }),
-    db.trainer.findMany({ where: { uploadedPhoto: { not: null } }, select: { uploadedPhoto: true } }),
     db.galleryPhoto.findMany({ select: { path: true } }),
     db.direction.findMany({ where: { photo: { not: null } }, select: { photo: true } }),
     Promise.all(slots.map((s) => s.paths())),
@@ -317,7 +309,6 @@ async function referencedPaths(slots: PhotoSlots): Promise<Set<string>> {
   const all = [
     settings?.heroPhoto,
     settings?.womenPhoto,
-    ...trainers.map((t) => t.uploadedPhoto),
     ...gallery.map((g) => g.path),
     ...directions.map((d) => d.photo),
     ...owned.flat(),

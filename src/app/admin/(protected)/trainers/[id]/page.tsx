@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTrainerWithTariffs } from "@/lib/services/trainers";
+import { getTrainerWithTariffs } from "@/modules/trainers";
 import { isHall } from "@/modules/tariffs/client";
 import { PlusIcon } from "@/components/icons";
 import { TariffRow } from "../../tariffs/TariffRow";

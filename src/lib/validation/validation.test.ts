@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LIMITS } from "@/lib/admin/limits";
 import { parseTariffForm } from "@/modules/tariffs/validation/tariff";
-import { parseTrainerForm } from "./trainer";
+import { parseTrainerForm } from "@/modules/trainers/validation/trainer";
 
 function form(values: Record<string, string>): FormData {
   const fd = new FormData();
