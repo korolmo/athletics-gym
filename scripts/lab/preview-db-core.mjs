@@ -24,6 +24,16 @@ export function withDatabase(url, database) {
   return u.toString();
 }
 
+/** База основной Лаборатории (production athletics-gym-lab). Только миграции и часы по умолчанию — lab-prod-db.mjs. */
+export const LAB_PRODUCTION_DB = "athletics";
+
+/** Адрес базы основной Лаборатории в том же кластере. Отдельная функция: withDatabase её имени не примет. */
+export function labProductionUrl(url) {
+  const u = new URL(url);
+  u.pathname = `/${LAB_PRODUCTION_DB}`;
+  return u.toString();
+}
+
 /**
  * Какие базы превью удалить перед созданием новой, чтобы их стало не больше limit вместе с новой.
  * existing — [{ name, createdAt: Date | null }]; без даты (недосозданная база) считается самой старой.
