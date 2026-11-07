@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { PASSWORD_MAX_BYTES, PASSWORD_MIN_LENGTH, passwordBytes } from "@/lib/auth/password-policy";
-import { toParsed, type Parsed } from "./shared";
+import { PASSWORD_MAX_BYTES, PASSWORD_MIN_LENGTH, passwordBytes } from "../domain/password-policy";
+import { toParsed, type Parsed } from "@/lib/validation/shared";
 
 /** Смена пароля Владельца: текущий пароль и новый дважды. Пароли не обрезаем — пробелы в них значимы. */
 export const passwordChangeSchema = z

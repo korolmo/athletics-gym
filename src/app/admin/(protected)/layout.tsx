@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { isAuthed } from "@/lib/auth";
+import { isAuthed } from "@/modules/owner";
 import { logout } from "../actions";
 import { AdminNav } from "./AdminNav";
 import { logo } from "@/lib/brand";

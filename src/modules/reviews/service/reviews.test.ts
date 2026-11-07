@@ -72,7 +72,7 @@ const { state, db, requireOwner } = vi.hoisted(() => {
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
-vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
+vi.mock("@/modules/owner", () => ({ requireOwner }));
 
 import { LEGAL_UPDATED } from "@/modules/legal/client";
 import * as reviews from "./reviews";

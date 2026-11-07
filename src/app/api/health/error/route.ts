@@ -1,4 +1,4 @@
-import { isAuthed } from "@/lib/auth";
+import { isAuthed } from "@/modules/owner";
 
 // Проверка цепочки ошибок (docs/runbooks/observability.md): Владелец вызывает POST — сервер бросает ошибку,
 // onRequestError в instrumentation.ts отправляет её в Sentry (если задан SENTRY_DSN). Посторонним — 401.

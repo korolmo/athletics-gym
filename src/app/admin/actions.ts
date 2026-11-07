@@ -1,9 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createSession, destroySession } from "@/lib/auth";
-import { checkLoginLimit, clearFailedLogins, currentIpHash, recordFailedLogin } from "@/lib/auth/login-limit";
-import { loginOwner } from "@/lib/services/owner-account";
+import { createSession, destroySession } from "@/modules/owner";
+import { checkLoginLimit, clearFailedLogins, recordFailedLogin } from "@/modules/owner";
+import { currentIpHash } from "@/lib/ip-hash";
+import { loginOwner } from "@/modules/owner";
 import { logError } from "@/lib/observability/log";
 
 export type LoginState = { error?: string } | undefined;

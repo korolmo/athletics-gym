@@ -16,8 +16,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../../src/lib/auth/password";
-import { SESSION_COOKIE, signSession } from "../../src/lib/auth/session";
+import { hashPassword } from "../../src/modules/owner/service/password";
+import { SESSION_COOKIE, signSession } from "../../src/modules/owner/domain/session";
 import { LOCALE_COOKIE } from "../../src/lib/locale-cookie";
 
 const CHECK = process.argv.includes("--check");

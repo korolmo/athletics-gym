@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { mediaUrl, type PhotoSlot } from "@/modules/photos";
 import { HALLS, isHall, type HallId } from "../domain/tariff";
 

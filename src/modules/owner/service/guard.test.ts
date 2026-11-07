@@ -11,7 +11,7 @@ const { isAuthed, redirect } = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/auth", () => ({ isAuthed }));
+vi.mock("./session-cookie", () => ({ isAuthed }));
 vi.mock("next/navigation", () => ({ redirect }));
 
 import { requireOwner } from "./guard";

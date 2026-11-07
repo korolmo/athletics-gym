@@ -1,6 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { isAuthed } from "@/lib/auth";
+import { isAuthed } from "./session-cookie";
 
 /**
  * Граница доступа к данным админки: вызывается в каждом серверном действии

@@ -1,8 +1,8 @@
 // Числа, которые называют юридические страницы, — из тех же констант, по которым работает код:
 // поменяли срок или лимит в коде — текст документа изменится сам, а не разойдётся с сайтом.
 
-import { ATTEMPT_KEEP_MS } from "@/lib/auth/login-limit.rules";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/lib/auth/session";
+import { ATTEMPT_KEEP_MS } from "@/modules/owner/client";
+import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/modules/owner/client";
 import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS } from "@/modules/reviews/client";
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 

@@ -9,7 +9,7 @@ const { readiness, authed, health } = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/services/health", () => ({ getReadiness: readiness, getHealth: health }));
 vi.mock("@/modules/photos", () => ({ photoStorageHealth: {} }));
-vi.mock("@/lib/auth", () => ({ isAuthed: authed }));
+vi.mock("@/modules/owner", () => ({ isAuthed: authed, requireOwner: vi.fn(async () => {}) }));
 
 import { GET as detailed } from "./route";
 import { GET as live } from "./live/route";

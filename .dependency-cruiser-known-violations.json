@@ -33,20 +33,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/lib/services/account.ts",
-    "to": "src/lib/services/owner-account.ts",
-    "unresolvedTo": "./owner-account",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-entity-services"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/lib/services/site-settings.ts",
     "to": "src/lib/services/site.ts",
     "unresolvedTo": "./site",

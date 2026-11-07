@@ -1,4 +1,4 @@
-import { isAuthed } from "@/lib/auth";
+import { isAuthed } from "@/modules/owner";
 import { MAX_FILE_BYTES, basePhotoPath, checkQuota, formatMegabytes, sniffImageType, typeOfPath } from "@/modules/photos";
 import { MediaFileExists, StorageNotConfigured, disk, storageDriver } from "@/modules/photos";
 import { logError } from "@/lib/observability/log";

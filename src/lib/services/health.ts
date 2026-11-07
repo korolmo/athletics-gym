@@ -3,7 +3,6 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import v8 from "node:v8";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
 import { createDependencyCheck, type ReadyChecks } from "@/lib/domain/health";
 import { appEnv } from "@/lib/seo";
 import { accessLogStats } from "@/lib/observability/access-log";
@@ -67,8 +66,12 @@ async function database() {
   }
 }
 
-export async function getHealth(storage: StorageHealth) {
-  await requireOwner();
+/**
+ * Только для Владельца. Проверку сессии передаёт маршрут (requireOwner из модуля Аккаунт Владельца):
+ * платформа о модулях не знает (ADR 0015) — как и хранилище Фото выше.
+ */
+export async function getHealth(storage: StorageHealth, ensureOwner: () => Promise<void>) {
+  await ensureOwner();
   const memory = process.memoryUsage();
   const [osName, dbState, mediaState, ready] = await Promise.all([osRelease(), database(), storage.status(), getReadiness(storage)]);
   return {

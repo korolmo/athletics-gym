@@ -15,7 +15,7 @@ const { rows, db, requireOwner } = vi.hoisted(() => {
 });
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
-vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
+vi.mock("@/modules/owner", () => ({ requireOwner }));
 
 import { getContactStats, recordContact } from "../service/contacts";
 import { CONTACT_CHANNEL_LABEL_RU, CONTACT_SOURCE_LABEL_RU } from "../presentation/contact-labels";

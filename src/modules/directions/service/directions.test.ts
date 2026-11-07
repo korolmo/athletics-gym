@@ -56,7 +56,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
 // Модуль Фото: правила — настоящие (client.ts без хранилища), хранилище — подмена
 vi.mock("@/modules/photos", async () => ({ ...(await vi.importActual<object>("@/modules/photos/client")), ...storage }));
-vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
+vi.mock("@/modules/owner", () => ({ requireOwner }));
 
 import { DIRECTION_ICONS, DIRECTION_LIMITS, toDirectionViews } from "../domain/direction";
 import { DEFAULT_DIRECTIONS } from "../domain/direction.defaults";

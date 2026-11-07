@@ -1,4 +1,4 @@
-import { isAuthed } from "@/lib/auth";
+import { isAuthed, requireOwner } from "@/modules/owner";
 import { getHealth } from "@/lib/services/health";
 import { photoStorageHealth } from "@/modules/photos";
 
@@ -11,6 +11,6 @@ export async function GET(): Promise<Response> {
   if (!(await isAuthed())) {
     return Response.json({ error: "Только для Владельца: войдите в админку и откройте адрес снова." }, { status: 401 });
   }
-  const health = await getHealth(photoStorageHealth);
+  const health = await getHealth(photoStorageHealth, requireOwner);
   return Response.json(health, { status: health.ok ? 200 : 503, headers: { "Cache-Control": "no-store" } });
 }

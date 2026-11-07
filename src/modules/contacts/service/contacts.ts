@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { statsSince, summarizeContacts, type ContactInput, type ContactStats } from "../domain/contact";
 
 // Обращения: запись нажатия (сайт, без сессии) и сводка для Владельца.
