@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { buildSitemap, readSeoEnv } from "@/lib/seo";
-import { LEGAL_PAGES, LEGAL_UPDATED } from "@/lib/legal/meta";
+import { LEGAL_PAGES, LEGAL_UPDATED } from "@/modules/legal/client";
 
 export const dynamic = "force-dynamic";
 

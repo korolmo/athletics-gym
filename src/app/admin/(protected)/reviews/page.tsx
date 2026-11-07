@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { countReviewsByStatus, listReviews } from "@/lib/services/reviews";
-import { REVIEW_STATUSES, isReviewStatus } from "@/lib/domain/review";
-import { REVIEW_STATUS_LABEL_RU } from "@/lib/presentation/review-labels";
+import { countReviewsByStatus, listReviews } from "@/modules/reviews";
+import { REVIEW_STATUSES, isReviewStatus } from "@/modules/reviews/client";
+import { REVIEW_STATUS_LABEL_RU } from "@/modules/reviews/client";
 import { PlusIcon } from "@/components/icons";
 import { ReviewMeta, Stars, StatusButtons, StatusChip } from "./ReviewCard";
 

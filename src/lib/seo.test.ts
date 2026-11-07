@@ -3,7 +3,7 @@ import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
-import { LEGAL_PAGES, LEGAL_UPDATED, legalHead } from "@/lib/legal";
+import { LEGAL_PAGES, LEGAL_UPDATED, legalHead } from "@/modules/legal";
 import {
   DEFAULT_SITE_URL,
   buildGymJsonLd,

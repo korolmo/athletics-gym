@@ -1,5 +1,5 @@
 import { requireOwner } from "@/lib/admin/guard";
-import { toDateInput, todayInGym } from "@/lib/domain/review";
+import { toDateInput, todayInGym } from "@/modules/reviews/client";
 import { ReviewForm } from "../ReviewForm";
 
 export const dynamic = "force-dynamic";

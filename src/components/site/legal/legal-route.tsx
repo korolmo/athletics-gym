@@ -4,7 +4,7 @@ import { LegalPage } from "@/components/site/legal/LegalPage";
 import { siteIcons } from "@/lib/brand";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { legalContext, legalDoc, legalHead, type LegalPageId } from "@/lib/legal";
+import { legalContext, legalDoc, legalHead, type LegalPageId } from "@/modules/legal";
 import { buildMetadata, readSeoEnv } from "@/lib/seo";
 import { getSiteSettings } from "@/lib/services/site";
 

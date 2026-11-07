@@ -7,9 +7,9 @@ import {
   containsLink,
   normalizeSourceUrl,
   parseReviewDate,
-} from "@/lib/domain/review";
+} from "../domain/review";
 import { HALLS } from "@/modules/tariffs/client";
-import { fail, toParsed, type Parsed } from "./shared";
+import { fail, toParsed, type Parsed } from "@/lib/validation/shared";
 
 const { nameMax, textMin, textMax, urlMax } = REVIEW_LIMITS;
 

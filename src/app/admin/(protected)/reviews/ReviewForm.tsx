@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { REVIEW_LIMITS, REVIEW_SOURCES, type ReviewSource } from "@/lib/domain/review";
+import { REVIEW_LIMITS, REVIEW_SOURCES, type ReviewSource } from "@/modules/reviews/client";
 import { HALLS } from "@/modules/tariffs/client";
-import { REVIEW_SOURCE_LABEL_RU } from "@/lib/presentation/review-labels";
+import { REVIEW_SOURCE_LABEL_RU } from "@/modules/reviews/client";
 import { HALL_LABEL_RU } from "@/modules/tariffs/client";
 import { deleteReview, saveReview, type ReviewFormState } from "./actions";
 

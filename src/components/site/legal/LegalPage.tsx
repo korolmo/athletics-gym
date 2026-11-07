@@ -3,7 +3,7 @@ import { ContactTracker } from "@/components/site/ContactTracker";
 import { Footer, Header } from "@/components/site/sections";
 import type { SectionProps } from "@/components/site/sections/types";
 import { container, eyebrow, h2, label } from "@/components/ui/styles";
-import { LEGAL_PAGES, formatLegalDate, legalPath, type Inline, type LegalDoc, type LegalPageId } from "@/lib/legal";
+import { LEGAL_PAGES, formatLegalDate, legalPath, type Inline, type LegalDoc, type LegalPageId } from "@/modules/legal";
 import { site } from "@/lib/site";
 
 const link = "text-primary-container underline underline-offset-2 transition-colors hover:text-text-primary";

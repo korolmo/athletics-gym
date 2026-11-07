@@ -5,7 +5,7 @@ import { CONTACT_CHANNELS, CONTACT_LOCALES, CONTACT_SOURCES } from "../src/lib/d
 import { DEFAULT_DIRECTIONS } from "../src/modules/directions/domain/direction.defaults";
 import { settingsToRow } from "../src/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
-import { LEGAL_UPDATED } from "../src/lib/legal/meta";
+import { LEGAL_UPDATED } from "../src/modules/legal/meta";
 import { HALLS, LAB_CONTACTS, MONTH, ONCE, hallTariffs, type HallId, type TariffSeed } from "./seed-data";
 import { withConnectRetry } from "../scripts/lab/connect-retry.mjs";
 

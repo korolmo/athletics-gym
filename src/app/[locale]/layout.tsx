@@ -5,7 +5,7 @@ import { siteFontVars } from "@/lib/fonts";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { buildMetadata, readSeoEnv } from "@/lib/seo";
 import { siteIcons } from "@/lib/brand";
-import { COOKIES_ANCHOR, legalPath } from "@/lib/legal/meta";
+import { COOKIES_ANCHOR, legalPath } from "@/modules/legal/client";
 import { CookieNotice } from "@/components/site/CookieNotice";
 import { LabBanner } from "@/components/LabBanner";
 import { isLab } from "@/lib/lab";

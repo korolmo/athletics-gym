@@ -1,5 +1,5 @@
 // Как Отзывы называются в админке (она только на русском). Подписи для сайта — в src/dictionaries.
-import type { ReviewSource, ReviewStatus } from "@/lib/domain/review";
+import type { ReviewSource, ReviewStatus } from "../domain/review";
 
 export const REVIEW_SOURCE_LABEL_RU: Record<ReviewSource, string> = {
   SITE: "Сайт",

@@ -10,10 +10,9 @@ import {
   type OwnerStatus,
   type ReviewStatus,
   type SubmissionCheck,
-} from "@/lib/domain/review";
-import { LEGAL_UPDATED } from "@/lib/legal/meta";
-import type { OwnerReviewInput, VisitorReviewInput } from "@/lib/validation/review";
-import type { ServiceResult } from "./result";
+} from "../domain/review";
+import type { OwnerReviewInput, VisitorReviewInput } from "../validation/review";
+import type { ServiceResult } from "@/lib/services/result";
 
 // Отзывы. Две границы доступа:
 // — сайт: чтение только опубликованных и приём Отзыва от Посетителя (без сессии, под антиспамом);
@@ -53,7 +52,16 @@ export async function checkVisitorSubmission(
  * Без Согласия на обработку данных Отзыв не записывается; вместе с ним сохраняются время Согласия
  * и дата редакции Политики конфиденциальности, с которой Посетитель согласился.
  */
-export async function createVisitorReview(input: VisitorReviewInput, ipHash: string, now: Date = new Date()): Promise<void> {
+/**
+ * Дата редакции Политики, на которую Посетитель дал Согласие, — аргумент: юридические документы — модуль поверх
+ * Отзывов (ADR 0015), Отзывы о нём не знают. Действие сайта передаёт LEGAL_UPDATED.privacy из модуля legal.
+ */
+export async function createVisitorReview(
+  input: VisitorReviewInput,
+  ipHash: string,
+  policyDate: string,
+  now: Date = new Date(),
+): Promise<void> {
   const { consent, ...review } = input;
   if (consent !== true) throw new Error("Отзыв без согласия на обработку данных не принимается.");
   await db.$transaction([
@@ -66,7 +74,7 @@ export async function createVisitorReview(input: VisitorReviewInput, ipHash: str
         status: "NEW",
         fromVisitor: true,
         consentAt: now,
-        consentPolicyDate: LEGAL_UPDATED.privacy,
+        consentPolicyDate: policyDate,
       },
     }),
     db.reviewSubmission.create({ data: { ipHash } }),

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getReview } from "@/lib/services/reviews";
-import { isSafeSourceUrl, toDateInput, todayInGym } from "@/lib/domain/review";
+import { getReview } from "@/modules/reviews";
+import { isSafeSourceUrl, toDateInput, todayInGym } from "@/modules/reviews/client";
 import { ReviewMeta, Stars, StatusButtons, StatusChip } from "../ReviewCard";
 import { DeleteReviewButton, ReviewForm } from "../ReviewForm";
 
