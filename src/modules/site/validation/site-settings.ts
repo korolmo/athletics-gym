@@ -11,8 +11,8 @@ import {
   normalizeInstagram,
   normalizePhoneDigits,
   parseRating,
-} from "@/lib/domain/site-settings";
-import { fail, toParsed, type Parsed } from "./shared";
+} from "../domain/site-settings";
+import { fail, toParsed, type Parsed } from "@/lib/validation/shared";
 
 // Формы раздела «Сайт». RU обязателен, KZ необязателен: пустое поле → null, на /kk покажем RU.
 

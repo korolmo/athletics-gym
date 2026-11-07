@@ -1,6 +1,6 @@
 import type { Dictionary } from "@/dictionaries/ru";
 import type { Locale } from "@/lib/i18n";
-import type { SiteContent } from "@/lib/domain/site-settings";
+import type { SiteContent } from "@/modules/site/client";
 
 /**
  * Что получает каждая секция главной: язык страницы, словарь (подписи из кода) и Настройки сайта

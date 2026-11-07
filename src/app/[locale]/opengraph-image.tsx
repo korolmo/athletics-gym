@@ -3,9 +3,9 @@ import { join } from "node:path";
 import { notFound } from "next/navigation";
 import { ImageResponse } from "next/og";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
-import { getSiteSettings } from "@/lib/services/site";
-import { toSiteContent } from "@/lib/domain/site-settings";
-import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
+import { getSiteSettings } from "@/modules/site";
+import { toSiteContent } from "@/modules/site/client";
+import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/modules/site/client";
 
 // Картинка-превью для ссылок (Open Graph, Twitter, WhatsApp, Telegram): 1200×630, своя для /ru и /kk.
 // Логотип, название, город и адрес; адрес — из Настроек сайта.

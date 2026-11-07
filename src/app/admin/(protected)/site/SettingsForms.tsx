@@ -11,8 +11,8 @@ import {
   instagramHandle,
   type AboutCardData,
   type SiteSettingsData,
-} from "@/lib/domain/site-settings";
-import { DEFAULT_DATA_LOCATION } from "@/lib/domain/site-settings.defaults";
+} from "@/modules/site/client";
+import { DEFAULT_DATA_LOCATION } from "@/modules/site/client";
 import { saveAbout, saveContacts, saveHero, saveLegal, saveMarquee, saveRating, saveWomen, type SettingsFormState } from "./actions";
 
 const field =

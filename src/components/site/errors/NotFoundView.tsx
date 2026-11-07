@@ -4,8 +4,8 @@ import { LocationOnSym } from "@/components/symbols";
 import { Art404 } from "@/components/site/errors/ErrorArt";
 import { ErrorActions, ErrorChip, ErrorHeading, ErrorShell, errorButton } from "@/components/site/errors/ErrorShell";
 import { label } from "@/components/ui/styles";
-import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
-import { toSiteContent } from "@/lib/domain/site-settings";
+import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/modules/site/client";
+import { toSiteContent } from "@/modules/site/client";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { site } from "@/lib/site";
 

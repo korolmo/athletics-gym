@@ -1,7 +1,7 @@
 // Юридический документ как данные: страница только выводит их, тесты читают их как текст.
 
 import type { Locale } from "@/lib/i18n";
-import type { SiteContent } from "@/lib/domain/site-settings";
+import type { SiteContent } from "@/modules/site/client";
 
 /** Кусок строки: текст или ссылка. */
 export type Inline = string | { text: string; href: string; external?: boolean };

@@ -10,6 +10,7 @@ import {
   newPhotoPath,
   parsePhotoTarget,
   photoFiles,
+  PHOTO_KINDS,
   PHOTO_VARIANTS,
   pathMatchesKind,
   type PhotoKind,
@@ -19,10 +20,6 @@ import * as storage from "../storage/client";
 import type { GalleryCaptionInput } from "../validation/gallery";
 import type { ServiceResult } from "@/lib/services/result";
 import { logError } from "@/lib/observability/log";
-
-// Строка Настроек сайта (id «site»). Места hero/women уходят в модуль Сайт в его PR — тогда исчезнет и это знание
-// (тест tables.test.ts держит список чужих таблиц, которые трогает Фото).
-const SETTINGS_ID = "site";
 
 // Фото в админке: выдача ссылки на загрузку, привязка загруженного файла к месту на сайте, Галерея.
 // Каждая функция сама проверяет сессию Владельца. В базе — только путь к файлу; сам файл — в хранилище.
@@ -69,8 +66,8 @@ export type PhotoSlots = readonly PhotoSlot[];
 
 const slotFor = (target: PhotoTarget, slots: PhotoSlots) => slots.find((s) => s.kind === target.kind) ?? null;
 const targetId = (target: PhotoTarget) => ("id" in target ? target.id : undefined);
-/** Места, которые ведут модули-владельцы: без переданного места такая загрузка не принимается. */
-const OWNED_KINDS: readonly PhotoKind[] = ["hall", "trainer", "direction"];
+/** Места, которые ведут модули-владельцы: без переданного места такая загрузка не принимается. Своё у Фото — только Галерея. */
+const OWNED_KINDS: readonly PhotoKind[] = PHOTO_KINDS.filter((k) => k !== "gallery");
 
 /** Есть ли место, к которому привязывается Фото: Тренер мог быть удалён в другой вкладке. */
 async function targetExists(target: PhotoTarget, slots: PhotoSlots): Promise<boolean> {
@@ -118,27 +115,12 @@ export async function requestUpload(
 async function saveToTarget(target: PhotoTarget, path: string, slots: PhotoSlots): Promise<string | null> {
   const slot = slotFor(target, slots);
   if (slot) return slot.set(targetId(target), path);
-  switch (target.kind) {
-    case "hero":
-    case "women": {
-      const column = target.kind === "hero" ? "heroPhoto" : "womenPhoto";
-      const before = await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { [column]: true } });
-      await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: { [column]: path } });
-      return (before as Record<string, string | null> | null)?.[column] ?? null;
-    }
-    case "trainer":
-    case "hall":
-    case "direction":
-      // Места ведут модули-владельцы (Тренеры, Тарифы, Направления); сюда попадаем, только если место
-      // не передали — attachPhoto это отсекает
-      throw new Error(`Место «${target.kind}» ведёт модуль-владелец: передайте его в slots`);
-    case "gallery": {
-      // Новое фото встаёт в конец Галереи
-      const last = await db.galleryPhoto.aggregate({ _max: { sortOrder: true } });
-      await db.galleryPhoto.create({ data: { path, sortOrder: (last._max.sortOrder ?? -1) + 1 } });
-      return null;
-    }
-  }
+  // Остальные места ведут модули-владельцы; сюда попадаем, только если место не передали — attachPhoto это отсекает
+  if (target.kind !== "gallery") throw new Error(`Место «${target.kind}» ведёт модуль-владелец: передайте его в slots`);
+  // Новое фото встаёт в конец Галереи
+  const last = await db.galleryPhoto.aggregate({ _max: { sortOrder: true } });
+  await db.galleryPhoto.create({ data: { path, sortOrder: (last._max.sortOrder ?? -1) + 1 } });
+  return null;
 }
 
 /**
@@ -195,19 +177,12 @@ export async function removePhoto(targetRaw: string, slots: PhotoSlots = []): Pr
   const target = parsePhotoTarget(targetRaw);
   if (!target || target.kind === "gallery") return { ok: false, error: BAD_TARGET };
   const slot = slotFor(target, slots);
-  if (!slot && OWNED_KINDS.includes(target.kind)) return { ok: false, error: BAD_TARGET };
+  if (!slot) return { ok: false, error: BAD_TARGET };
 
   let previous: string | null = null;
   try {
-    if (slot) {
-      if (!(await slot.exists(targetId(target)))) return { ok: false, error: NOT_FOUND_MESSAGE };
-      previous = await slot.clear(targetId(target));
-    } else if (target.kind === "hero" || target.kind === "women") {
-      const column = target.kind === "hero" ? "heroPhoto" : "womenPhoto";
-      const before = await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { [column]: true } });
-      previous = (before as Record<string, string | null> | null)?.[column] ?? null;
-      if (previous) await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: { [column]: null } });
-    }
+    if (!(await slot.exists(targetId(target)))) return { ok: false, error: NOT_FOUND_MESSAGE };
+    previous = await slot.clear(targetId(target));
   } catch (e) {
     if (isNotFound(e)) return { ok: false, error: NOT_FOUND_MESSAGE };
     throw e;
@@ -273,35 +248,18 @@ export async function deleteGalleryPhoto(id: string): Promise<void> {
   await removeQuietly([photo.path]);
 }
 
-// ——— Места с одним Фото и уборка ———
-
-/** Фото первого экрана и Женского зала — для раздела «Фото». Плакаты прайса отдаёт модуль Тарифы. */
-export async function getSinglePhotos() {
-  await requireOwner();
-  const settings = await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } });
-  return {
-    configured: storage.isStorageConfigured(),
-    hero: storage.mediaUrl(settings?.heroPhoto),
-    women: storage.mediaUrl(settings?.womenPhoto),
-  };
-}
+// ——— Уборка ———
 
 /**
- * Все пути к Фото, на которые ссылается база: свои, ещё не переданные владельцам места и места владельцев.
+ * Все пути к Фото, на которые ссылается база: Галерея и места владельцев.
  * Если место владельца не передали, его файлы считались бы брошенными — поэтому без всех мест уборка не идёт.
  */
 async function referencedPaths(slots: PhotoSlots): Promise<Set<string>> {
-  const [settings, gallery, owned] = await Promise.all([
-    db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } }),
+  const [gallery, owned] = await Promise.all([
     db.galleryPhoto.findMany({ select: { path: true } }),
     Promise.all(slots.map((s) => s.paths())),
   ]);
-  const all = [
-    settings?.heroPhoto,
-    settings?.womenPhoto,
-    ...gallery.map((g) => g.path),
-    ...owned.flat(),
-  ];
+  const all = [...gallery.map((g) => g.path), ...owned.flat()];
   return new Set(all.filter((p): p is string => Boolean(p)));
 }
 

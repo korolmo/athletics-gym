@@ -11,7 +11,6 @@ export {
   deleteGalleryPhoto,
   discardUpload,
   getGalleryPhoto,
-  getSinglePhotos,
   type PhotoSlot,
   type PhotoSlots,
   listGallery,

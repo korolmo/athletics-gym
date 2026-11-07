@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { getSettingsForEdit } from "@/lib/services/site-settings";
-import { isSettingsForm } from "@/lib/domain/site-settings";
-import { SETTINGS_FORM_LABEL_RU } from "@/lib/presentation/site-settings-labels";
+import { getSettingsForEdit } from "@/modules/site";
+import { isSettingsForm } from "@/modules/site/client";
+import { SETTINGS_FORM_LABEL_RU } from "@/modules/site/client";
 import { AboutForm, ContactsForm, HeroForm, LegalForm, MarqueeForm, RatingForm, WomenForm } from "../SettingsForms";
 
 export const dynamic = "force-dynamic";

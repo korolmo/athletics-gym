@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { getSettingsForEdit } from "@/lib/services/site-settings";
+import { getSettingsForEdit } from "@/modules/site";
 import {
   BLOCKS,
   SHOW_COLUMN,
   formatRating,
   isSettingsForm,
   type BlockId,
-} from "@/lib/domain/site-settings";
+} from "@/modules/site/client";
 import { LEGAL_PAGES, legalPath } from "@/modules/legal/client";
-import { BLOCK_LABEL_RU, SETTINGS_FORM_LABEL_RU } from "@/lib/presentation/site-settings-labels";
+import { BLOCK_LABEL_RU, SETTINGS_FORM_LABEL_RU } from "@/modules/site/client";
 import { plural } from "@/lib/plural";
 import { PencilIcon } from "@/components/icons";
 import { toggleBlock } from "./actions";

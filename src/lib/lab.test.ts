@@ -5,8 +5,8 @@ import { LAB_CONTACTS } from "../../prisma/seed-data";
 import { LabBanner } from "@/components/LabBanner";
 import { kk } from "@/dictionaries/kk";
 import { ru } from "@/dictionaries/ru";
-import { DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
-import { isInstagramUrl, isPhone, normalizeEmail, normalizeInstagram } from "@/lib/domain/site-settings";
+import { DEFAULT_SETTINGS } from "@/modules/site/client";
+import { isInstagramUrl, isPhone, normalizeEmail, normalizeInstagram } from "@/modules/site/client";
 import { CLIENT_SITE, isLab, labBannerText } from "./lab";
 
 describe("Лаборатория: признак среды", () => {

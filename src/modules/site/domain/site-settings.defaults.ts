@@ -2,7 +2,7 @@
 // Отсюда их берут seed и запасной вариант на случай пустой базы; на боевую базу те же значения
 // кладёт миграция 20261009010000_site_settings (совпадение проверяет тест).
 
-import type { AboutCardData, SiteSettingsData } from "./site-settings";
+import type { AboutCardData, SiteSettingsData } from "./site-settings.model";
 
 // Импорт только типов: сам site-settings.ts берёт отсюда запасные значения для ссылок.
 

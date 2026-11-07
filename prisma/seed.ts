@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { decideSeed } from "../src/lib/db-guard/production";
-import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
-import { settingsToRow } from "../src/lib/domain/site-settings";
+import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/modules/site/domain/site-settings.defaults";
+import { settingsToRow } from "../src/modules/site/domain/site-settings";
 import { DEFAULT_DIRECTIONS } from "../src/modules/directions/domain/direction.defaults";
 import { HALLS, MONTH, ONCE, hallTariffs, type HallId, type TariffSeed } from "./seed-data";
 

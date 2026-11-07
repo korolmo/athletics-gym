@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getSinglePhotos, listGallery } from "@/modules/photos";
+import { isStorageConfigured, listGallery } from "@/modules/photos";
+import { getSettingsPhotos } from "@/modules/site";
 import { GALLERY_FIRST, MAX_FILE_BYTES, formatMegabytes } from "@/modules/photos";
 import { HALLS, HALL_LABEL_RU, listPricePosters } from "@/modules/tariffs";
 import { PencilIcon } from "@/components/icons";
@@ -16,8 +17,8 @@ const square =
 
 export default async function PhotosPage({ searchParams }: { searchParams: Promise<{ saved?: string; deleted?: string }> }) {
   const { saved, deleted } = await searchParams;
-  const [single, gallery, posters] = await Promise.all([getSinglePhotos(), listGallery(), listPricePosters()]);
-  const off = !single.configured;
+  const [single, gallery, posters] = await Promise.all([getSettingsPhotos(), listGallery(), listPricePosters()]);
+  const off = !isStorageConfigured();
   const visible = gallery.filter((p) => p.isVisible).length;
 
   return (

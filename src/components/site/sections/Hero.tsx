@@ -1,8 +1,8 @@
 import Image, { getImageProps } from "next/image";
 import { site, whatsappUrl } from "@/lib/site";
-import { mottoWords } from "@/lib/domain/site-settings";
+import { mottoWords } from "@/modules/site/client";
 import { CountNumber, CountText } from "@/components/site/Count";
-import { ratingCountText } from "@/lib/presentation/rating";
+import { ratingCountText } from "@/modules/site/client";
 import { AirSym, CallSym, FitnessCenterSym, LocationOnSym, ScheduleSym } from "@/components/symbols";
 import { container, label } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
