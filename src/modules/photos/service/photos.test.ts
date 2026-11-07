@@ -111,9 +111,10 @@ const hallSlot: photos.PhotoSlot = {
   kind: "hall",
   exists: async (id) => (await db.hall.count({ where: { id: id ?? "" } })) > 0,
   set: async (id, path) => {
-    const before = await db.hall.findUnique({ where: { id: id ?? "" } });
+    // Подменённая база отдаёт ссылку на строку, а не копию, — прежний путь запоминаем до записи
+    const previous = (await db.hall.findUnique({ where: { id: id ?? "" } }))?.pricePoster ?? null;
     await db.hall.update({ where: { id: id ?? "" }, data: { pricePoster: path } });
-    return before?.pricePoster ?? null;
+    return previous;
   },
   clear: async (id) => {
     const previous = (await db.hall.findUnique({ where: { id: id ?? "" } }))?.pricePoster ?? null;
@@ -122,7 +123,24 @@ const hallSlot: photos.PhotoSlot = {
   },
   paths: async () => (await db.hall.findMany()).map((h) => h.pricePoster),
 };
-const slots = [hallSlot];
+// Место «Плакат Тренера» ведёт модуль Тренеры — тоже подделка над подменённой базой
+const trainerSlot: photos.PhotoSlot = {
+  kind: "trainer",
+  exists: async (id) => (await db.trainer.count({ where: { id: id ?? "" } })) > 0,
+  set: async (id, path) => {
+    const before = await db.trainer.findUnique({ where: { id: id ?? "" } });
+    const previous = before?.uploadedPhoto ?? null;
+    await db.trainer.update({ where: { id: id ?? "" }, data: { uploadedPhoto: path } });
+    return previous;
+  },
+  clear: async (id) => {
+    const previous = (await db.trainer.findUnique({ where: { id: id ?? "" } }))?.uploadedPhoto ?? null;
+    if (previous) await db.trainer.update({ where: { id: id ?? "" }, data: { uploadedPhoto: null } });
+    return previous;
+  },
+  paths: async () => (await db.trainer.findMany()).map((t) => t.uploadedPhoto),
+};
+const slots = [hallSlot, trainerSlot];
 /** Сервис так, как его вызывают действия админки: со всеми местами владельцев. */
 const withSlots = {
   requestUpload: (t: string, type: string, sizes: number[]) => photos.requestUpload(t, type, sizes, slots),

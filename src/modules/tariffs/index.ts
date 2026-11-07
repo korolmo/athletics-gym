@@ -4,5 +4,14 @@ import "server-only";
 
 export * from "./client";
 export { parseTariffForm, tariffSchema, type TariffInput } from "./validation/tariff";
-export { deleteTariff, getTariff, listHallTariffs, saveTariff, toggleTariffVisibility, type TariffPlace } from "./service/tariffs";
+export {
+  deleteTariff,
+  getTariff,
+  listHallTariffs,
+  moveTrainerTariffs,
+  saveTariff,
+  toggleTariffVisibility,
+  type TariffPlace,
+  type TrainerHallLookup,
+} from "./service/tariffs";
 export { listPricePosters, pricePosterSlot } from "./service/price-poster";

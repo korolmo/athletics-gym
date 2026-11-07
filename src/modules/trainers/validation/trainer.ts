@@ -2,7 +2,7 @@ import { z } from "zod";
 import { checked, text } from "@/lib/admin/form";
 import { LIMITS } from "@/lib/admin/limits";
 import { HALLS } from "@/modules/tariffs/client";
-import { fail, toParsed, type Parsed } from "./shared";
+import { fail, toParsed, type Parsed } from "@/lib/validation/shared";
 
 const description = z
   .string()

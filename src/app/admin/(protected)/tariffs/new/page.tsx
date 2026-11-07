@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getTrainer } from "@/lib/services/trainers";
+import { getTrainer } from "@/modules/trainers";
 import { isHall } from "@/modules/tariffs/client";
 import { TariffForm } from "../TariffForm";
 
