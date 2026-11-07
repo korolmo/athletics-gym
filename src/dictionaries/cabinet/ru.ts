@@ -3,7 +3,7 @@
 export const cabinetRu = {
   meta: { title: "Личный кабинет — Athletic's Gym" },
   badge: "Athletic Club ID",
-  badgeFirst: "Athletic Club ID · первый вход",
+  badgeFirst: "Первый вход",
   step: "Шаг {n} / 02",
   login: {
     title: "Вход в кабинет",

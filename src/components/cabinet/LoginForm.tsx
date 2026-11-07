@@ -176,7 +176,7 @@ function CodeStep({
 
   return (
     <>
-      <div className="mb-5 flex items-center justify-between gap-3">
+      <div className="mb-5 flex min-w-0 flex-wrap items-center justify-between gap-3">
         <Pill small={first} className={first ? "border border-primary-container/40" : "mx-auto md:mx-0"}>
           {first ? t.badgeFirst : t.badge}
         </Pill>
