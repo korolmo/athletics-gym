@@ -9,7 +9,7 @@ import {
 } from "@/lib/domain/site-settings";
 import { LEGAL_PAGES, legalPath } from "@/lib/legal/meta";
 import { BLOCK_LABEL_RU, SETTINGS_FORM_LABEL_RU } from "@/lib/presentation/site-settings-labels";
-import { plural } from "@/lib/presentation/tariff-labels";
+import { plural } from "@/lib/plural";
 import { PencilIcon } from "@/components/icons";
 import { toggleBlock } from "./actions";
 

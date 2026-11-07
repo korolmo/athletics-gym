@@ -1,4 +1,4 @@
-import { formatTariffPrice } from "@/lib/presentation/tariff-labels";
+import { formatTariffPrice } from "@/modules/tariffs/client";
 import { CheckCircleSym, CheckSym } from "@/components/symbols";
 import type { TariffView, PricesText } from "@/components/site/halls/types";
 import { tariffLabel, tariffTags } from "@/components/site/halls/tariff-text";

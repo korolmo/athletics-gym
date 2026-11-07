@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import { whatsappUrl } from "@/lib/site";
-import { CATEGORY_ORDER, type Category } from "@/lib/domain/tariff";
+import { CATEGORY_ORDER, type Category } from "@/modules/tariffs/client";
 import { ArrowForwardSym, ChatSym, ZoomInSym } from "@/components/symbols";
 import { PosterDialog } from "@/components/site/halls/PosterDialog";
 import { label } from "@/components/ui/styles";

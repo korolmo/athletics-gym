@@ -2,9 +2,9 @@ import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
-import type { HallId } from "@/lib/domain/tariff";
-import type { TariffInput } from "@/lib/validation/tariff";
-import type { ServiceResult } from "./result";
+import type { HallId } from "../domain/tariff";
+import type { TariffInput } from "../validation/tariff";
+import type { ServiceResult } from "@/lib/services/result";
 
 // Тарифы в админке: правила домена и доступ к базе.
 // Каждая функция сама проверяет сессию Владельца — это и есть граница доступа к данным.

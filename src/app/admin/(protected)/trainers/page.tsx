@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { listTrainers } from "@/lib/services/trainers";
-import { isHall } from "@/lib/domain/tariff";
-import { formatPrice } from "@/lib/presentation/tariff-labels";
+import { isHall } from "@/modules/tariffs/client";
+import { formatPrice } from "@/modules/tariffs/client";
 import { PencilIcon, PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
 import { toggleTrainer } from "./actions";

@@ -1,5 +1,5 @@
-import { isAccess, isAudience } from "@/lib/domain/tariff";
-import { plural } from "@/lib/presentation/tariff-labels";
+import { isAccess, isAudience } from "@/modules/tariffs/client";
+import { plural } from "@/lib/plural";
 import type { TariffView, PricesText } from "@/components/site/halls/types";
 
 // Как Тариф называется на сайте — на языке страницы, из полей и словаря

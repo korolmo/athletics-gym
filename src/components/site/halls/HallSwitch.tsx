@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dictionary } from "@/dictionaries/ru";
-import { HALLS } from "@/lib/domain/tariff";
+import { HALLS } from "@/modules/tariffs/client";
 import { label } from "@/components/ui/styles";
 import { useHall, setHall } from "@/components/site/halls/hall-store";
 

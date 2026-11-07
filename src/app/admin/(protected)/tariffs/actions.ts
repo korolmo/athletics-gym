@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/admin/guard";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/lib/admin/revalidate";
-import { parseTariffForm } from "@/lib/validation/tariff";
-import * as tariffs from "@/lib/services/tariffs";
+import { parseTariffForm } from "@/modules/tariffs";
+import * as tariffs from "@/modules/tariffs";
 
 // Действия — тонкие: права → валидация → сервис → обновить страницы и вернуть Владельца в список
 

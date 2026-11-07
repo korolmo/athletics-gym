@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
-import type { HallId } from "@/lib/domain/tariff";
+import type { HallId } from "@/modules/tariffs/client";
 import { sortOrderOnCreate, sortOrderOnUpdate } from "@/lib/domain/trainer";
 import type { TrainerInput } from "@/lib/validation/trainer";
 import { removeObjects } from "@/modules/photos";

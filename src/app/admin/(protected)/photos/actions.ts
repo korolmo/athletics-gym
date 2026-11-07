@@ -6,6 +6,7 @@ import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/lib/admin/revalidate";
 import { parseGalleryCaptionForm } from "@/modules/photos";
 import * as photos from "@/modules/photos";
+import { photoSlots } from "./slots";
 
 // Действия — тонкие: права → сервис → обновить страницы. Проверки файла и путей — в сервисе.
 
@@ -15,13 +16,13 @@ export type PhotoResult = { ok: true } | { ok: false; error: string };
 /** Шаг 1: адреса загрузки Фото и его уменьшенных копий. Браузер загружает по ним файлы (PUT). */
 export async function requestUpload(target: string, type: string, sizes: number[]): Promise<UploadTicket> {
   await requireOwner();
-  return photos.requestUpload(String(target), String(type), Array.isArray(sizes) ? sizes.map(Number) : []);
+  return photos.requestUpload(String(target), String(type), Array.isArray(sizes) ? sizes.map(Number) : [], photoSlots);
 }
 
 /** Шаг 2: файл загружен — привязать его к месту на сайте. */
 export async function attachPhoto(target: string, path: string): Promise<PhotoResult> {
   await requireOwner();
-  const result = await photos.attachPhoto(String(target), String(path));
+  const result = await photos.attachPhoto(String(target), String(path), photoSlots);
   if (!result.ok) return result;
   revalidateSite();
   return { ok: true };
@@ -30,12 +31,12 @@ export async function attachPhoto(target: string, path: string): Promise<PhotoRe
 /** Загрузка сорвалась: убрать файл, если он успел появиться в хранилище. */
 export async function discardUpload(path: string): Promise<void> {
   await requireOwner();
-  await photos.discardUpload(String(path));
+  await photos.discardUpload(String(path), photoSlots);
 }
 
 export async function removePhoto(fd: FormData): Promise<void> {
   await requireOwner();
-  await photos.removePhoto(text(fd, "target"));
+  await photos.removePhoto(text(fd, "target"), photoSlots);
   revalidateSite();
 }
 

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTrainer } from "@/lib/services/trainers";
-import { isHall } from "@/lib/domain/tariff";
+import { isHall } from "@/modules/tariffs/client";
 import { TariffForm } from "../TariffForm";
 
 export const dynamic = "force-dynamic";

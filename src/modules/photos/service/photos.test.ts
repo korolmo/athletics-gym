@@ -106,6 +106,32 @@ vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
 
 import * as photos from "./photos";
 
+// Место «Плакат прайса» ведёт модуль Тарифы; здесь — поддельное место над той же подменённой базой
+const hallSlot: photos.PhotoSlot = {
+  kind: "hall",
+  exists: async (id) => (await db.hall.count({ where: { id: id ?? "" } })) > 0,
+  set: async (id, path) => {
+    const before = await db.hall.findUnique({ where: { id: id ?? "" } });
+    await db.hall.update({ where: { id: id ?? "" }, data: { pricePoster: path } });
+    return before?.pricePoster ?? null;
+  },
+  clear: async (id) => {
+    const previous = (await db.hall.findUnique({ where: { id: id ?? "" } }))?.pricePoster ?? null;
+    if (previous) await db.hall.update({ where: { id: id ?? "" }, data: { pricePoster: null } });
+    return previous;
+  },
+  paths: async () => (await db.hall.findMany()).map((h) => h.pricePoster),
+};
+const slots = [hallSlot];
+/** Сервис так, как его вызывают действия админки: со всеми местами владельцев. */
+const withSlots = {
+  requestUpload: (t: string, type: string, sizes: number[]) => photos.requestUpload(t, type, sizes, slots),
+  attachPhoto: (t: string, path: string) => photos.attachPhoto(t, path, slots),
+  discardUpload: (path: string) => photos.discardUpload(path, slots),
+  removePhoto: (t: string) => photos.removePhoto(t, slots),
+  sweepOrphans: () => photos.sweepOrphans(slots),
+};
+
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const HOUR = 60 * 60 * 1000;
 /** Файл уже загружен браузером в хранилище. */
@@ -124,7 +150,7 @@ beforeEach(() => {
 
 describe("ссылка на загрузку", () => {
   it("имя файла задаёт сервер: папка места и uuid, расширение — по типу", async () => {
-    const r = await photos.requestUpload("gallery", "image/webp", [300_000, 20_000, 60_000]);
+    const r = await withSlots.requestUpload("gallery", "image/webp", [300_000, 20_000, 60_000]);
     if (!r.ok) throw new Error(r.error);
     expect(r.path).toMatch(/^gallery\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.webp$/);
     // Само Фото и две уменьшенные копии рядом с ним
@@ -135,47 +161,47 @@ describe("ссылка на загрузку", () => {
   });
 
   it("файлов должно быть ровно три: Фото и две копии", async () => {
-    expect(await photos.requestUpload("gallery", "image/webp", [1000])).toMatchObject({ ok: false });
-    expect(await photos.requestUpload("gallery", "image/webp", [1000, 1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await withSlots.requestUpload("gallery", "image/webp", [1000])).toMatchObject({ ok: false });
+    expect(await withSlots.requestUpload("gallery", "image/webp", [1000, 1000, 1000, 1000])).toMatchObject({ ok: false });
     expect(storage.uploadUrls).not.toHaveBeenCalled();
   });
 
   it("место для фото закончилось — ошибка с цифрами, ссылки не выдаются", async () => {
     storage.checkSpace.mockResolvedValueOnce({ ok: false, error: "Место для фото закончилось: занято 599,9 МБ из 600,0 МБ." });
-    const r = await photos.requestUpload("gallery", "image/webp", [1000, 1000, 1000]);
+    const r = await withSlots.requestUpload("gallery", "image/webp", [1000, 1000, 1000]);
     expect(r.ok === false && r.error).toMatch(/Место для фото закончилось/);
     expect(storage.uploadUrls).not.toHaveBeenCalled();
   });
 
   it("у каждой загрузки своё имя", async () => {
-    const a = await photos.requestUpload("hero", "image/jpeg", [1000, 1000, 1000]);
-    const b = await photos.requestUpload("hero", "image/jpeg", [1000, 1000, 1000]);
+    const a = await withSlots.requestUpload("hero", "image/jpeg", [1000, 1000, 1000]);
+    const b = await withSlots.requestUpload("hero", "image/jpeg", [1000, 1000, 1000]);
     expect(a.ok && b.ok && a.path !== b.path).toBe(true);
   });
 
   it("не картинка или слишком большой файл — ссылка не выдаётся", async () => {
-    expect(await photos.requestUpload("gallery", "application/pdf", [1000, 1000, 1000])).toMatchObject({ ok: false });
-    expect(await photos.requestUpload("gallery", "image/svg+xml", [1000, 1000, 1000])).toMatchObject({ ok: false });
-    const big = await photos.requestUpload("gallery", "image/webp", [5 * 1024 * 1024 + 1, 1000, 1000]);
+    expect(await withSlots.requestUpload("gallery", "application/pdf", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await withSlots.requestUpload("gallery", "image/svg+xml", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    const big = await withSlots.requestUpload("gallery", "image/webp", [5 * 1024 * 1024 + 1, 1000, 1000]);
     expect(big.ok === false && big.error).toMatch(/слишком большое/);
     expect(storage.uploadUrls).not.toHaveBeenCalled();
   });
 
   it("неизвестное место или удалённый Тренер — ссылка не выдаётся", async () => {
-    expect(await photos.requestUpload("logo", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
-    expect(await photos.requestUpload("trainer:ghost", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await withSlots.requestUpload("logo", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await withSlots.requestUpload("trainer:ghost", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
     expect(storage.uploadUrls).not.toHaveBeenCalled();
   });
 
   it("хранилище не настроено или не отвечает — понятная ошибка, а не падение", async () => {
     storage.uploadUrls.mockRejectedValueOnce(new storage.StorageNotConfigured());
-    expect(await photos.requestUpload("hero", "image/webp", [1000, 1000, 1000])).toEqual({
+    expect(await withSlots.requestUpload("hero", "image/webp", [1000, 1000, 1000])).toEqual({
       ok: false,
       error: "Хранилище фото не настроено. Сообщите разработчику.",
     });
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     storage.uploadUrls.mockRejectedValueOnce(new Error("timeout"));
-    const r = await photos.requestUpload("hero", "image/webp", [1000, 1000, 1000]);
+    const r = await withSlots.requestUpload("hero", "image/webp", [1000, 1000, 1000]);
     expect(r.ok === false && r.error).toMatch(/не отвечает/);
     log.mockRestore();
   });
@@ -185,7 +211,7 @@ describe("привязка загруженного Фото", () => {
   it("фон первого экрана: путь записан в базу", async () => {
     const path = `hero/${uuid(1)}.webp`;
     uploaded(path);
-    expect(await photos.attachPhoto("hero", path)).toEqual({ ok: true });
+    expect(await withSlots.attachPhoto("hero", path)).toEqual({ ok: true });
     expect(state.settings.heroPhoto).toBe(path);
     expect(state.files.has(path)).toBe(true);
   });
@@ -194,9 +220,9 @@ describe("привязка загруженного Фото", () => {
     const first = `hero/${uuid(1)}.webp`;
     const second = `hero/${uuid(2)}.webp`;
     uploaded(first);
-    await photos.attachPhoto("hero", first);
+    await withSlots.attachPhoto("hero", first);
     uploaded(second);
-    await photos.attachPhoto("hero", second);
+    await withSlots.attachPhoto("hero", second);
     expect(state.settings.heroPhoto).toBe(second);
     expect([...state.files.keys()]).toEqual([second]);
   });
@@ -206,8 +232,8 @@ describe("привязка загруженного Фото", () => {
     const price = `hall/${uuid(4)}.jpg`;
     uploaded(poster);
     uploaded(price);
-    expect(await photos.attachPhoto("trainer:tr1", poster)).toEqual({ ok: true });
-    expect(await photos.attachPhoto("hall:women", price)).toEqual({ ok: true });
+    expect(await withSlots.attachPhoto("trainer:tr1", poster)).toEqual({ ok: true });
+    expect(await withSlots.attachPhoto("hall:women", price)).toEqual({ ok: true });
     expect(state.trainers[0].uploadedPhoto).toBe(poster);
     expect(state.halls.find((h) => h.id === "women")?.pricePoster).toBe(price);
     expect(state.halls.find((h) => h.id === "general")?.pricePoster).toBeNull();
@@ -216,7 +242,7 @@ describe("привязка загруженного Фото", () => {
   it("Галерея: новое фото встаёт в конец", async () => {
     for (const n of [1, 2, 3]) {
       uploaded(`gallery/${uuid(n)}.webp`);
-      await photos.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
+      await withSlots.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
     }
     expect(state.gallery.map((g) => [g.path, g.sortOrder])).toEqual([
       [`gallery/${uuid(1)}.webp`, 0],
@@ -226,7 +252,7 @@ describe("привязка загруженного Фото", () => {
   });
 
   it("файла в хранилище нет — в базу ничего не пишем", async () => {
-    const r = await photos.attachPhoto("hero", `hero/${uuid(1)}.webp`);
+    const r = await withSlots.attachPhoto("hero", `hero/${uuid(1)}.webp`);
     expect(r).toEqual({ ok: false, error: "Фото не загрузилось. Попробуйте ещё раз." });
     expect(state.settings.heroPhoto).toBeNull();
     expect(db.siteSettings.update).not.toHaveBeenCalled();
@@ -240,7 +266,7 @@ describe("привязка загруженного Фото", () => {
     ["файл из public", "trainer:tr1", "/trainers/aisha.jpg"],
   ])("путь из браузера не наш (%s) — отказ, хранилище и базу не трогаем", async (_name, target, path) => {
     state.files.set(path, new Date());
-    expect((await photos.attachPhoto(target, path)).ok).toBe(false);
+    expect((await withSlots.attachPhoto(target, path)).ok).toBe(false);
     expect(storage.photoUploaded).not.toHaveBeenCalled();
     expect(db.siteSettings.update).not.toHaveBeenCalled();
     expect(db.galleryPhoto.create).not.toHaveBeenCalled();
@@ -251,7 +277,7 @@ describe("привязка загруженного Фото", () => {
     const path = `gallery/${uuid(1)}.webp`;
     uploaded(path);
     state.failNextWrite = true;
-    await expect(photos.attachPhoto("gallery", path)).rejects.toThrow("база недоступна");
+    await expect(withSlots.attachPhoto("gallery", path)).rejects.toThrow("база недоступна");
     expect(state.gallery).toEqual([]);
     expect(state.files.has(path)).toBe(false);
   });
@@ -259,7 +285,7 @@ describe("привязка загруженного Фото", () => {
   it("Тренера удалили, пока шла загрузка, — файл убираем, ошибка понятная", async () => {
     const path = `trainer/${uuid(1)}.webp`;
     uploaded(path);
-    const r = await photos.attachPhoto("trainer:ghost", path);
+    const r = await withSlots.attachPhoto("trainer:ghost", path);
     expect(r.ok === false && r.error).toMatch(/не найдена/);
     expect(state.files.has(path)).toBe(false);
   });
@@ -268,11 +294,11 @@ describe("привязка загруженного Фото", () => {
     const first = `hero/${uuid(1)}.webp`;
     const second = `hero/${uuid(2)}.webp`;
     uploaded(first);
-    await photos.attachPhoto("hero", first);
+    await withSlots.attachPhoto("hero", first);
     uploaded(second);
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     storage.removeObjects.mockRejectedValueOnce(new Error("storage down"));
-    expect(await photos.attachPhoto("hero", second)).toEqual({ ok: true });
+    expect(await withSlots.attachPhoto("hero", second)).toEqual({ ok: true });
     expect(state.settings.heroPhoto).toBe(second);
     log.mockRestore();
   });
@@ -282,14 +308,14 @@ describe("удаление Фото", () => {
   it("с места: путь в базе очищен, файл удалён из хранилища", async () => {
     const path = `hall/${uuid(1)}.webp`;
     uploaded(path);
-    await photos.attachPhoto("hall:general", path);
-    expect(await photos.removePhoto("hall:general")).toEqual({ ok: true });
+    await withSlots.attachPhoto("hall:general", path);
+    expect(await withSlots.removePhoto("hall:general")).toEqual({ ok: true });
     expect(state.halls[0].pricePoster).toBeNull();
     expect(state.files.size).toBe(0);
   });
 
   it("нечего удалять — ничего не происходит", async () => {
-    expect(await photos.removePhoto("women")).toEqual({ ok: true });
+    expect(await withSlots.removePhoto("women")).toEqual({ ok: true });
     expect(db.siteSettings.update).not.toHaveBeenCalled();
     expect(storage.removeObjects).not.toHaveBeenCalled();
   });
@@ -297,7 +323,7 @@ describe("удаление Фото", () => {
   it("из Галереи: запись и файл удаляются вместе, остальные фото на месте", async () => {
     for (const n of [1, 2]) {
       uploaded(`gallery/${uuid(n)}.webp`);
-      await photos.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
+      await withSlots.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
     }
     await photos.deleteGalleryPhoto("g1");
     expect(state.gallery.map((g) => g.id)).toEqual(["g2"]);
@@ -309,10 +335,10 @@ describe("удаление Фото", () => {
     const used = `hero/${uuid(2)}.webp`;
     uploaded(orphan);
     uploaded(used);
-    await photos.attachPhoto("hero", used);
-    await photos.discardUpload(orphan);
-    await photos.discardUpload(used);
-    await photos.discardUpload("../../etc/passwd");
+    await withSlots.attachPhoto("hero", used);
+    await withSlots.discardUpload(orphan);
+    await withSlots.discardUpload(used);
+    await withSlots.discardUpload("../../etc/passwd");
     expect([...state.files.keys()]).toEqual([used]);
   });
 });
@@ -321,7 +347,7 @@ describe("Галерея: порядок и показ", () => {
   beforeEach(async () => {
     for (const n of [1, 2, 3]) {
       uploaded(`gallery/${uuid(n)}.webp`);
-      await photos.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
+      await withSlots.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
     }
   });
   const order = async () => (await photos.listGallery()).map((g) => g.id);
@@ -361,10 +387,10 @@ describe("уборка хранилища", () => {
   it("удаляет старые файлы без записи в базе; привязанные и свежие не трогает", async () => {
     const used = `hero/${uuid(1)}.webp`;
     uploaded(used, 5 * HOUR);
-    await photos.attachPhoto("hero", used);
+    await withSlots.attachPhoto("hero", used);
     uploaded(`gallery/${uuid(2)}.webp`, 2 * HOUR);
     uploaded(`gallery/${uuid(3)}.webp`, 60_000);
-    expect(await photos.sweepOrphans()).toBe(1);
+    expect(await withSlots.sweepOrphans()).toBe(1);
     expect([...state.files.keys()].sort()).toEqual([`gallery/${uuid(3)}.webp`, used].sort());
   });
 
@@ -372,7 +398,7 @@ describe("уборка хранилища", () => {
     uploaded(`gallery/${uuid(9)}.webp`, 3 * HOUR);
     const path = `women/${uuid(1)}.webp`;
     uploaded(path);
-    await photos.attachPhoto("women", path);
+    await withSlots.attachPhoto("women", path);
     expect([...state.files.keys()]).toEqual([path]);
   });
 
@@ -381,7 +407,7 @@ describe("уборка хранилища", () => {
     storage.listObjects.mockRejectedValueOnce(new Error("storage down"));
     const path = `women/${uuid(1)}.webp`;
     uploaded(path);
-    expect(await photos.attachPhoto("women", path)).toEqual({ ok: true });
+    expect(await withSlots.attachPhoto("women", path)).toEqual({ ok: true });
     log.mockRestore();
   });
 });
@@ -392,10 +418,10 @@ describe("права: без сессии Владельца — отказ", ()
   const g1 = `gallery/${uuid(1)}.webp`;
 
   const calls: [string, () => Promise<unknown>][] = [
-    ["requestUpload", () => photos.requestUpload("gallery", "image/webp", [1000, 1000, 1000])],
-    ["attachPhoto", () => photos.attachPhoto("gallery", g1)],
-    ["discardUpload", () => photos.discardUpload(g1)],
-    ["removePhoto", () => photos.removePhoto("hero")],
+    ["requestUpload", () => withSlots.requestUpload("gallery", "image/webp", [1000, 1000, 1000])],
+    ["attachPhoto", () => withSlots.attachPhoto("gallery", g1)],
+    ["discardUpload", () => withSlots.discardUpload(g1)],
+    ["removePhoto", () => withSlots.removePhoto("hero")],
     ["listGallery", () => photos.listGallery()],
     ["getGalleryPhoto", () => photos.getGalleryPhoto("g1")],
     ["saveGalleryCaption", () => photos.saveGalleryCaption({ id: "g1", captionRu: "x", captionKk: null, isVisible: true })],
@@ -403,7 +429,7 @@ describe("права: без сессии Владельца — отказ", ()
     ["moveGalleryPhoto", () => photos.moveGalleryPhoto("g1", "down")],
     ["deleteGalleryPhoto", () => photos.deleteGalleryPhoto("g1")],
     ["getSinglePhotos", () => photos.getSinglePhotos()],
-    ["sweepOrphans", () => photos.sweepOrphans()],
+    ["sweepOrphans", () => withSlots.sweepOrphans()],
   ];
 
   it("проверены все функции сервиса", () => {
@@ -427,5 +453,34 @@ describe("права: без сессии Владельца — отказ", ()
     for (const fn of [storage.uploadUrls, storage.photoUploaded, storage.removeObjects, storage.listObjects]) {
       expect(fn).not.toHaveBeenCalled();
     }
+  });
+});
+
+describe("места для Фото, которые ведут модули-владельцы", () => {
+  it("без места Зала загрузка Плаката прайса не принимается, а база не меняется", async () => {
+    const path = `hall/${uuid(7)}.webp`;
+    uploaded(path);
+    expect(await photos.requestUpload("hall:general", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await photos.attachPhoto("hall:general", path)).toMatchObject({ ok: false });
+    expect(await photos.removePhoto("hall:general")).toMatchObject({ ok: false });
+    expect(db.hall.update).not.toHaveBeenCalled();
+  });
+
+  it("Зал, которого нет у владельца, — «не найдено», файл не привязан", async () => {
+    const path = `hall/${uuid(8)}.webp`;
+    uploaded(path);
+    expect(await withSlots.attachPhoto("hall:vip", path)).toMatchObject({ ok: false });
+    expect(state.files.has(path)).toBe(false); // файл без записи в базе не остаётся
+    expect(db.hall.update).not.toHaveBeenCalled();
+  });
+
+  it("без всех мест владельцев уборка не идёт: их файлы иначе считались бы брошенными", async () => {
+    const poster = `hall/${uuid(5)}.webp`;
+    uploaded(poster, 5 * HOUR);
+    await withSlots.attachPhoto("hall:general", poster);
+    expect(await photos.sweepOrphans()).toBe(0);
+    expect(state.files.has(poster)).toBe(true);
+    expect(await withSlots.sweepOrphans()).toBe(0);
+    expect(state.files.has(poster)).toBe(true);
   });
 });

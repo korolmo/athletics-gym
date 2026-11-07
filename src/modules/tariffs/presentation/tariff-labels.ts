@@ -8,7 +8,8 @@ import {
   type Category,
   type HallId,
   type TariffShape,
-} from "@/lib/domain/tariff";
+} from "../domain/tariff";
+import { plural } from "@/lib/plural";
 
 export const HALL_LABEL_RU: Record<HallId, string> = {
   general: "Общий зал",
@@ -47,15 +48,6 @@ export function formatTariffPrice(t: { price: number; priceTo: number | null }):
   return t.priceTo && t.priceTo > t.price ? `${formatNumber(t.price)} – ${formatPrice(t.priceTo)}` : formatPrice(t.price);
 }
 
-/** Русское склонение: plural(5, ["месяц", "месяца", "месяцев"]) → "месяцев". */
-export function plural(n: number, forms: readonly string[]): string {
-  if (forms.length < 3) return forms[0] ?? "";
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return forms[0];
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return forms[1];
-  return forms[2];
-}
 
 /** Название Тарифа для админки, собранное из полей. */
 export function tariffLabelRu(t: TariffShape): string {

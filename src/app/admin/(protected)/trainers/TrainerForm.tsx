@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { deleteTrainer, saveTrainer, type TrainerFormState } from "./actions";
-import { HALLS, type HallId } from "@/lib/domain/tariff";
-import { HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
+import { HALLS, type HallId } from "@/modules/tariffs/client";
+import { HALL_LABEL_RU } from "@/modules/tariffs/client";
 import { LIMITS } from "@/lib/admin/limits";
 
 export type TrainerInput = {

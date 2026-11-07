@@ -72,10 +72,10 @@ module.exports = {
       name: "lib-no-modules",
       severity: "error",
       comment:
-        "Платформа под модулями: src/lib модули не импортирует. Временно (до PR «Главная»): сервисы сущностей, ещё " +
-        "не перенесённых в модули (src/lib/services/*), — это модули в ожидании, им можно импортировать модули через " +
-        "index.ts. health.ts — платформа: хранилище ему передают маршруты.",
-      from: { path: "^src/lib/", pathNot: "^src/lib/services/(?!health\\.ts$)" },
+        "Платформа под модулями: src/lib модули не импортирует. Временно (до PR «Главная»): слои сущностей, ещё " +
+        "не перенесённых в модули (src/lib/{domain,validation,presentation,services}/*), — это модули в ожидании, им " +
+        "можно импортировать модули через index.ts / client.ts. health.ts — платформа: хранилище ему передают маршруты.",
+      from: { path: "^src/lib/", pathNot: "^src/lib/(domain|validation|presentation|services)/(?!health\\.ts$)" },
       to: { path: "^src/modules/" },
     },
     {

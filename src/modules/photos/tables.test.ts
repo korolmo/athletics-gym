@@ -12,7 +12,6 @@ const OWN = ["galleryPhoto"];
 const FOREIGN_UNTIL_OWNER_MOVES = {
   siteSettings: "Сайт — Фото первого экрана и Женского зала",
   trainer: "Тренеры — Плакат Тренера",
-  hall: "Тарифы — Плакат прайса Зала",
   direction: "Направления — своё Фото Направления",
 };
 

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { getTariff } from "@/lib/services/tariffs";
-import { isAccess, isAudience, isCategory, isHall } from "@/lib/domain/tariff";
-import { tariffLabelRu } from "@/lib/presentation/tariff-labels";
+import { getTariff } from "@/modules/tariffs";
+import { isAccess, isAudience, isCategory, isHall } from "@/modules/tariffs/client";
+import { tariffLabelRu } from "@/modules/tariffs/client";
 import { TariffForm } from "../TariffForm";
 import { DeleteButton } from "../DeleteButton";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { HallId } from "@/lib/domain/tariff";
+import type { HallId } from "@/modules/tariffs/client";
 
 // Выбранный Зал: один на блоки «Цены» и «Тренеры»
 
