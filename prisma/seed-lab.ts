@@ -121,8 +121,16 @@ async function main() {
     return;
   }
 
-  // Холодный TiDB: первое соединение бывает дольше тайм-аута (этап 0, инцидент 3) — повторяем только его
-  await withConnectRetry(() => db.$connect());
+  // TiDB Starter рвёт соединение и на первом запросе (холодный кластер, этап 0, инцидент 3), и посреди seed
+  // (PR #58: «Can't reach database server» на последнем запросе). Seed можно повторять: он сначала удаляет
+  // свои данные, дальше — upsert. Поэтому при ошибке соединения повторяем его целиком.
+  const result = await withConnectRetry(() => seed(login, password));
+  console.log(
+    `Готово (Лаборатория): 2 Зала, ${result.trainerCount} вымышленных Тренеров, ${result.tariffCount} Тарифов, ${reviews.length} синтетических Отзывов, ${result.clicks} Обращений, аккаунт Владельца.`,
+  );
+}
+
+async function seed(login: string, password: string) {
   const now = new Date();
   await db.contactClick.deleteMany();
   await db.review.deleteMany();
@@ -192,9 +200,7 @@ async function main() {
   });
 
   const [tariffCount, trainerCount] = await Promise.all([db.tariff.count(), db.trainer.count()]);
-  console.log(
-    `Готово (Лаборатория): 2 Зала, ${trainerCount} вымышленных Тренеров, ${tariffCount} Тарифов, ${reviews.length} синтетических Отзывов, ${clicks.length} Обращений, аккаунт Владельца.`,
-  );
+  return { tariffCount, trainerCount, clicks: clicks.length };
 }
 
 main()
