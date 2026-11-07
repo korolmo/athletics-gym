@@ -1,0 +1,70 @@
+# C4: компоненты приложения (уровень 3)
+
+Контейнер «Приложение Next.js» из [containers.md](./containers.md), разрезанный на модули на этапе 6 (ADR 0015).
+Связи сняты с кода 7 ноября 2026 (dependency-cruiser, PR 12) — та же картина в сводке каждого прогона CI (job «Dependency boundaries», артефакт `deps-graph`). Если рисунок и граф CI разошлись, прав граф: поправьте рисунок в том же PR.
+
+```mermaid
+flowchart TB
+  subgraph app["Слой приложения — src/app, src/components, middleware"]
+    pages["Страницы сайта и админки,<br/>server actions, маршруты API"]
+    slots["photos/slots.ts — места для Фото<br/>revalidate.ts — сброс кэша"]
+  end
+
+  subgraph top["Поверх всех"]
+    home["Главная<br/>home"]
+    legal["Юридические документы<br/>legal"]
+  end
+
+  subgraph entities["Сущности"]
+    site["Сайт<br/>site"]
+    reviews["Отзывы<br/>reviews"]
+    trainers["Тренеры<br/>trainers"]
+    tariffs["Тарифы<br/>tariffs"]
+    directions["Направления<br/>directions"]
+    contacts["Обращения<br/>contacts"]
+  end
+
+  subgraph base["Базовые"]
+    photos["Фото<br/>photos"]
+    owner["Аккаунт Владельца<br/>owner"]
+  end
+
+  platform["Платформа — src/lib<br/>db, логи, i18n, SEO, health, хэш адреса, помощники форм"]
+
+  pages --> home & legal & site & reviews & trainers & tariffs & directions & contacts & photos & owner
+  slots --> photos & site & tariffs & trainers & directions
+
+  home --> site & tariffs & trainers & photos
+  legal --> site & reviews & owner
+
+  site --> photos & owner
+  reviews --> tariffs & owner
+  trainers --> tariffs & photos & owner
+  tariffs --> photos & owner
+  directions --> photos & owner
+  contacts --> owner
+
+  photos --> owner
+
+  top & entities & base -.-> platform
+```
+
+## Как читать
+
+- **Стрелка — «импортирует через `index.ts` / `client.ts`».** Внутрь чужого модуля не ходит никто (`module-via-index-*`).
+- **Вверх стрелок нет.** Платформа не импортирует модули (`lib-no-modules`); Главную и Юридические документы не импортирует ни один модуль (`top-modules`); Фото знает только Аккаунт Владельца (`photos-knows-no-one`).
+- **Обратные потребности — через слой приложения.** Фото не знает владельцев мест — места собирает `slots.ts`; Тарифам нужен Зал Тренера — его передаёт действие админки; Отзывам нужна дата редакции Политики — её передаёт действие сайта; `health` получает хранилище Фото и проверку Владельца от маршрутов.
+- **Таблицы — только у хозяина.** У каждого модуля `tables.test.ts`: Главная и Юридические документы своих таблиц не имеют, Фото — только Галерея. Запись в чужую таблицу в общей транзакции — запросом модуля-хозяина (`moveTrainerTariffs`).
+
+| Модуль | Таблицы | Входы |
+|---|---|---|
+| owner | `owner`, `loginAttempt` | `index.ts`, `client.ts` (middleware, форма пароля) |
+| photos | `galleryPhoto` | `index.ts`, `client.ts` |
+| tariffs | `hall`, `tariff` | `index.ts`, `client.ts` |
+| trainers | `trainer` | `index.ts`, `client.ts` |
+| directions | `direction` | `index.ts`, `client.ts` |
+| reviews | `review`, `reviewSubmission` | `index.ts`, `client.ts` |
+| contacts | `contactClick` | `index.ts`, `client.ts` |
+| site | `siteSettings`, `aboutCard` | `index.ts`, `client.ts` |
+| home | — | `index.ts` |
+| legal | — | `index.ts`, `client.ts` (адреса и даты редакций) |
