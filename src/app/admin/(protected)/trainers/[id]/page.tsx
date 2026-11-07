@@ -7,6 +7,12 @@ import { TariffRow } from "../../tariffs/TariffRow";
 import { DeleteTrainerButton, TrainerForm } from "../TrainerForm";
 import { PhotoSlot } from "../../photos/PhotoSlot";
 import { isStorageConfigured, mediaUrl } from "@/modules/photos";
+import { getScheduleForAdmin } from "@/modules/schedule";
+import { ScheduleCard } from "../ScheduleCard";
+
+const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+/** «2026-11-15» → «15 ноября» */
+const dayLabel = (day: string) => `${Number(day.slice(8))} ${MONTHS[Number(day.slice(5, 7)) - 1]}`;
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +27,7 @@ export default async function EditTrainerPage({
   const { saved, deleted } = await searchParams;
   const tr = await getTrainerWithTariffs(id);
   if (!tr || !isHall(tr.hallId)) notFound();
+  const schedule = await getScheduleForAdmin(tr.id);
 
   return (
     <>
@@ -79,6 +86,11 @@ export default async function EditTrainerPage({
           </ul>
         )}
       </section>
+
+      <ScheduleCard
+        trainerId={tr.id}
+        schedule={{ ...schedule, timeOff: schedule.timeOff.map((t) => ({ ...t, label: { from: dayLabel(t.fromDay), to: dayLabel(t.toDay) } })) }}
+      />
 
       <div className="mt-8 border-t border-line pt-4">
         <DeleteTrainerButton id={tr.id} name={tr.name} tariffCount={tr.tariffs.length} />

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/admin", label: "Обращения" },
+  { href: "/admin/bookings", label: "Записи" },
   { href: "/admin/tariffs", label: "Тарифы" },
   { href: "/admin/trainers", label: "Тренеры" },
   { href: "/admin/directions", label: "Направления" },
@@ -62,7 +63,7 @@ export function HallFilter({ base, hall }: { base: string; hall: string }) {
       {halls.map((h) => (
         <Link
           key={h.id}
-          href={`${base}?hall=${h.id}`}
+          href={`${base}${base.includes("?") ? "&" : "?"}hall=${h.id}`}
           role="tab"
           aria-selected={h.id === hall}
           className={
