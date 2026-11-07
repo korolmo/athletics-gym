@@ -10,7 +10,6 @@ import { tablesUsedBy } from "@/lib/testing/module-tables";
 const OWN = ["galleryPhoto"];
 const FOREIGN_UNTIL_OWNER_MOVES = {
   siteSettings: "Сайт — Фото первого экрана и Женского зала",
-  direction: "Направления — своё Фото Направления",
 };
 
 describe("модуль Фото: таблицы базы", () => {

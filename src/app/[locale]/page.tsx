@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { getPriceListAndTrainers, getSitePhotos, getSiteSettings } from "@/lib/services/site";
 import { listPublishedReviews } from "@/lib/services/reviews";
-import { listVisibleDirections } from "@/lib/services/directions";
-import { toDirectionViews } from "@/lib/domain/direction";
+import { listVisibleDirections } from "@/modules/directions";
+import { toDirectionViews } from "@/modules/directions/client";
 import { isSafeSourceUrl } from "@/lib/domain/review";
 import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
 import { site } from "@/lib/site";

@@ -140,7 +140,15 @@ const trainerSlot: photos.PhotoSlot = {
   },
   paths: async () => (await db.trainer.findMany()).map((t) => t.uploadedPhoto),
 };
-const slots = [hallSlot, trainerSlot];
+// Место «Фото Направления» ведёт модуль Направления; в этих тестах Направлений нет — место пустое
+const directionSlot: photos.PhotoSlot = {
+  kind: "direction",
+  exists: async () => (await db.direction.count()) > 0,
+  set: async () => null,
+  clear: async () => null,
+  paths: async () => [],
+};
+const slots = [hallSlot, trainerSlot, directionSlot];
 /** Сервис так, как его вызывают действия админки: со всеми местами владельцев. */
 const withSlots = {
   requestUpload: (t: string, type: string, sizes: number[]) => photos.requestUpload(t, type, sizes, slots),

@@ -1,4 +1,4 @@
-import type { DirectionIcon } from "@/lib/domain/direction";
+import type { DirectionIcon } from "@/modules/directions/client";
 import {
   AccessibilityNewSym,
   DirectionsRunSym,

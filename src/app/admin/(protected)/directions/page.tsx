@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { listDirections } from "@/lib/services/directions";
-import { DIRECTION_ICONS, isDirectionIcon } from "@/lib/domain/direction";
+import { listDirections } from "@/modules/directions";
+import { DIRECTION_ICONS, isDirectionIcon } from "@/modules/directions/client";
 import { DIRECTION_ICON } from "@/components/site/direction-icons";
 import { PencilIcon, PlusIcon } from "@/components/icons";
 import { moveDirection, toggleDirection } from "./actions";

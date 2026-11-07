@@ -58,11 +58,11 @@ vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/modules/photos", async () => ({ ...(await vi.importActual<object>("@/modules/photos/client")), ...storage }));
 vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
 
-import { DIRECTION_ICONS, DIRECTION_LIMITS, toDirectionViews } from "@/lib/domain/direction";
-import { DEFAULT_DIRECTIONS } from "@/lib/domain/direction.defaults";
+import { DIRECTION_ICONS, DIRECTION_LIMITS, toDirectionViews } from "../domain/direction";
+import { DEFAULT_DIRECTIONS } from "../domain/direction.defaults";
 import { parsePhotoTarget, pathMatchesKind } from "@/modules/photos/client";
-import { DIRECTION_ICON_LABEL_RU } from "@/lib/presentation/direction-labels";
-import { parseDirectionForm } from "@/lib/validation/direction";
+import { DIRECTION_ICON_LABEL_RU } from "../presentation/direction-labels";
+import { parseDirectionForm } from "../validation/direction";
 import * as directions from "./directions";
 
 const input = { id: null, titleRu: "Бег", titleKk: null, descriptionRu: null, descriptionKk: null, icon: "run" as const, isVisible: true };
