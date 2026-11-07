@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
-import { isSessionCurrent } from "@/lib/domain/owner";
-import { getOwnerSessionVersion } from "@/lib/services/owner-account";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SEC, readSession, signSession } from "./session";
+import { isSessionCurrent } from "../domain/owner";
+import { getOwnerSessionVersion } from "./owner-account";
+import { SESSION_COOKIE, SESSION_MAX_AGE_SEC, readSession, signSession } from "../domain/session";
 import { logError } from "@/lib/observability/log";
 
 /** Выдаёт куку сессии с версией из аккаунта Владельца на момент входа. */

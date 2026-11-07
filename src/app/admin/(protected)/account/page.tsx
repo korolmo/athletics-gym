@@ -1,4 +1,4 @@
-import { getAccountLogin } from "@/lib/services/account";
+import { getAccountLogin } from "@/modules/owner";
 import { LogoutEverywhereButton, PasswordForm } from "./AccountForms";
 
 export const dynamic = "force-dynamic";

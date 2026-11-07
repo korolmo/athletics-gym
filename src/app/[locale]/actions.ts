@@ -1,6 +1,6 @@
 "use server";
 
-import { currentIpHash } from "@/lib/auth/login-limit";
+import { currentIpHash } from "@/lib/ip-hash";
 import { issueFormToken, readFormToken } from "@/modules/reviews";
 import { parseVisitorReview, type VisitorReviewError } from "@/modules/reviews";
 import { checkVisitorSubmission, createVisitorReview } from "@/modules/reviews";

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { isBlock } from "@/lib/domain/site-settings";

@@ -1,8 +1,8 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { decideLogin, type OwnerAccount } from "@/lib/domain/owner";
+import { hashPassword, verifyPassword } from "./password";
+import { decideLogin, type OwnerAccount } from "../domain/owner";
 
 // Аккаунт Владельца для входа и проверки сессии. Здесь сессию не проверяем:
 // этими функциями она и устанавливается. Смена пароля и отзыв сессий — в services/account.ts.

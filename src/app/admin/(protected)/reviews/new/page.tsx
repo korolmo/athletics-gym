@@ -1,4 +1,4 @@
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { toDateInput, todayInGym } from "@/modules/reviews/client";
 import { ReviewForm } from "../ReviewForm";
 

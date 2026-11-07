@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth/password-policy";
+import { PASSWORD_MIN_LENGTH } from "@/modules/owner/client";
 import { EyeIcon } from "@/components/icons";
 import { changePassword, logoutEverywhere, type PasswordFormState } from "./actions";
 

@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { PASSWORD_MAX_BYTES, passwordBytes } from "./password-policy";
+import { PASSWORD_MAX_BYTES, passwordBytes } from "../domain/password-policy";
 
 // Хэш пароля Владельца — bcrypt (bcryptjs: чистый JS, без сборки под платформу).
 

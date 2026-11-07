@@ -1,25 +1,9 @@
-import crypto from "node:crypto";
-import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { ATTEMPT_KEEP_MS, FAILURE_DELAY_MS, WINDOW_MS, evaluateAttempts, type LimitState } from "./login-limit.rules";
+import { ATTEMPT_KEEP_MS, FAILURE_DELAY_MS, WINDOW_MS, evaluateAttempts, type LimitState } from "../domain/login-limit.rules";
 
 // Лимит попыток входа хранится в базе (таблица LoginAttempt).
 // Любая ошибка базы здесь пробрасывается наверх: без работающего лимита вход запрещён.
 
-/** IP клиента: на hoster.kz его ставит nginx Plesk в x-real-ip (подделку из запроса он перезаписывает), на Vercel — так же. */
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  return h.get("x-real-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-}
-
-/** В базе храним не сам IP, а его хэш с секретом. */
-function hashIp(ip: string): string {
-  return crypto.createHmac("sha256", process.env.AUTH_SECRET ?? "").update(ip).digest("hex");
-}
-
-export async function currentIpHash(): Promise<string> {
-  return hashIp(await clientIp());
-}
 
 export async function checkLoginLimit(ipHash: string): Promise<LimitState> {
   const now = new Date();

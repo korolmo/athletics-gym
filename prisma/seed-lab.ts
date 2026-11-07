@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../src/lib/auth/password";
+import { hashPassword } from "../src/modules/owner/service/password";
 import { decideSeed } from "../src/lib/db-guard/production";
 import { CONTACT_CHANNELS, CONTACT_LOCALES, CONTACT_SOURCES } from "../src/modules/contacts/domain/contact";
 import { DEFAULT_DIRECTIONS } from "../src/modules/directions/domain/direction.defaults";

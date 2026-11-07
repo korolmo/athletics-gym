@@ -1,9 +1,9 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
-import { decidePasswordChange } from "@/lib/domain/owner";
+import { requireOwner } from "./guard";
+import { decidePasswordChange } from "../domain/owner";
 import { OWNER_ID, findOwner, passwordTools } from "./owner-account";
-import type { ServiceResult } from "./result";
+import type { ServiceResult } from "@/lib/services/result";
 
 // Раздел «Аккаунт»: смена пароля и отзыв сессий. Каждая функция сама проверяет сессию Владельца.
 

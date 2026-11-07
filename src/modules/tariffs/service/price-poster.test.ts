@@ -23,7 +23,7 @@ const { halls, db } = vi.hoisted(() => {
 });
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
-vi.mock("@/lib/admin/guard", () => ({ requireOwner: vi.fn(async () => {}) }));
+vi.mock("@/modules/owner", () => ({ requireOwner: vi.fn(async () => {}) }));
 vi.mock("@/modules/photos", () => ({ mediaUrl: (p: string | null) => (p ? `/media/${p}` : null) }));
 
 import { listPricePosters, pricePosterSlot } from "./price-poster";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { readSession, signSession } from "@/lib/auth/session";
+import { hashPassword, verifyPassword } from "../service/password";
+import { readSession, signSession } from "./session";
 import { decideLogin, decidePasswordChange, isSessionCurrent, nextSessionVersion, type OwnerAccount } from "./owner";
 
 // Настоящий bcrypt, но с малой стоимостью — чтобы тесты шли быстро

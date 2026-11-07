@@ -1,5 +1,5 @@
-import { isAuthed } from "@/lib/auth";
-import { currentIpHash } from "@/lib/auth/login-limit";
+import { isAuthed } from "@/modules/owner";
+import { currentIpHash } from "@/lib/ip-hash";
 import { CONTACT_RATE, acceptContact, createRateLimiter } from "@/modules/contacts/client";
 import { recordContact } from "@/modules/contacts";
 import { logError } from "@/lib/observability/log";

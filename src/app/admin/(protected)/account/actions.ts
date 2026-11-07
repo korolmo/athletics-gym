@@ -1,11 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createSession, destroySession } from "@/lib/auth";
-import { checkLoginLimit, currentIpHash, recordFailedLogin } from "@/lib/auth/login-limit";
-import { requireOwner } from "@/lib/admin/guard";
-import { parsePasswordChangeForm } from "@/lib/validation/account";
-import * as account from "@/lib/services/account";
+import { createSession, destroySession } from "@/modules/owner";
+import { checkLoginLimit, recordFailedLogin } from "@/modules/owner";
+import { currentIpHash } from "@/lib/ip-hash";
+import { requireOwner } from "@/modules/owner";
+import { parsePasswordChangeForm } from "@/modules/owner";
+import * as account from "@/modules/owner";
 
 export type PasswordFormState = { error?: string } | undefined;
 

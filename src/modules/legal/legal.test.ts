@@ -2,8 +2,8 @@ import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
-import { ATTEMPT_KEEP_MS, MAX_FAILED_ATTEMPTS, evaluateAttempts } from "@/lib/auth/login-limit.rules";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/lib/auth/session";
+import { ATTEMPT_KEEP_MS, MAX_FAILED_ATTEMPTS, evaluateAttempts } from "@/modules/owner/client";
+import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/modules/owner/client";
 import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS, SUBMISSION_WINDOW_MS } from "@/modules/reviews/client";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_DATA_LOCATION, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
@@ -264,7 +264,7 @@ describe("политика говорит то же, что делает код"
 
     it("HTTPS: сайт велит браузеру ходить только по защищённому соединению (HSTS), а кука сессии в production — только по HTTPS", () => {
       expect(fs.readFileSync("next.config.mjs", "utf8")).toMatch(/Strict-Transport-Security", value: "max-age=\d{8,}/);
-      expect(fs.readFileSync("src/lib/auth/index.ts", "utf8")).toContain('secure: process.env.NODE_ENV === "production"');
+      expect(fs.readFileSync("src/modules/owner/service/session-cookie.ts", "utf8")).toContain('secure: process.env.NODE_ENV === "production"');
     });
 
     it("число попыток входа ограничено: после лимита неудач вход закрыт", () => {
@@ -279,7 +279,7 @@ describe("политика говорит то же, что делает код"
       const aboutIp = columns.filter((c) => /^ip([A-Z]|$)|I[Pp]([A-Z]|$)/.test(c));
       expect([...new Set(aboutIp)]).toEqual(["ipHash"]);
       // Хэш считается с секретом: без него по хэшу адрес не подобрать
-      expect(fs.readFileSync("src/lib/auth/login-limit.ts", "utf8")).toContain('createHmac("sha256", process.env.AUTH_SECRET');
+      expect(fs.readFileSync("src/lib/ip-hash.ts", "utf8")).toContain('createHmac("sha256", process.env.AUTH_SECRET');
     });
   });
 

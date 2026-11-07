@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import { moveInOrder } from "../domain/direction";
 import { isPhotoPath } from "@/modules/photos";

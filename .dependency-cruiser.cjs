@@ -49,8 +49,8 @@ module.exports = {
     {
       name: "db-only-in-services",
       severity: "error",
-      comment: "К Prisma ходят только сервисы и лимит попыток входа (CLAUDE.md, «Слои»).",
-      from: { pathNot: ["^src/lib/services/", "^src/modules/[^/]+/service", "^src/lib/auth/login-limit\\.ts$", "^src/lib/db\\.ts$"] },
+      comment: "К Prisma ходят только сервисы (лимит попыток входа — тоже сервис, модуль Аккаунт Владельца).",
+      from: { pathNot: ["^src/lib/services/", "^src/modules/[^/]+/service", "^src/lib/db\\.ts$"] },
       to: { path: "^src/lib/db\\.ts$" },
     },
     {
@@ -106,11 +106,12 @@ module.exports = {
       name: "photos-knows-no-one",
       severity: "error",
       comment:
-        "Фото — базовый модуль (решение 8 этапа 6): не импортирует ни другие модули, ни сущности, ещё лежащие в " +
-        "src/lib. Связь по данным (чужие таблицы) этим правилом не видна — её держит src/modules/photos/tables.test.ts.",
+        "Фото — базовый модуль (решение 8 этапа 6): не импортирует ни другие модули (кроме Аккаунта Владельца — " +
+        "requireOwner нужен всем), ни сущности, ещё лежащие в src/lib. Связь по данным (чужие таблицы) этим правилом " +
+        "не видна — её держит src/modules/photos/tables.test.ts.",
       from: { path: "^src/modules/photos/" },
       to: {
-        path: ["^src/modules/(?!photos/)", "^src/lib/(domain|validation|services|presentation)/"],
+        path: ["^src/modules/(?!photos/|owner/)", "^src/lib/(domain|validation|services|presentation)/"],
         pathNot: ["^src/lib/services/result\\.ts$", "^src/lib/validation/shared\\.ts$"],
       },
     },

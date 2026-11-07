@@ -18,7 +18,7 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import sharp from "sharp";
-import { SESSION_COOKIE, signSession } from "../../src/lib/auth/session";
+import { SESSION_COOKIE, signSession } from "../../src/modules/owner/domain/session";
 
 const APP = path.resolve("dist", "hosting");
 const PORT = Number(process.env.PORT ?? 3200);

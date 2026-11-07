@@ -1,5 +1,5 @@
 import { isHall } from "@/modules/tariffs/client";
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { TrainerForm } from "../TrainerForm";
 
 export default async function NewTrainerPage({ searchParams }: { searchParams: Promise<{ hall?: string }> }) {

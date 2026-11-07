@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, readSession } from "@/lib/auth/session";
+import { SESSION_COOKIE, readSession } from "@/modules/owner/client";
 import { LOCALE_COOKIE as COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 import { REQUEST_ID_HEADER, REQUEST_START_HEADER, requestIdFrom } from "@/lib/observability/log";
 import { MAINTENANCE_RETRY_AFTER_SEC, isMaintenance } from "@/lib/maintenance";

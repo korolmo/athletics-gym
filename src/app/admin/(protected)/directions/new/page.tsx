@@ -1,4 +1,4 @@
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { DirectionForm } from "../DirectionForm";
 
 export const dynamic = "force-dynamic";

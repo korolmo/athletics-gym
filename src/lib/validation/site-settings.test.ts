@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LIMITS } from "@/lib/admin/limits";
 import { ratingCountText } from "@/lib/presentation/rating";
-import { parsePasswordChangeForm } from "./account";
+import { parsePasswordChangeForm } from "@/modules/owner/validation/account";
 import {
   parseAboutForm,
   parseContactsForm,

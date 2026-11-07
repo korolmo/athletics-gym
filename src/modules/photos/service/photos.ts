@@ -1,7 +1,7 @@
 import "server-only";
 import crypto from "node:crypto";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import {
   checkUpload,

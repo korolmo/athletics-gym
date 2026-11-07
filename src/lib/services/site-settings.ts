@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/admin/guard";
+import { requireOwner } from "@/modules/owner";
 import { SHOW_COLUMN, settingsToRow, type BlockId, type SiteSettingsData } from "@/lib/domain/site-settings";
 import { DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
 import type { AboutInput, ContactsInput, HeroInput, LegalInput, MarqueeInput, RatingInput, WomenInput } from "@/lib/validation/site-settings";
