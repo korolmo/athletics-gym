@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { CONTACT_SOURCES, channelOfHref, type ContactSource } from "@/lib/domain/contact";
+import { CONTACT_SOURCES, channelOfHref, type ContactSource } from "@/modules/contacts/client";
 
 /** Источник по месту ссылки на странице: явная пометка data-contact-source или секция, в которой она стоит. */
 const SECTION_SOURCE: Record<string, ContactSource> = {

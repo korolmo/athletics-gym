@@ -1,7 +1,7 @@
 import { isAuthed } from "@/lib/auth";
 import { currentIpHash } from "@/lib/auth/login-limit";
-import { CONTACT_RATE, acceptContact, createRateLimiter } from "@/lib/domain/contact";
-import { recordContact } from "@/lib/services/contacts";
+import { CONTACT_RATE, acceptContact, createRateLimiter } from "@/modules/contacts/client";
+import { recordContact } from "@/modules/contacts";
 import { logError } from "@/lib/observability/log";
 
 // Счётчик Обращений: сайт сообщает сюда о нажатии на кнопку связи (navigator.sendBeacon).

@@ -1,5 +1,5 @@
-import { getContactStats } from "@/lib/services/contacts";
-import { CONTACT_CHANNEL_LABEL_RU, contactSourceLabelRu, formatDayRu } from "@/lib/presentation/contact-labels";
+import { getContactStats } from "@/modules/contacts";
+import { CONTACT_CHANNEL_LABEL_RU, contactSourceLabelRu, formatDayRu } from "@/modules/contacts/client";
 
 export const dynamic = "force-dynamic";
 
