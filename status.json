@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T13:41:56.750Z",
+  "generatedAt": "2026-11-07T13:45:02.077Z",
   "source": "UptimeRobot, каждые 5 минут (ADR 0014)",
   "slo": {
     "target": 0.995,
@@ -11,22 +11,22 @@
     ]
   },
   "overall": {
-    "total": 12,
-    "good": 10,
-    "availability": 0.8333333333333334,
-    "p50": 90,
+    "total": 14,
+    "good": 12,
+    "availability": 0.8571428571428571,
+    "p50": 87,
     "p95": 1792
   },
   "budget": {
-    "allowedErrors": 0.06000000000000005,
+    "allowedErrors": 0.07000000000000006,
     "errors": 2,
-    "remaining": -32.33333333333331
+    "remaining": -27.571428571428545
   },
   "burn": {
-    "1h": 33.3333333333333,
-    "6h": 33.3333333333333,
-    "24h": 33.3333333333333,
-    "30d": 33.3333333333333
+    "1h": 28.571428571428545,
+    "6h": 28.571428571428545,
+    "24h": 28.571428571428545,
+    "30d": 28.571428571428545
   },
   "alerts": {
     "fastBurn": {
@@ -44,22 +44,22 @@
       "targets": [
         {
           "target": "/ru",
-          "checks": 6
+          "checks": 7
         },
         {
           "target": "/kk",
-          "checks": 6
+          "checks": 7
         },
         {
           "target": "/api/health/ready",
-          "checks": 7
+          "checks": 8
         }
       ],
       "firing": true
     },
     "stale": {
       "maxAgeMin": 120,
-      "ageMin": 3,
+      "ageMin": 1,
       "firing": false
     }
   },
@@ -77,51 +77,51 @@
   },
   "byTarget": {
     "/ru": {
-      "total": 6,
-      "good": 5,
-      "availability": 0.8333333333333334,
+      "total": 7,
+      "good": 6,
+      "availability": 0.8571428571428571,
       "p50": 87,
       "p95": 1082,
       "slo": true,
-      "lastDay": 6,
+      "lastDay": 7,
       "last": {
-        "t": "2026-11-07T13:38:00.000Z",
+        "t": "2026-11-07T13:43:00.000Z",
         "target": "/ru",
         "status": 200,
-        "ms": 81,
+        "ms": 66,
         "source": "uptimerobot"
       }
     },
     "/kk": {
-      "total": 6,
-      "good": 5,
-      "availability": 0.8333333333333334,
+      "total": 7,
+      "good": 6,
+      "availability": 0.8571428571428571,
       "p50": 90,
       "p95": 1792,
       "slo": true,
-      "lastDay": 6,
+      "lastDay": 7,
       "last": {
-        "t": "2026-11-07T13:38:00.000Z",
+        "t": "2026-11-07T13:43:00.000Z",
         "target": "/kk",
         "status": 200,
-        "ms": 90,
+        "ms": 48,
         "source": "uptimerobot"
       }
     },
     "/api/health/ready": {
-      "total": 7,
-      "good": 1,
-      "availability": 0.14285714285714285,
-      "p50": 490,
+      "total": 8,
+      "good": 2,
+      "availability": 0.25,
+      "p50": 267,
       "p95": 490,
       "slo": false,
-      "lastDay": 7,
+      "lastDay": 8,
       "last": {
-        "t": "2026-11-07T13:38:51.000Z",
+        "t": "2026-11-07T13:44:00.000Z",
         "target": "/api/health/ready",
-        "status": 503,
-        "ms": null,
-        "source": "uptimerobot-log"
+        "status": 200,
+        "ms": 267,
+        "source": "uptimerobot"
       }
     }
   }
