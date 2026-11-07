@@ -109,7 +109,8 @@ html[data-lab] body {
   padding-top: var(--lab-bar);
 }
 html[data-lab] [data-site-header],
-html[data-lab] [data-admin-header] {
+html[data-lab] [data-admin-header],
+html[data-lab] [data-cabinet-header] {
   top: var(--lab-bar);
 }
 html[data-lab] section[id] {

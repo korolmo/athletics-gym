@@ -153,7 +153,7 @@ describe("проверка кода", () => {
     const code = await codeFor();
     const wrong = code === "000000" ? "111111" : "000000";
     for (let i = 1; i < MAX_CODE_ATTEMPTS; i++) {
-      expect(await verifyLoginCode({ phone: PHONE, code: wrong, profile }, "d", later(i))).toEqual({ ok: false, reason: "wrongCode" });
+      expect(await verifyLoginCode({ phone: PHONE, code: wrong, profile }, "d", later(i))).toEqual({ ok: false, reason: "wrongCode", attemptsLeft: MAX_CODE_ATTEMPTS - i });
     }
     expect(await verifyLoginCode({ phone: PHONE, code: wrong, profile }, "d", later(10))).toEqual({ ok: false, reason: "tooManyAttempts" });
     expect(await verifyLoginCode({ phone: PHONE, code, profile }, "d", later(11))).toEqual({ ok: false, reason: "tooManyAttempts" });
@@ -169,7 +169,7 @@ describe("проверка кода", () => {
     const first = await codeFor(PHONE, "ip1", now);
     const second = await codeFor(PHONE, "ip1", later(1000));
     if (first !== second) {
-      expect(await verifyLoginCode({ phone: PHONE, code: first, profile }, "d", later(2000))).toEqual({ ok: false, reason: "wrongCode" });
+      expect(await verifyLoginCode({ phone: PHONE, code: first, profile }, "d", later(2000))).toMatchObject({ ok: false, reason: "wrongCode" });
     }
     expect((await verifyLoginCode({ phone: PHONE, code: second, profile }, "d", later(3000))).ok).toBe(true);
   });

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, readSession } from "@/modules/owner/client";
+import { CLIENT_SESSION_COOKIE, readClientSession } from "@/modules/clients/client";
 import { LOCALE_COOKIE as COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 import { REQUEST_ID_HEADER, REQUEST_START_HEADER, requestIdFrom } from "@/lib/observability/log";
 import { MAINTENANCE_RETRY_AFTER_SEC, isMaintenance } from "@/lib/maintenance";
@@ -8,7 +9,7 @@ import { offlinePage } from "@/lib/errors/offline-page";
 const LOCALES = ["ru", "kk"];
 
 /** Страницы, которые без языка в адресе ведут на язык из cookie («/privacy» → «/ru/privacy»). Проверяет тест. */
-export const LOCALE_REDIRECTS = ["/", "/privacy", "/terms"];
+export const LOCALE_REDIRECTS = ["/", "/privacy", "/terms", "/cabinet"];
 const LOGIN_PATH = "/admin/login";
 
 /** Заголовки запроса дальше по цепочке: request_id видят сервер, строка доступа и логи (ADR 0009). */
@@ -49,6 +50,21 @@ async function guardAdmin(req: NextRequest, id: string): Promise<NextResponse> {
   return NextResponse.redirect(url);
 }
 
+/**
+ * Кабинет Клиента (этап 1): без подписанной и непросроченной сессии Клиента — на вход в кабинет того же языка.
+ * Версию сессии здесь не сверяем — это делает requireClient() перед доступом к данным.
+ */
+async function guardCabinet(req: NextRequest, locale: string): Promise<NextResponse | null> {
+  const rest = req.nextUrl.pathname.slice(locale.length + 1);
+  if (!/^\/cabinet(\/|$)/.test(rest) || /^\/cabinet\/login\/?$/.test(rest)) return null;
+  const session = await readClientSession(req.cookies.get(CLIENT_SESSION_COOKIE)?.value, process.env.AUTH_SECRET).catch(() => null);
+  if (session) return null;
+  const url = req.nextUrl.clone();
+  url.pathname = `/${locale}/cabinet/login`;
+  url.search = "";
+  return NextResponse.redirect(url);
+}
+
 /** Страница сайта (не API, не файл, не Фото): к ней относится выбор языка. */
 function isPage(pathname: string): boolean {
   return !/^\/(api|media)(\/|$)/.test(pathname) && !/\.[^/]*$/.test(pathname);
@@ -63,7 +79,7 @@ async function route(req: NextRequest, id: string): Promise<NextResponse> {
   // Всё под /ru и /kk — страницы сайта. Адрес без своей страницы («/ru/abc») Next отдаёт сам: app/global-not-found.tsx, код 404
   if (LOCALES.includes(first)) {
     if (isMaintenance()) return maintenance();
-    const res = next(req, id);
+    const res = (await guardCabinet(req, first)) ?? next(req, id);
     if (req.cookies.get(COOKIE)?.value !== first) {
       res.cookies.set(COOKIE, first, { path: "/", maxAge: LOCALE_COOKIE_MAX_AGE_SEC });
     }
