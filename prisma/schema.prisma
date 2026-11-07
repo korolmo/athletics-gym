@@ -106,6 +106,7 @@ model Trainer {
   schedule      TrainerSchedule?
   workHours     TrainerWorkHours[]
   timeOff       TrainerTimeOff[]
+  bookings      Booking[]
 
   @@index([hallId])
 }
@@ -319,6 +320,7 @@ model Client {
   consentPolicyDate String
   /// Последний вход: аккаунт без входа дольше срока из правил удаляется
   lastLoginAt       DateTime
+  bookings          Booking[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -377,4 +379,40 @@ model TrainerTimeOff {
   createdAt DateTime @default(now())
 
   @@index([trainerId, toDay])
+}
+
+/// Статус Записи: прошедшая действующая Запись остаётся ACTIVE — «прошла» считается по времени
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+/// Запись — персональная тренировка Клиента у Тренера на время (этап 1, ADR 0017).
+/// Двойную Запись на одно Окно запрещает уникальный индекс (activeTrainerId, startAt): у действующей Записи
+/// activeTrainerId = trainerId, у отменённой — NULL (частичных индексов в MariaDB 10.4 нет, а NULL не мешает уникальности).
+model Booking {
+  id              String        @id @default(cuid())
+  /// Клиент; удалил аккаунт — Запись остаётся без его данных
+  client          Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId        String?
+  /// Тренер; удалён — Запись остаётся в истории без него
+  trainer         Trainer?      @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  trainerId       String?
+  /// Копия Зала Тренера на момент Записи
+  hallId          String
+  startAt         DateTime
+  endAt           DateTime
+  status          BookingStatus @default(ACTIVE)
+  activeTrainerId String?
+  /// Ключ повтора из формы: повторная отправка возвращает ту же Запись
+  idempotencyKey  String?       @unique
+  cancelledAt     DateTime?
+  /// Кто отменил: client | owner
+  cancelledBy     String?
+  createdAt       DateTime      @default(now())
+
+  @@unique([activeTrainerId, startAt])
+  @@index([clientId, status, startAt])
+  @@index([trainerId, startAt])
+  @@index([startAt])
 }

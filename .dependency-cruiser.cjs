@@ -133,6 +133,15 @@ module.exports = {
       to: { path: "^src/modules/(?!schedule/|owner/)" },
     },
     {
+      name: "bookings-on-top-of-entities",
+      severity: "error",
+      comment:
+        "Записи (этап 1, ADR 0017) стоят над Клиентами, Тренерами и Окнами: их не импортирует ни один модуль, кроме " +
+        "модулей поверх всех. Что нужно Окнам от Записей (занятое время), передаёт слой приложения.",
+      from: { path: "^src/modules/([^/]+)/", pathNot: "^src/modules/(bookings|home|legal)/" },
+      to: { path: "^src/modules/bookings/" },
+    },
+    {
       name: "top-modules",
       severity: "error",
       comment:
