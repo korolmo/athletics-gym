@@ -163,3 +163,13 @@ export async function cancelBookingByOwner(bookingId: string, now: Date = new Da
   });
   return count === 1;
 }
+
+/** Перед удалением аккаунта: будущие действующие Записи Клиента отменяются — их Окна освобождаются. */
+export async function cancelMyFutureBookings(now: Date = new Date()): Promise<number> {
+  const client = await requireClient();
+  const { count } = await db.booking.updateMany({
+    where: { clientId: client.id, status: "ACTIVE", endAt: { gt: now } },
+    data: { status: "CANCELLED", activeTrainerId: null, cancelledAt: now, cancelledBy: "client" },
+  });
+  return count;
+}

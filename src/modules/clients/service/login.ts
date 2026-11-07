@@ -66,7 +66,8 @@ export type CodeVerifyResult =
   | { ok: true; clientId: string; sessionVersion: number; created: boolean }
   /** Код верный, но Клиента ещё нет: форма должна спросить имя и Согласие. Код не расходуется */
   | { ok: false; reason: "needsProfile" }
-  | { ok: false; reason: "wrongCode" | "expired" | "tooManyAttempts" };
+  | { ok: false; reason: "wrongCode"; attemptsLeft: number }
+  | { ok: false; reason: "expired" | "tooManyAttempts" };
 
 function sameHash(a: string, b: string): boolean {
   const x = Buffer.from(a, "hex");
@@ -87,7 +88,8 @@ export async function verifyLoginCode(input: CodeVerifyInput, policyDate: string
 
   if (!sameHash(row.codeHash, hashCode(phone, code))) {
     await db.clientLoginCode.updateMany({ where: { id: row.id }, data: { attempts: { increment: 1 } } });
-    return { ok: false, reason: row.attempts + 1 >= MAX_CODE_ATTEMPTS ? "tooManyAttempts" : "wrongCode" };
+    const attemptsLeft = MAX_CODE_ATTEMPTS - (row.attempts + 1);
+    return attemptsLeft <= 0 ? { ok: false, reason: "tooManyAttempts" } : { ok: false, reason: "wrongCode", attemptsLeft };
   }
 
   const existing = await db.client.findUnique({ where: { phone }, select: { id: true, sessionVersion: true } });

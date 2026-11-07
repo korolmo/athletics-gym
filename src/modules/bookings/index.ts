@@ -8,6 +8,7 @@ export { parseBookingForm, type BookingInput } from "./validation/booking";
 export {
   cancelBookingByOwner,
   cancelMyBooking,
+  cancelMyFutureBookings,
   createBooking,
   listBookingsForOwner,
   listMyBookings,
