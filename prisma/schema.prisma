@@ -290,7 +290,7 @@ model Direction {
   /// Короткое описание, до 200 символов
   descriptionRu String? @db.Text
   descriptionKk String? @db.Text
-  /// Иконка из набора — ключ из src/lib/domain/direction.ts
+  /// Иконка из набора — ключ из src/modules/directions/domain/direction.ts
   icon          String   @default("exercise")
   /// Своё Фото вместо иконки: путь к файлу в хранилище
   photo         String?

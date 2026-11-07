@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { ArrowForwardSym } from "@/components/symbols";
 import { DIRECTION_ICON } from "@/components/site/direction-icons";
-import type { DirectionView } from "@/lib/domain/direction";
+import type { DirectionView } from "@/modules/directions/client";
 import { whatsappUrl } from "@/lib/site";
 import { container, label, sectionY } from "@/components/ui/styles";
 import { SectionHead } from "@/components/ui/SectionHead";

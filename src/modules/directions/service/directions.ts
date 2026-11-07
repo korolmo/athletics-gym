@@ -2,11 +2,11 @@ import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
-import { moveInOrder } from "@/lib/domain/direction";
+import { moveInOrder } from "../domain/direction";
 import { isPhotoPath } from "@/modules/photos";
 import { mediaUrl, removeObjects } from "@/modules/photos";
-import type { DirectionInput } from "@/lib/validation/direction";
-import type { ServiceResult } from "./result";
+import type { DirectionInput } from "../validation/direction";
+import type { ServiceResult } from "@/lib/services/result";
 import { logError } from "@/lib/observability/log";
 
 // Направления. Сайт читает только не скрытые; всё остальное — админка, каждая функция сама проверяет сессию Владельца.

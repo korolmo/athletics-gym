@@ -1,5 +1,5 @@
 // Как иконки Направлений называются в админке — Владелец выбирает иконку по рисунку и подписи.
-import type { DirectionIcon } from "@/lib/domain/direction";
+import type { DirectionIcon } from "../domain/direction";
 
 export const DIRECTION_ICON_LABEL_RU: Record<DirectionIcon, string> = {
   exercise: "Набор массы",

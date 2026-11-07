@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { DIRECTION_ICONS, DIRECTION_LIMITS, type DirectionIcon } from "@/lib/domain/direction";
+import { DIRECTION_ICONS, DIRECTION_LIMITS, type DirectionIcon } from "@/modules/directions/client";
 import { DIRECTION_ICON } from "@/components/site/direction-icons";
-import { DIRECTION_ICON_LABEL_RU } from "@/lib/presentation/direction-labels";
+import { DIRECTION_ICON_LABEL_RU } from "@/modules/directions/client";
 import { deleteDirection, saveDirection, type DirectionFormState } from "./actions";
 
 export type DirectionFormValues = {

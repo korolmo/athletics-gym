@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { checked, text } from "@/lib/admin/form";
-import { DIRECTION_ICONS, DIRECTION_LIMITS } from "@/lib/domain/direction";
-import { toParsed, type Parsed } from "./shared";
+import { DIRECTION_ICONS, DIRECTION_LIMITS } from "../domain/direction";
+import { toParsed, type Parsed } from "@/lib/validation/shared";
 
 const { title, description } = DIRECTION_LIMITS;
 const optional = (name: string, max: number) =>
