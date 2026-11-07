@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { TariffShape } from "@/lib/domain/tariff";
-import { formatNumber, formatPrice, formatTariffPrice, plural, tariffLabelRu, tariffTagsRu } from "./tariff-labels";
+import type { TariffShape } from "../domain/tariff";
+import { formatNumber, formatPrice, formatTariffPrice, tariffLabelRu, tariffTagsRu } from "./tariff-labels";
+import { plural } from "@/lib/plural";
 
 // Intl ставит между разрядами неразрывный пробел — в тестах сравниваем с обычным
 const plain = (s: string) => s.replace(/[  ]/g, " ");

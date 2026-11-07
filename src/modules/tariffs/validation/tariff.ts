@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { checked, text } from "@/lib/admin/form";
 import { LIMITS } from "@/lib/admin/limits";
-import { ACCESS, AUDIENCES, CATEGORY_FIELDS, CATEGORY_ORDER, HALLS } from "@/lib/domain/tariff";
-import { fail, intFromText, toParsed, type Parsed } from "./shared";
+import { ACCESS, AUDIENCES, CATEGORY_FIELDS, CATEGORY_ORDER, HALLS } from "../domain/tariff";
+import { fail, intFromText, toParsed, type Parsed } from "@/lib/validation/shared";
 
 /**
  * Тариф из формы админки — единственное место, где описано, какие значения допустимы.

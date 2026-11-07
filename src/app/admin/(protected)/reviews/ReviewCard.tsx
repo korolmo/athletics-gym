@@ -1,7 +1,7 @@
-import { isHall } from "@/lib/domain/tariff";
+import { isHall } from "@/modules/tariffs/client";
 import type { ReviewSource, ReviewStatus } from "@/lib/domain/review";
 import { REVIEW_SOURCE_LABEL_RU, REVIEW_STATUS_LABEL_RU, formatConsentRu, formatReviewDateRu } from "@/lib/presentation/review-labels";
-import { HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
+import { HALL_LABEL_RU } from "@/modules/tariffs/client";
 import { setReviewStatus } from "./actions";
 
 export type AdminReview = {

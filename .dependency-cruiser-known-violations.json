@@ -58,22 +58,5 @@
       "severity": "error",
       "name": "no-cross-entity-services"
     }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/photos/domain/photo.ts",
-    "to": "src/lib/domain/tariff.ts",
-    "unresolvedTo": "@/lib/domain/tariff",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "photos-knows-no-one"
-    }
   }
 ]

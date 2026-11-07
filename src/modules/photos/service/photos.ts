@@ -12,6 +12,7 @@ import {
   photoFiles,
   PHOTO_VARIANTS,
   pathMatchesKind,
+  type PhotoKind,
   type PhotoTarget,
 } from "../domain/photo";
 import * as storage from "../storage/client";
@@ -48,10 +49,35 @@ async function removeQuietly(paths: (string | null | undefined)[]): Promise<void
   }
 }
 
+/**
+ * Место для Фото, которое ведёт модуль-владелец (ADR 0015, «Места для Фото»): Фото не знает чужих таблиц,
+ * а владелец не знает хранилища. Фото выдаёт путь, кладёт файл, убирает старый; владелец хранит путь у себя.
+ * Места собирает слой приложения (app/admin/(protected)/photos/slots.ts) и передаёт в функции этого сервиса.
+ */
+export type PhotoSlot = {
+  kind: PhotoKind;
+  /** Есть ли место с таким id (Зал, Тренер…): его могли удалить в другой вкладке. */
+  exists(id: string | undefined): Promise<boolean>;
+  /** Записывает путь и возвращает прежний (или null). */
+  set(id: string | undefined, path: string): Promise<string | null>;
+  /** Снимает Фото с места и возвращает прежний путь (или null). */
+  clear(id: string | undefined): Promise<string | null>;
+  /** Все пути, на которые ссылается владелец, — для уборки брошенных файлов. */
+  paths(): Promise<(string | null | undefined)[]>;
+};
+export type PhotoSlots = readonly PhotoSlot[];
+
+const slotFor = (target: PhotoTarget, slots: PhotoSlots) => slots.find((s) => s.kind === target.kind) ?? null;
+const targetId = (target: PhotoTarget) => ("id" in target ? target.id : undefined);
+/** Места, которые ведут модули-владельцы: без переданного места такая загрузка не принимается. */
+const OWNED_KINDS: readonly PhotoKind[] = ["hall"];
+
 /** Есть ли место, к которому привязывается Фото: Тренер мог быть удалён в другой вкладке. */
-async function targetExists(target: PhotoTarget): Promise<boolean> {
+async function targetExists(target: PhotoTarget, slots: PhotoSlots): Promise<boolean> {
+  const slot = slotFor(target, slots);
+  if (slot) return slot.exists(targetId(target));
+  if (OWNED_KINDS.includes(target.kind)) return false;
   if (target.kind === "trainer") return (await db.trainer.count({ where: { id: target.id } })) > 0;
-  if (target.kind === "hall") return (await db.hall.count({ where: { id: target.id } })) > 0;
   if (target.kind === "direction") return (await db.direction.count({ where: { id: target.id } })) > 0;
   return true;
 }
@@ -65,6 +91,7 @@ export async function requestUpload(
   targetRaw: string,
   type: string,
   sizes: number[],
+  slots: PhotoSlots = [],
 ): Promise<ServiceResult<{ path: string; uploads: { path: string; url: string }[] }>> {
   await requireOwner();
   const target = parsePhotoTarget(targetRaw);
@@ -76,7 +103,7 @@ export async function requestUpload(
     if (!allowed.ok) return allowed;
   }
   if (!allowed?.ok) return { ok: false, error: BAD_TARGET };
-  if (!(await targetExists(target))) return { ok: false, error: NOT_FOUND_MESSAGE };
+  if (!(await targetExists(target, slots))) return { ok: false, error: NOT_FOUND_MESSAGE };
 
   const path = newPhotoPath(target.kind, allowed.type, crypto.randomUUID());
   const files = photoFiles(path);
@@ -91,7 +118,9 @@ export async function requestUpload(
 }
 
 /** Записывает путь в базу и возвращает путь, который был там раньше. */
-async function saveToTarget(target: PhotoTarget, path: string): Promise<string | null> {
+async function saveToTarget(target: PhotoTarget, path: string, slots: PhotoSlots): Promise<string | null> {
+  const slot = slotFor(target, slots);
+  if (slot) return slot.set(targetId(target), path);
   switch (target.kind) {
     case "hero":
     case "women": {
@@ -105,11 +134,9 @@ async function saveToTarget(target: PhotoTarget, path: string): Promise<string |
       await db.trainer.update({ where: { id: target.id }, data: { uploadedPhoto: path } });
       return before?.uploadedPhoto ?? null;
     }
-    case "hall": {
-      const before = await db.hall.findUnique({ where: { id: target.id }, select: { pricePoster: true } });
-      await db.hall.update({ where: { id: target.id }, data: { pricePoster: path } });
-      return before?.pricePoster ?? null;
-    }
+    case "hall":
+      // Место ведёт модуль Тарифы; сюда попадаем, только если его не передали — attachPhoto это отсекает
+      throw new Error("Место «Плакат прайса» ведёт модуль Тарифы: передайте его в slots");
     case "direction": {
       const before = await db.direction.findUnique({ where: { id: target.id }, select: { photo: true } });
       await db.direction.update({ where: { id: target.id }, data: { photo: path } });
@@ -128,12 +155,16 @@ async function saveToTarget(target: PhotoTarget, path: string): Promise<string |
  * Шаг 2 загрузки. Привязывает загруженный файл к месту на сайте.
  * Прежний файл этого места удаляется из хранилища. Если запись в базу не удалась — удаляется новый файл.
  */
-export async function attachPhoto(targetRaw: string, path: string): Promise<ServiceResult<object>> {
+export async function attachPhoto(targetRaw: string, path: string, slots: PhotoSlots = []): Promise<ServiceResult<object>> {
   await requireOwner();
   const target = parsePhotoTarget(targetRaw);
   if (!target) return { ok: false, error: BAD_TARGET };
   // Путь приходит из браузера: принимаем только наш формат и только из папки этого места
   if (!pathMatchesKind(path, target.kind)) return { ok: false, error: BAD_TARGET };
+  if (OWNED_KINDS.includes(target.kind) && !slotFor(target, slots)) return { ok: false, error: BAD_TARGET };
+  // Место владельца: id из браузера проверяет сам владелец (у Зала — ещё и по списку Залов)
+  const slot = slotFor(target, slots);
+  if (slot && !(await slot.exists(targetId(target)))) return { ok: false, error: NOT_FOUND_MESSAGE };
 
   try {
     if (!(await storage.photoUploaded(path))) {
@@ -145,34 +176,39 @@ export async function attachPhoto(targetRaw: string, path: string): Promise<Serv
 
   let previous: string | null;
   try {
-    previous = await saveToTarget(target, path);
+    previous = await saveToTarget(target, path, slots);
   } catch (e) {
     await removeQuietly([path]);
     if (isNotFound(e)) return { ok: false, error: NOT_FOUND_MESSAGE };
     throw e;
   }
   if (previous !== path) await removeQuietly([previous]);
-  await sweepOrphans();
+  await sweepOrphans(slots);
   return { ok: true };
 }
 
 /** Загрузка сорвалась на стороне браузера: убираем файл, если он успел появиться и ни к чему не привязан. */
-export async function discardUpload(path: string): Promise<void> {
+export async function discardUpload(path: string, slots: PhotoSlots = []): Promise<void> {
   await requireOwner();
   if (!isPhotoPath(path)) return;
-  if ((await referencedPaths()).has(path)) return;
+  if ((await referencedPaths(slots)).has(path)) return;
   await removeQuietly([path]);
 }
 
 /** Убирает Фото с места (кроме Галереи): на сайте снова покажется картинка из public/. Файл удаляется из хранилища. */
-export async function removePhoto(targetRaw: string): Promise<ServiceResult<object>> {
+export async function removePhoto(targetRaw: string, slots: PhotoSlots = []): Promise<ServiceResult<object>> {
   await requireOwner();
   const target = parsePhotoTarget(targetRaw);
   if (!target || target.kind === "gallery") return { ok: false, error: BAD_TARGET };
+  const slot = slotFor(target, slots);
+  if (!slot && OWNED_KINDS.includes(target.kind)) return { ok: false, error: BAD_TARGET };
 
   let previous: string | null = null;
   try {
-    if (target.kind === "hero" || target.kind === "women") {
+    if (slot) {
+      if (!(await slot.exists(targetId(target)))) return { ok: false, error: NOT_FOUND_MESSAGE };
+      previous = await slot.clear(targetId(target));
+    } else if (target.kind === "hero" || target.kind === "women") {
       const column = target.kind === "hero" ? "heroPhoto" : "womenPhoto";
       const before = await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { [column]: true } });
       previous = (before as Record<string, string | null> | null)?.[column] ?? null;
@@ -183,9 +219,6 @@ export async function removePhoto(targetRaw: string): Promise<ServiceResult<obje
     } else if (target.kind === "direction") {
       previous = (await db.direction.findUnique({ where: { id: target.id }, select: { photo: true } }))?.photo ?? null;
       if (previous) await db.direction.update({ where: { id: target.id }, data: { photo: null } });
-    } else {
-      previous = (await db.hall.findUnique({ where: { id: target.id }, select: { pricePoster: true } }))?.pricePoster ?? null;
-      if (previous) await db.hall.update({ where: { id: target.id }, data: { pricePoster: null } });
     }
   } catch (e) {
     if (isNotFound(e)) return { ok: false, error: NOT_FOUND_MESSAGE };
@@ -254,50 +287,56 @@ export async function deleteGalleryPhoto(id: string): Promise<void> {
 
 // ——— Места с одним Фото и уборка ———
 
-/** Фото первого экрана, Женского зала и Плакаты прайса — для раздела «Фото». */
+/** Фото первого экрана и Женского зала — для раздела «Фото». Плакаты прайса отдаёт модуль Тарифы. */
 export async function getSinglePhotos() {
   await requireOwner();
-  const [settings, halls] = await Promise.all([
-    db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } }),
-    db.hall.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, pricePoster: true } }),
-  ]);
+  const settings = await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } });
   return {
     configured: storage.isStorageConfigured(),
     hero: storage.mediaUrl(settings?.heroPhoto),
     women: storage.mediaUrl(settings?.womenPhoto),
-    posters: Object.fromEntries(halls.map((h) => [h.id, storage.mediaUrl(h.pricePoster)])) as Record<string, string | null>,
   };
 }
 
-/** Все пути к Фото, на которые ссылается база. */
-async function referencedPaths(): Promise<Set<string>> {
-  const [settings, halls, trainers, gallery, directions] = await Promise.all([
+/**
+ * Все пути к Фото, на которые ссылается база: свои, ещё не переданные владельцам места и места владельцев.
+ * Если место владельца не передали, его файлы считались бы брошенными — поэтому без всех мест уборка не идёт.
+ */
+async function referencedPaths(slots: PhotoSlots): Promise<Set<string>> {
+  const [settings, trainers, gallery, directions, owned] = await Promise.all([
     db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } }),
-    db.hall.findMany({ select: { pricePoster: true } }),
     db.trainer.findMany({ where: { uploadedPhoto: { not: null } }, select: { uploadedPhoto: true } }),
     db.galleryPhoto.findMany({ select: { path: true } }),
     db.direction.findMany({ where: { photo: { not: null } }, select: { photo: true } }),
+    Promise.all(slots.map((s) => s.paths())),
   ]);
   const all = [
     settings?.heroPhoto,
     settings?.womenPhoto,
-    ...halls.map((h) => h.pricePoster),
     ...trainers.map((t) => t.uploadedPhoto),
     ...gallery.map((g) => g.path),
     ...directions.map((d) => d.photo),
+    ...owned.flat(),
   ];
   return new Set(all.filter((p): p is string => Boolean(p)));
 }
+
+/** Переданы ли места всех владельцев: иначе уборка приняла бы их файлы за брошенные и удалила. */
+const allOwnedSlots = (slots: PhotoSlots) => OWNED_KINDS.every((k) => slots.some((s) => s.kind === k));
 
 /**
  * Уборка: удаляет из хранилища файлы старше часа, на которые не ссылается база, —
  * загрузки, брошенные на полпути (закрыли вкладку, пропала связь). Запускается после каждой успешной загрузки.
  * Ошибка уборки основному действию не мешает.
  */
-export async function sweepOrphans(): Promise<number> {
+export async function sweepOrphans(slots: PhotoSlots = []): Promise<number> {
   await requireOwner();
+  if (!allOwnedSlots(slots)) {
+    logError("Хранилище фото: уборка пропущена — переданы не все места для Фото (slots).", new Error(OWNED_KINDS.join(", ")));
+    return 0;
+  }
   try {
-    const orphans = findOrphans(await storage.listObjects(), await referencedPaths(), new Date());
+    const orphans = findOrphans(await storage.listObjects(), await referencedPaths(slots), new Date());
     await storage.removeObjects(orphans);
     return orphans.length;
   } catch (e) {

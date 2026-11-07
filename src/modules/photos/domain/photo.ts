@@ -1,7 +1,6 @@
 // Фото: что Владелец загружает, какие файлы принимаем и где они лежат в хранилище.
 // Чистые функции без базы и сети — их используют и браузер (до загрузки), и сервер (перед выдачей ссылки).
 
-import { HALLS, type HallId } from "@/lib/domain/tariff";
 
 /** Бакет Supabase Storage, общий для всех Фото. Публичный: файлы читаются по прямой ссылке. */
 export const MEDIA_BUCKET = "media";
@@ -40,15 +39,16 @@ export type PhotoTarget =
   | { kind: "gallery" }
   | { kind: "trainer"; id: string }
   | { kind: "direction"; id: string }
-  | { kind: "hall"; id: HallId };
+  | { kind: "hall"; id: string };
 
-/** Место из формы: «hero», «women», «gallery», «trainer:<id>», «direction:<id>», «hall:<general|women>». */
+/** Место из формы: «hero», «women», «gallery», «trainer:<id>», «direction:<id>», «hall:<id Зала>». */
 export function parsePhotoTarget(raw: string): PhotoTarget | null {
   const [kind, id, ...rest] = raw.split(":");
   if (rest.length > 0) return null;
   if (kind === "hero" || kind === "women" || kind === "gallery") return id === undefined ? { kind } : null;
   if (kind === "trainer" || kind === "direction") return id && /^[a-z0-9_]{1,40}$/i.test(id) ? { kind, id } : null;
-  if (kind === "hall") return (HALLS as readonly string[]).includes(id ?? "") ? { kind, id: id as HallId } : null;
+  // Есть ли такой Зал, проверяет модуль-владелец (Тарифы) через своё место для Фото — здесь только формат id
+  if (kind === "hall") return id && /^[a-z0-9_-]{1,40}$/i.test(id) ? { kind, id } : null;
   return null;
 }
 

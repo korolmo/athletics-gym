@@ -8,7 +8,7 @@ import {
   normalizeSourceUrl,
   parseReviewDate,
 } from "@/lib/domain/review";
-import { HALLS } from "@/lib/domain/tariff";
+import { HALLS } from "@/modules/tariffs/client";
 import { fail, toParsed, type Parsed } from "./shared";
 
 const { nameMax, textMin, textMax, urlMax } = REVIEW_LIMITS;

@@ -1,4 +1,4 @@
-import { formatNumber } from "@/lib/presentation/tariff-labels";
+import { formatNumber } from "@/modules/tariffs/client";
 import type { PricesText } from "@/components/site/halls/types";
 
 /** Крупная цена «от …» в карточке Категории. */

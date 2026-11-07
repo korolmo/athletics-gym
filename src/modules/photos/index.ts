@@ -12,6 +12,8 @@ export {
   discardUpload,
   getGalleryPhoto,
   getSinglePhotos,
+  type PhotoSlot,
+  type PhotoSlots,
   listGallery,
   moveGalleryPhoto,
   removePhoto,

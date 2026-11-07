@@ -2,8 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSinglePhotos, listGallery } from "@/modules/photos";
 import { GALLERY_FIRST, MAX_FILE_BYTES, formatMegabytes } from "@/modules/photos";
-import { HALLS } from "@/lib/domain/tariff";
-import { HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
+import { HALLS, HALL_LABEL_RU, listPricePosters } from "@/modules/tariffs";
 import { PencilIcon } from "@/components/icons";
 import { moveGalleryPhoto, toggleGalleryPhoto } from "./actions";
 import { PhotoSlot } from "./PhotoSlot";
@@ -17,7 +16,7 @@ const square =
 
 export default async function PhotosPage({ searchParams }: { searchParams: Promise<{ saved?: string; deleted?: string }> }) {
   const { saved, deleted } = await searchParams;
-  const [single, gallery] = await Promise.all([getSinglePhotos(), listGallery()]);
+  const [single, gallery, posters] = await Promise.all([getSinglePhotos(), listGallery(), listPricePosters()]);
   const off = !single.configured;
   const visible = gallery.filter((p) => p.isVisible).length;
 
@@ -77,7 +76,7 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
               target={`hall:${hall}`}
               title={HALL_LABEL_RU[hall]}
               note="Плакат прайса этого зала"
-              url={single.posters[hall] ?? null}
+              url={posters[hall] ?? null}
               shape="tall"
               disabled={off}
             />

@@ -13,8 +13,8 @@ import {
   type Audience,
   type Category,
   type HallId,
-} from "@/lib/domain/tariff";
-import { ACCESS_LABEL_RU, AUDIENCE_LABEL_RU, CATEGORY_LABEL_RU, HALL_LABEL_RU } from "@/lib/presentation/tariff-labels";
+} from "@/modules/tariffs/client";
+import { ACCESS_LABEL_RU, AUDIENCE_LABEL_RU, CATEGORY_LABEL_RU, HALL_LABEL_RU } from "@/modules/tariffs/client";
 import { LIMITS } from "@/lib/admin/limits";
 
 export type TariffInput = {

@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import type { Locale } from "@/lib/i18n";
 import { REVIEW_LIMITS } from "@/lib/domain/review";
-import { HALLS } from "@/lib/domain/tariff";
+import { HALLS } from "@/modules/tariffs/client";
 import { legalPath } from "@/lib/legal/meta";
 import { openReviewForm, submitReview, type ReviewFormState } from "@/app/[locale]/actions";
 

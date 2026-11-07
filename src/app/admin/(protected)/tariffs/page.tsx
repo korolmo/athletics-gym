@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { listHallTariffs } from "@/lib/services/tariffs";
-import { HALL_CATEGORIES, isHall } from "@/lib/domain/tariff";
-import { CATEGORY_LABEL_RU, formatPrice } from "@/lib/presentation/tariff-labels";
+import { listHallTariffs } from "@/modules/tariffs";
+import { HALL_CATEGORIES, isHall } from "@/modules/tariffs/client";
+import { CATEGORY_LABEL_RU, formatPrice } from "@/modules/tariffs/client";
 import { PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
 import { TariffRow } from "./TariffRow";

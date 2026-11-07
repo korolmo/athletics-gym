@@ -121,12 +121,14 @@ describe("куда загружается Фото", () => {
     ["trainer:cmabc123xyz", { kind: "trainer", id: "cmabc123xyz" }],
     ["hall:general", { kind: "hall", id: "general" }],
     ["hall:women", { kind: "hall", id: "women" }],
+    // Есть ли такой Зал, решает модуль Тарифы (место «Плакат прайса»): формат id верный
+    ["hall:vip", { kind: "hall", id: "vip" }],
   ])("%s", (raw, target) => {
     expect(parsePhotoTarget(raw)).toEqual(target);
     expect(formatPhotoTarget(parsePhotoTarget(raw)!)).toBe(raw);
   });
 
-  it.each(["", "logo", "hero:1", "trainer", "trainer:", "trainer:../x", "trainer:a:b", "hall", "hall:vip", "gallery:1", "HERO"])(
+  it.each(["", "logo", "hero:1", "trainer", "trainer:", "trainer:../x", "trainer:a:b", "hall", "hall:../x", "gallery:1", "HERO"])(
     "«%s» — нет такого места",
     (raw) => {
       expect(parsePhotoTarget(raw)).toBeNull();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LIMITS } from "@/lib/admin/limits";
-import { parseTariffForm } from "./tariff";
+import { parseTariffForm } from "@/modules/tariffs/validation/tariff";
 import { parseTrainerForm } from "./trainer";
 
 function form(values: Record<string, string>): FormData {
