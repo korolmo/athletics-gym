@@ -18,3 +18,4 @@ export {
   toggleBlock,
 } from "./service/site-settings";
 export { getSettingsPhotos, heroPhotoSlot, womenPhotoSlot } from "./service/photo-slots";
+export { getSettingsPhotoUrls } from "./service/public-photos";

@@ -68,7 +68,12 @@ const { state, db, storage, requireOwner } = vi.hoisted(() => {
         write();
         state.gallery.push({ id: `g${state.gallery.length + 1}`, isVisible: true, captionRu: null, captionKk: null, createdAt: new Date(), ...data });
       }),
-      findMany: vi.fn(async () => [...state.gallery].sort((a, b) => a.sortOrder - b.sortOrder).map((g) => ({ ...g }))),
+      findMany: vi.fn(async (args?: { where?: { isVisible?: boolean } }) =>
+        [...state.gallery]
+          .filter((g) => args?.where?.isVisible === undefined || g.isVisible === args.where.isVisible)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((g) => ({ ...g })),
+      ),
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) => state.gallery.find((g) => g.id === where.id) ?? null),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: object }) => {
         const photo = state.gallery.find((g) => g.id === where.id);
@@ -473,9 +478,24 @@ describe("права: без сессии Владельца — отказ", ()
     ["sweepOrphans", () => withSlots.sweepOrphans()],
   ];
 
+  // Публичные функции — для сайта, без сессии: только видимое (собирает модуль Главная). Любая новая функция
+  // попадает либо сюда, либо в список выше — забыть проверку сессии незаметно нельзя.
+  const PUBLIC = ["listVisibleGallery"];
+
   it("проверены все функции сервиса", () => {
     const exported = Object.entries(photos).filter(([, v]) => typeof v === "function").map(([k]) => k);
-    expect(calls.map(([name]) => name).sort()).toEqual(exported.sort());
+    expect([...calls.map(([name]) => name), ...PUBLIC].sort()).toEqual(exported.sort());
+  });
+
+  it("публичная Галерея — только видимые фото и без сессии", async () => {
+    requireOwner.mockImplementation(async () => {
+      throw new Error("NEXT_REDIRECT");
+    });
+    state.gallery.push(
+      { id: "g1", path: g1, sortOrder: 0, isVisible: true, captionRu: "a", captionKk: null, createdAt: new Date() },
+      { id: "g2", path: `gallery/${uuid(3)}.webp`, sortOrder: 1, isVisible: false, captionRu: null, captionKk: null, createdAt: new Date() },
+    );
+    expect((await photos.listVisibleGallery()).map((g) => g.id)).toEqual(["g1"]);
   });
 
   it.each(calls)("%s: ни база, ни хранилище не тронуты", async (_name, call) => {

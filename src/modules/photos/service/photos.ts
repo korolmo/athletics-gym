@@ -195,6 +195,15 @@ export async function removePhoto(targetRaw: string, slots: PhotoSlots = []): Pr
 
 const galleryOrder = [{ sortOrder: "asc" as const }, { createdAt: "asc" as const }];
 
+/** Видимые фото Галереи для публичного сайта — без проверки сессии; файлы без ссылки пропускаем. */
+export async function listVisibleGallery(): Promise<{ id: string; url: string; captionRu: string | null; captionKk: string | null }[]> {
+  const photos = await db.galleryPhoto.findMany({ where: { isVisible: true }, orderBy: galleryOrder });
+  return photos.flatMap((g) => {
+    const url = storage.mediaUrl(g.path);
+    return url ? [{ id: g.id, url, captionRu: g.captionRu, captionKk: g.captionKk }] : [];
+  });
+}
+
 /** Все фото Галереи, включая скрытые, со ссылками для показа в админке. */
 export async function listGallery() {
   await requireOwner();
