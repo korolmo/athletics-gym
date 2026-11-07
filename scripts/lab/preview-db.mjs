@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import { PrismaClient } from "@prisma/client";
 import { databasesToDrop, previewDbName, withDatabase } from "./preview-db-core.mjs";
+import { hideUrl, withConnectRetry } from "./connect-retry.mjs";
 
 const [command, prNumber] = process.argv.slice(2);
 const base = process.env.LAB_DATABASE_URL;
@@ -32,6 +33,8 @@ async function previewDatabases() {
 
 // Имена проверены previewDbName / databasesToDrop: только pr_<число>, поэтому подстановка в SQL безопасна
 async function main() {
+  // Холодный TiDB: первое соединение бывает дольше тайм-аута — повторяем только его
+  await withConnectRetry(() => db.$queryRawUnsafe("SELECT 1"));
   if (command === "drop") {
     await db.$executeRawUnsafe(`DROP DATABASE IF EXISTS \`${name}\``);
     console.log(`База превью ${name} удалена.`);
@@ -54,7 +57,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error(String(e?.message ?? e).replace(/mysql:\/\/\S+/g, "<url>"));
+    console.error(hideUrl(e?.message ?? e));
     process.exitCode = 1;
   })
   .finally(() => db.$disconnect());

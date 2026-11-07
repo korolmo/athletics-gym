@@ -13,6 +13,21 @@ permissions:
   contents: read
 
 jobs:
+  actionlint:
+    # Workflow проверяются до выкатки (этап 0, ретро): lab.yml дважды не запустился из-за кавычек.
+    # actionlint сам гоняет shellcheck по шагам run (shellcheck есть на ubuntu-latest).
+    name: actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install actionlint 1.7.7
+        run: bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+
+      - name: Check workflows
+        run: ./actionlint -color
+
   check:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
