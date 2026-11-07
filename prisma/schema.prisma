@@ -102,6 +102,10 @@ model Trainer {
   sortOrder     Int      @default(0)
   isVisible     Boolean  @default(true)
   tariffs       Tariff[]
+  /// Часы работы, исключения и длительность тренировки — модуль schedule (этап 1)
+  schedule      TrainerSchedule?
+  workHours     TrainerWorkHours[]
+  timeOff       TrainerTimeOff[]
 
   @@index([hallId])
 }
@@ -335,4 +339,42 @@ model ClientLoginCode {
 
   @@index([phone, createdAt])
   @@index([ipHash, createdAt])
+}
+
+/// Настройки записи к Тренеру (этап 1, ADR 0017): длительность одной тренировки. Окна не хранятся —
+/// их вычисляет модуль schedule из часов работы и исключений.
+model TrainerSchedule {
+  trainerId      String   @id
+  trainer        Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  /// Длительность тренировки в минутах: 30–180, шаг 15
+  sessionMinutes Int      @default(60)
+  updatedAt      DateTime @updatedAt
+}
+
+/// Интервал работы Тренера в один из дней недели, в поясе Клуба: минуты от полуночи, конец не включается
+model TrainerWorkHours {
+  id        String  @id @default(cuid())
+  trainer   Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId String
+  /// 1 — понедельник … 7 — воскресенье
+  weekday   Int
+  startMin  Int
+  endMin    Int
+
+  @@index([trainerId])
+}
+
+/// Исключение: дни (включительно, в поясе Клуба), когда Тренер не принимает записи — выходной, отпуск
+model TrainerTimeOff {
+  id        String   @id @default(cuid())
+  trainer   Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId String
+  /// «2026-11-15»
+  fromDay   String
+  toDay     String
+  /// Подпись для Владельца: «отпуск», «выходной»
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([trainerId, toDay])
 }
