@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/lib/admin/guard";
-import { statsSince, summarizeContacts, type ContactInput, type ContactStats } from "@/lib/domain/contact";
+import { statsSince, summarizeContacts, type ContactInput, type ContactStats } from "../domain/contact";
 
 // Обращения: запись нажатия (сайт, без сессии) и сводка для Владельца.
 

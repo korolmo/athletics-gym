@@ -1,5 +1,5 @@
 // Как Обращения называются в админке (она только на русском).
-import type { ContactChannel, ContactSource } from "@/lib/domain/contact";
+import type { ContactChannel, ContactSource } from "../domain/contact";
 
 export const CONTACT_CHANNEL_LABEL_RU: Record<ContactChannel, string> = {
   whatsapp: "WhatsApp",

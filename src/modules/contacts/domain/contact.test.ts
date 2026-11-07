@@ -17,8 +17,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
 
-import { getContactStats, recordContact } from "@/lib/services/contacts";
-import { CONTACT_CHANNEL_LABEL_RU, CONTACT_SOURCE_LABEL_RU } from "@/lib/presentation/contact-labels";
+import { getContactStats, recordContact } from "../service/contacts";
+import { CONTACT_CHANNEL_LABEL_RU, CONTACT_SOURCE_LABEL_RU } from "../presentation/contact-labels";
 import {
   CONTACT_CHANNELS,
   CONTACT_RATE,

@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
 import { decideSeed } from "../src/lib/db-guard/production";
-import { CONTACT_CHANNELS, CONTACT_LOCALES, CONTACT_SOURCES } from "../src/lib/domain/contact";
+import { CONTACT_CHANNELS, CONTACT_LOCALES, CONTACT_SOURCES } from "../src/modules/contacts/domain/contact";
 import { DEFAULT_DIRECTIONS } from "../src/modules/directions/domain/direction.defaults";
 import { settingsToRow } from "../src/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
