@@ -13,3 +13,8 @@ export async function listVisibleTrainersWithTariffs() {
     include: { tariffs: { where: { isVisible: true }, orderBy: tariffsByOrder } },
   });
 }
+
+/** Тренер, к которому можно записаться: только видимый на сайте. Без сессии — для модуля Записи (этап 1). */
+export async function getBookableTrainer(id: string): Promise<{ id: string; name: string; hallId: string } | null> {
+  return db.trainer.findFirst({ where: { id, isVisible: true }, select: { id: true, name: true, hallId: true } });
+}

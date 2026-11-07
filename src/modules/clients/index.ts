@@ -9,3 +9,4 @@ export { demoChannel, resolveCodeChannel, type CodeChannel, type Delivery } from
 export { requestLoginCode, verifyLoginCode, type CodeRequestResult, type CodeVerifyResult } from "./service/login";
 export { createClientSession, currentClient, destroyClientSession, requireClient } from "./service/session-cookie";
 export { deleteClientAccount, deleteInactiveClients, revokeAllClientSessions, updateClientName } from "./service/profile";
+export { getClientContacts, lockClient, type ClientContact } from "./service/for-modules";

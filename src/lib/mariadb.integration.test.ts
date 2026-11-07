@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import { PrismaClient } from "@prisma/client";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { isNotFound } from "@/lib/admin/db-errors";
 import { settingsFromRow, settingsToRow } from "@/modules/site/client";
 import { DEFAULT_SETTINGS } from "@/modules/site/client";
@@ -149,5 +149,85 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
   it("логин Владельца сравнивается без учёта регистра (utf8mb4_unicode_ci): второй аккаунт «Admin» не создать", async () => {
     await db.owner.create({ data: { login: "admin", passwordHash: "x" } });
     await expect(db.owner.create({ data: { id: "other", login: "Admin", passwordHash: "x" } })).rejects.toMatchObject({ code: "P2002" });
+  });
+});
+
+// ——— Записи (этап 1, ADR 0017): гарантии базы под параллельной нагрузкой ———
+// Сервис Записей — настоящий, на пуле соединений к той же тестовой базе. Окна подменены и всегда «свободны»:
+// проверка в коде пропускает всех, и единственная защита — уникальный индекс и блокировка строки Клиента.
+
+const pooled = vi.hoisted(() => ({ db: null as PrismaClient | null }));
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/db", async () => {
+  const { PrismaClient: Client } = await import("@prisma/client");
+  pooled.db = new Client({ datasourceUrl: process.env.TEST_DATABASE_URL });
+  return { db: pooled.db };
+});
+vi.mock("@/modules/owner", () => ({ requireOwner: async () => {} }));
+vi.mock("@/modules/trainers", () => ({ getBookableTrainer: async () => ({ id: "race-trainer", name: "Тренер", hallId: "general" }) }));
+vi.mock("@/modules/schedule", () => ({ BOOKING_HORIZON_DAYS: 14, isWindowFree: async () => true, sessionMinutesOf: async () => 60 }));
+
+describe.skipIf(!URL_)("Записи на MariaDB: гонка", () => {
+  const now = new Date("2026-11-09T03:00:00Z");
+  const start = new Date("2026-11-11T14:00:00Z");
+  const key = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+  let db: PrismaClient;
+  let createBookingFor: typeof import("@/modules/bookings/service/bookings").createBookingFor;
+
+  beforeAll(async () => {
+    ({ createBookingFor } = await import("@/modules/bookings/service/bookings"));
+    db = pooled.db!;
+    await db.hall.upsert({ where: { id: "general" }, create: { id: "general", nameRu: "Общий зал" }, update: {} });
+    await db.trainer.create({ data: { id: "race-trainer", name: "Тренер", hallId: "general" } });
+    await db.client.createMany({
+      data: Array.from({ length: 50 }, (_, i) => ({
+        id: `race${i}`,
+        phone: `+7700${String(i).padStart(7, "0")}`,
+        name: `Клиент ${i}`,
+        consentAt: now,
+        consentPolicyDate: "2026-11-07",
+        lastLoginAt: now,
+      })),
+    });
+  });
+
+  afterAll(async () => {
+    await pooled.db?.$disconnect();
+  });
+
+  it("50 Клиентов параллельно на одно Окно — ровно одна Запись, остальным «занято»", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 50 }, (_, i) => createBookingFor(`race${i}`, { trainerId: "race-trainer", startAt: start, idempotencyKey: key(i) }, now)),
+    );
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(results.filter((r) => !r.ok && r.error === "taken")).toHaveLength(49);
+    expect(await db.booking.count({ where: { trainerId: "race-trainer", startAt: start, status: "ACTIVE" } })).toBe(1);
+  });
+
+  it("отмена освобождает Окно: снова можно записаться", async () => {
+    const active = await db.booking.findFirstOrThrow({ where: { startAt: start, status: "ACTIVE" } });
+    await db.booking.update({ where: { id: active.id }, data: { status: "CANCELLED", activeTrainerId: null } });
+    const again = await createBookingFor("race49", { trainerId: "race-trainer", startAt: start, idempotencyKey: key(100) }, now);
+    expect(again.ok).toBe(true);
+  });
+
+  it("один Клиент, 10 параллельных Записей на разное время — не больше 3", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 10 }, (_, i) =>
+        createBookingFor("race7", { trainerId: "race-trainer", startAt: new Date(start.getTime() + (i + 1) * 3_600_000), idempotencyKey: key(200 + i) }, now),
+      ),
+    );
+    expect(results.filter((r) => r.ok)).toHaveLength(3);
+    expect(results.filter((r) => !r.ok && r.error === "limit")).toHaveLength(7);
+  });
+
+  it("одна форма, отправленная 10 раз параллельно, — одна Запись", async () => {
+    const at = new Date(start.getTime() + 24 * 3_600_000);
+    const results = await Promise.all(
+      Array.from({ length: 10 }, () => createBookingFor("race8", { trainerId: "race-trainer", startAt: at, idempotencyKey: key(300) }, now)),
+    );
+    expect(results.every((r) => r.ok)).toBe(true);
+    expect(new Set(results.map((r) => (r.ok ? r.booking.id : "")))).toHaveProperty("size", 1);
+    expect(await db.booking.count({ where: { idempotencyKey: key(300) } })).toBe(1);
   });
 });
