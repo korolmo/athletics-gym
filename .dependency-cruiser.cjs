@@ -115,6 +115,15 @@ module.exports = {
       },
     },
     {
+      name: "clients-knows-no-one",
+      severity: "error",
+      comment:
+        "Клиенты — базовый модуль (этап 1, ADR 0016): вход, сессия и Согласие Клиента не зависят ни от одного модуля. " +
+        "Записи и Окна берут requireClient у него, а не наоборот; дата редакции Политики приходит из слоя приложения.",
+      from: { path: "^src/modules/clients/" },
+      to: { path: "^src/modules/(?!clients/)" },
+    },
+    {
       name: "top-modules",
       severity: "error",
       comment:

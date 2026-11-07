@@ -300,3 +300,39 @@ model Direction {
 
   @@index([sortOrder])
 }
+
+/// Клиент — человек со своим входом в личный кабинет (этап 1, ADR 0016). Храним минимум: телефон (он же логин),
+/// имя и Согласие на обработку данных. Удаление аккаунта удаляет запись целиком.
+model Client {
+  id                String   @id @default(cuid())
+  /// Телефон в виде +77XXXXXXXXX — логин Клиента
+  phone             String   @unique
+  name              String
+  /// Версия сессии: «Выйти на всех устройствах» увеличивает её — старые куки перестают подходить
+  sessionVersion    Int      @default(1)
+  /// Согласие на обработку данных: когда дано и с какой редакцией Политики («2026-11-07»)
+  consentAt         DateTime
+  consentPolicyDate String
+  /// Последний вход: аккаунт без входа дольше срока из правил удаляется
+  lastLoginAt       DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([lastLoginAt])
+}
+
+/// Одноразовый код входа Клиента. Хранится только хэш кода; запись удаляется при входе
+/// и чистится через сутки. IP — только хэш, для лимита запросов кода.
+model ClientLoginCode {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  ipHash    String
+  /// Неверные вводы этого кода
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+  @@index([ipHash, createdAt])
+}
