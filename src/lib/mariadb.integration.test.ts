@@ -19,6 +19,8 @@ const { migrate, singleConnectionUrl } = require("../../scripts/standalone/migra
 };
 const DIR = "prisma/migrations";
 const BASELINE = "20261015000000_init_mariadb";
+/** Все миграции папки по порядку: базовая и все после неё (этап 1 — Клиенты). */
+const ALL = fs.readdirSync(DIR, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
 
 describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
   let db: PrismaClient;
@@ -39,7 +41,8 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
 
   it("миграции применяются нашим скриптом и записываются, как у Prisma; второй запуск ничего не делает", async () => {
     const log: string[] = [];
-    expect(await migrate({ db, dir: DIR, log: (m) => log.push(m) })).toEqual([BASELINE]);
+    expect(await migrate({ db, dir: DIR, log: (m) => log.push(m) })).toEqual(ALL);
+    expect(ALL[0]).toBe(BASELINE);
     expect(await migrate({ db, dir: DIR, log: (m) => log.push(m) })).toEqual([]);
     const [row] = await db.$queryRawUnsafe<{ checksum: string; steps: number }[]>(
       "SELECT checksum, applied_steps_count AS steps FROM _prisma_migrations WHERE migration_name = ?",
