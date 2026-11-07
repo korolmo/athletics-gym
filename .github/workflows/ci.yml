@@ -28,6 +28,48 @@ jobs:
       - name: Check workflows
         run: ./actionlint -color
 
+  boundaries:
+    # Границы кода (этап 6, ADR 0015): новое нарушение — ошибка; известные — в
+    # .dependency-cruiser-known-violations.json, их число убывает с каждым перенесённым модулем.
+    name: Dependency boundaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Check boundaries
+        run: npm run deps:check
+
+      - name: Graph
+        if: always()
+        run: |
+          known=$(node -p "require('./.dependency-cruiser-known-violations.json').length")
+          {
+            echo "### Границы кода"
+            echo "Известных нарушений: **${known}** (цель этапа 6 — 0)."
+            echo
+            echo '```mermaid'
+            npm run -s deps:graph
+            echo '```'
+          } > deps-graph.md
+          cat deps-graph.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload graph
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deps-graph
+          path: deps-graph.md
+          if-no-files-found: ignore
+
   check:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
