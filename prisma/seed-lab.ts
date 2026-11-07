@@ -7,6 +7,7 @@ import { settingsToRow } from "../src/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/lib/domain/site-settings.defaults";
 import { LEGAL_UPDATED } from "../src/lib/legal/meta";
 import { HALLS, LAB_CONTACTS, MONTH, ONCE, hallTariffs, type HallId, type TariffSeed } from "./seed-data";
+import { withConnectRetry } from "../scripts/lab/connect-retry.mjs";
 
 // Seed Лаборатории (ADR 0007): бренд, тексты и Тарифы Athletic's Gym; Тренеры вымышленные (без плакатов),
 // Отзывы и Обращения синтетические. Копий боевой базы нет.
@@ -120,6 +121,16 @@ async function main() {
     return;
   }
 
+  // TiDB Starter рвёт соединение и на первом запросе (холодный кластер, этап 0, инцидент 3), и посреди seed
+  // (PR #58: «Can't reach database server» на последнем запросе). Seed можно повторять: он сначала удаляет
+  // свои данные, дальше — upsert. Поэтому при ошибке соединения повторяем его целиком.
+  const result = await withConnectRetry(() => seed(login, password));
+  console.log(
+    `Готово (Лаборатория): 2 Зала, ${result.trainerCount} вымышленных Тренеров, ${result.tariffCount} Тарифов, ${reviews.length} синтетических Отзывов, ${result.clicks} Обращений, аккаунт Владельца.`,
+  );
+}
+
+async function seed(login: string, password: string) {
   const now = new Date();
   await db.contactClick.deleteMany();
   await db.review.deleteMany();
@@ -189,9 +200,7 @@ async function main() {
   });
 
   const [tariffCount, trainerCount] = await Promise.all([db.tariff.count(), db.trainer.count()]);
-  console.log(
-    `Готово (Лаборатория): 2 Зала, ${trainerCount} вымышленных Тренеров, ${tariffCount} Тарифов, ${reviews.length} синтетических Отзывов, ${clicks.length} Обращений, аккаунт Владельца.`,
-  );
+  return { tariffCount, trainerCount, clicks: clicks.length };
 }
 
 main()
