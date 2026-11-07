@@ -124,6 +124,15 @@ module.exports = {
       to: { path: "^src/modules/(?!clients/)" },
     },
     {
+      name: "schedule-knows-only-owner",
+      severity: "error",
+      comment:
+        "Окна Тренера (этап 1, ADR 0017) знают только Аккаунт Владельца (requireOwner в админке). С Тренером связь — " +
+        "внешний ключ в базе, занятое время Записей передаёт слой приложения: Записи зависят от Окон, не наоборот.",
+      from: { path: "^src/modules/schedule/" },
+      to: { path: "^src/modules/(?!schedule/|owner/)" },
+    },
+    {
       name: "top-modules",
       severity: "error",
       comment:
