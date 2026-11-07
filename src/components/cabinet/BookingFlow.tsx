@@ -302,6 +302,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
                   key={tr.id}
                   type="button"
                   aria-pressed={on}
+                  aria-label={tr.name}
                   onClick={() => load(tr.id)}
                   className={`relative flex w-[42%] min-w-[150px] max-w-[200px] shrink-0 snap-start flex-col items-center gap-3 rounded-2xl border-2 bg-surface-card px-3 py-5 transition ${
                     on ? "border-primary-container" : "border-transparent hover:border-surface-border"
@@ -407,7 +408,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
         </p>
       )}
 
-      <div className="sticky bottom-24 z-30 mt-8 overflow-hidden rounded-2xl border-t-4 border-primary-container bg-surface-card p-5 shadow-[0_-8px_30px_rgba(0,0,0,0.45)] md:bottom-6">
+      <div className="mt-8 overflow-hidden rounded-2xl border-t-4 border-primary-container bg-surface-card p-5">
         {selected && trainer ? (
           <p className="flex items-start gap-3 text-[17px] font-bold text-text-primary">
             <CalendarMonthSym className="mt-0.5 h-6 w-6 shrink-0 text-primary-container" />

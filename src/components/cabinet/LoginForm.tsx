@@ -98,7 +98,9 @@ function PhoneStep({ locale, t, action, pending, error }: { locale: Locale; t: C
       <form action={action} className={`${cardLine} bg-gradient-to-br from-surface-card to-surface-container-low text-center md:text-left`}>
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="intent" value="request" />
-        <Pill className="mb-5 hidden md:inline-flex">{t.badge}</Pill>
+        <div className="mb-5 hidden md:block">
+          <Pill>{t.badge}</Pill>
+        </div>
         <h1 className="text-headline-lg-mobile font-extrabold uppercase text-text-primary">{t.login.title}</h1>
         <p className="mt-2 text-body-lg text-text-muted">{t.login.subtitle}</p>
 
@@ -175,8 +177,10 @@ function CodeStep({
   return (
     <>
       <div className="mb-5 flex items-center justify-between gap-3">
-        <Pill className={first ? "border border-primary-container/40" : "mx-auto md:mx-0"}>{first ? t.badgeFirst : t.badge}</Pill>
-        {first && <span className="text-label-uppercase uppercase tracking-wider text-primary-container">{fill(t.step, { n: "02" })}</span>}
+        <Pill small={first} className={first ? "border border-primary-container/40" : "mx-auto md:mx-0"}>
+          {first ? t.badgeFirst : t.badge}
+        </Pill>
+        {first && <span className="shrink-0 whitespace-nowrap text-[11px] font-extrabold uppercase tracking-wider text-primary-container sm:text-label-uppercase">{fill(t.step, { n: "02" })}</span>}
       </div>
       <form action={action} className={`${cardLine} ${first ? "text-left" : "text-center md:text-left"}`}>
         <input type="hidden" name="locale" value={locale} />
@@ -296,7 +300,7 @@ function CodeStep({
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-label-uppercase uppercase tracking-wider text-text-muted">{t.login.demoTitle}</p>
-            <p className="text-[28px] font-extrabold tracking-[0.15em] text-primary-container">
+            <p className="whitespace-nowrap text-[24px] font-extrabold tracking-[0.12em] text-primary-container sm:text-[28px]">
               <span className="sr-only">{t.code.demoCode} </span>
               {state.shownCode.slice(0, 3)} {state.shownCode.slice(3)}
             </p>

@@ -150,8 +150,10 @@ export function BookingsView({ locale, t, halls, name, bookings, trainerNames, w
 
       <a href={waHref} target="_blank" rel="noopener noreferrer" className={`${card} mt-6 flex items-center gap-4`}>
         <ChatSym className="h-7 w-7 shrink-0 text-whatsapp-green" />
-        <span className="flex-1 text-body-lg text-text-primary">{t.bookings.questions}</span>
-        <span className="font-bold text-whatsapp-green">{t.login.writeWa}</span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-body-md text-text-muted">{t.bookings.questions}</span>
+          <span className="font-bold text-whatsapp-green">{t.login.writeWa}</span>
+        </span>
         <ArrowForwardSym className="h-6 w-6 text-whatsapp-green" />
       </a>
     </>

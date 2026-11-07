@@ -24,7 +24,7 @@ export function CabinetShell({ locale, t, tab, children }: { locale: Locale; t: 
   const base = `/${locale}/cabinet`;
   return (
     <div className="min-h-dvh pb-28 md:pb-12">
-      <header className="sticky top-0 z-40 w-full bg-background/95 shadow-header md:bg-background/85 md:backdrop-blur-xl">
+      <header data-cabinet-header className="sticky top-0 z-40 w-full bg-background/95 shadow-header md:bg-background/85 md:backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-[1040px] items-center justify-between gap-3 px-4 md:h-20 md:px-gutter">
           <Link href={`/${locale}`} className="flex min-w-0 items-center gap-3">
             <Image src={logo} alt="" width={36} height={36} className="h-9 w-9 shrink-0 object-contain" priority />
@@ -59,7 +59,7 @@ export function CabinetShell({ locale, t, tab, children }: { locale: Locale; t: 
 
       <main className="mx-auto w-full max-w-[720px] px-4 pt-4 md:px-gutter md:pt-8">{children}</main>
 
-      <nav aria-label={t.header[tab]} className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-border bg-surface-container-lowest/95 md:hidden">
+      <nav aria-label={t.header[tab]} className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-border bg-surface-container-lowest md:hidden">
         <div className="mx-auto grid max-w-[720px] grid-cols-3 pb-[env(safe-area-inset-bottom)]">
           {TABS.map(({ id, path, Icon }) => (
             <Link
