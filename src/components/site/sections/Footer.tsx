@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { site, whatsappUrl } from "@/lib/site";
-import { requisitesParts } from "@/lib/domain/site-settings";
+import { requisitesParts } from "@/modules/site/client";
 import { LEGAL_PAGES, legalPath } from "@/modules/legal/client";
 import { NavLink } from "@/components/ui/NavLink";
 import { container, label } from "@/components/ui/styles";

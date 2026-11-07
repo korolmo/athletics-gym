@@ -3,7 +3,14 @@
 
 import type { Metadata, MetadataRoute } from "next";
 import { locales, type Locale } from "@/lib/i18n";
-import type { SiteContent } from "@/lib/domain/site-settings";
+/**
+ * Что SEO нужно от Настроек сайта. Платформа о модуле Сайт не знает (ADR 0015): поля описаны здесь,
+ * SiteContent модуля Сайт подходит под них по форме.
+ */
+export type SeoSiteContent = {
+  contacts: { hours: string; phoneTel: string; address: string; instagram: string };
+  women: { instagram: string };
+};
 
 /** Адрес сайта на хостинге hoster.kz (ADR 0004); другой адрес задаёт переменная SITE_URL. */
 export const DEFAULT_SITE_URL = "https://athleticsgym.kz";
@@ -161,7 +168,7 @@ export function buildGymJsonLd(input: {
   coords: { lat: number; lng: number };
   logoPath: string;
   extraLinks: string[];
-  content: Pick<SiteContent, "contacts" | "women">;
+  content: SeoSiteContent;
 }): Record<string, unknown> {
   const { siteUrl, locale, content } = input;
   const hours = parseOpeningHours(content.contacts.hours);

@@ -1,10 +1,10 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/modules/owner";
-import { SHOW_COLUMN, settingsToRow, type BlockId, type SiteSettingsData } from "@/lib/domain/site-settings";
-import { DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
-import type { AboutInput, ContactsInput, HeroInput, LegalInput, MarqueeInput, RatingInput, WomenInput } from "@/lib/validation/site-settings";
-import { SETTINGS_ID, getSiteSettings } from "./site";
+import { SHOW_COLUMN, settingsToRow, type BlockId, type SiteSettingsData } from "../domain/site-settings";
+import { DEFAULT_SETTINGS } from "../domain/site-settings.defaults";
+import type { AboutInput, ContactsInput, HeroInput, LegalInput, MarqueeInput, RatingInput, WomenInput } from "../validation/site-settings";
+import { SETTINGS_ID, getSiteSettings } from "./settings";
 
 // Настройки сайта в админке. Каждая функция сама проверяет сессию Владельца.
 

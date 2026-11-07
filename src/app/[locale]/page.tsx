@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getPriceListAndTrainers, getSitePhotos, getSiteSettings } from "@/lib/services/site";
+import { getPriceListAndTrainers, getSitePhotos } from "@/lib/services/site";
+import { getSiteSettings } from "@/modules/site";
 import { listPublishedReviews } from "@/modules/reviews";
 import { listVisibleDirections } from "@/modules/directions";
 import { toDirectionViews } from "@/modules/directions/client";
@@ -10,7 +11,7 @@ import { logoIconUrl } from "@/lib/brand";
 import { ContactTracker } from "@/components/site/ContactTracker";
 import { Motion } from "@/components/site/Motion";
 import { mediaUrl } from "@/modules/photos";
-import { toSiteContent } from "@/lib/domain/site-settings";
+import { toSiteContent } from "@/modules/site/client";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
 import {
   About,

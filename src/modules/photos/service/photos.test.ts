@@ -148,7 +148,23 @@ const directionSlot: photos.PhotoSlot = {
   clear: async () => null,
   paths: async () => [],
 };
-const slots = [hallSlot, trainerSlot, directionSlot];
+// Фото первого экрана и Женского зала ведёт модуль Сайт (Настройки сайта) — подделки над подменённой базой
+const settingsSlot = (kind: "hero" | "women", column: "heroPhoto" | "womenPhoto"): photos.PhotoSlot => ({
+  kind,
+  exists: async (id) => id === undefined,
+  set: async (_id, path) => {
+    const previous = (await db.siteSettings.findUnique())[column] ?? null;
+    await db.siteSettings.update({ data: { [column]: path } });
+    return previous;
+  },
+  clear: async () => {
+    const previous = (await db.siteSettings.findUnique())[column] ?? null;
+    if (previous) await db.siteSettings.update({ data: { [column]: null } });
+    return previous;
+  },
+  paths: async () => [(await db.siteSettings.findUnique())[column]],
+});
+const slots = [hallSlot, trainerSlot, directionSlot, settingsSlot("hero", "heroPhoto"), settingsSlot("women", "womenPhoto")];
 /** Сервис так, как его вызывают действия админки: со всеми местами владельцев. */
 const withSlots = {
   requestUpload: (t: string, type: string, sizes: number[]) => photos.requestUpload(t, type, sizes, slots),
@@ -454,7 +470,6 @@ describe("права: без сессии Владельца — отказ", ()
     ["toggleGalleryPhoto", () => photos.toggleGalleryPhoto("g1")],
     ["moveGalleryPhoto", () => photos.moveGalleryPhoto("g1", "down")],
     ["deleteGalleryPhoto", () => photos.deleteGalleryPhoto("g1")],
-    ["getSinglePhotos", () => photos.getSinglePhotos()],
     ["sweepOrphans", () => withSlots.sweepOrphans()],
   ];
 

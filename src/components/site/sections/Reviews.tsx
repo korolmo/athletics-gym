@@ -1,5 +1,5 @@
 import { site } from "@/lib/site";
-import { ratingCountText } from "@/lib/presentation/rating";
+import { ratingCountText } from "@/modules/site/client";
 import { OpenInNewSym } from "@/components/symbols";
 import { container, label, sectionY } from "@/components/ui/styles";
 import { SectionHead } from "@/components/ui/SectionHead";

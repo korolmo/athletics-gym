@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
-import { toSiteContent } from "@/lib/domain/site-settings";
-import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
+import { toSiteContent } from "@/modules/site/client";
+import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/modules/site/client";
 import { LEGAL_PAGES, LEGAL_UPDATED, legalHead } from "@/modules/legal";
 import {
   DEFAULT_SITE_URL,

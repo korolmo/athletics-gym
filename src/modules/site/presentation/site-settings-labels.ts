@@ -1,5 +1,5 @@
 // Как Блоки главной и формы Настроек сайта называются в админке (она только на русском).
-import type { BlockId, SettingsFormId } from "@/lib/domain/site-settings";
+import type { BlockId, SettingsFormId } from "../domain/site-settings";
 
 export const BLOCK_LABEL_RU: Record<BlockId, string> = {
   marquee: "Бегущая строка",

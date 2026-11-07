@@ -15,7 +15,7 @@ import {
   parseReviewDate,
   todayInGym,
 } from "./review";
-import { BLOCKS } from "@/lib/domain/site-settings";
+import { BLOCKS } from "@/modules/site/client";
 
 const NOW = new Date("2026-10-10T09:00:00Z");
 const SECRET = "test-secret-test-secret-test-secret-0123456789";

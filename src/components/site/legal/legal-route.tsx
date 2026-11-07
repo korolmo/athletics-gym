@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LegalPage } from "@/components/site/legal/LegalPage";
 import { siteIcons } from "@/lib/brand";
-import { toSiteContent } from "@/lib/domain/site-settings";
+import { toSiteContent } from "@/modules/site/client";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { legalContext, legalDoc, legalHead, type LegalPageId } from "@/modules/legal";
 import { buildMetadata, readSeoEnv } from "@/lib/seo";
-import { getSiteSettings } from "@/lib/services/site";
+import { getSiteSettings } from "@/modules/site";
 
 // Общее для страниц /privacy и /terms: сами файлы страниц только называют документ.
 

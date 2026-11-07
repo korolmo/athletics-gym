@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { requireOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
-import { isBlock } from "@/lib/domain/site-settings";
+import { isBlock } from "@/modules/site/client";
 import {
   parseAboutForm,
   parseContactsForm,
@@ -13,9 +13,9 @@ import {
   parseMarqueeForm,
   parseRatingForm,
   parseWomenForm,
-} from "@/lib/validation/site-settings";
+} from "@/modules/site";
 import type { Parsed } from "@/lib/validation/shared";
-import * as settings from "@/lib/services/site-settings";
+import * as settings from "@/modules/site";
 
 // Действия — тонкие: права → валидация → сервис → обновить страницы и вернуть Владельца в список
 

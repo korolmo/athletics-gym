@@ -4,8 +4,8 @@ import { createRequire } from "node:module";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { isNotFound } from "@/lib/admin/db-errors";
-import { settingsFromRow, settingsToRow } from "@/lib/domain/site-settings";
-import { DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
+import { settingsFromRow, settingsToRow } from "@/modules/site/client";
+import { DEFAULT_SETTINGS } from "@/modules/site/client";
 
 // Проверки на настоящей MariaDB 10.4 (ADR 0004): миграции нашим скриптом, типы колонок, кодировка, даты.
 // База должна быть отдельной — тест удаляет в ней все таблицы. В CI — сервис mariadb:10.4 (.github/workflows/ci.yml),

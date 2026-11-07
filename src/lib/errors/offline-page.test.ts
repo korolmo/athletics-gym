@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { errorsKk } from "@/dictionaries/errors/kk";
 import { errorsRu } from "@/dictionaries/errors/ru";
-import { DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
+import { DEFAULT_SETTINGS } from "@/modules/site/client";
 import { OFFLINE_FILE, offlineBody, offlinePage } from "./offline-page";
 
 describe("статическая страница 503", () => {
