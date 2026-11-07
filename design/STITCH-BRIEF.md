@@ -225,3 +225,79 @@ C) "НЕ ДОСТАВЛЕННЫЕ УВЕДОМЛЕНИЯ": list of failed Telegr
 
 - Скриншоты всех экранов (мобильная и десктоп) и экспорт HTML — в `design/stitch/cabinet/`.
 - Тексты в макетах — черновые: окончательные будут в словарях (`src/dictionaries`), казахские — там же.
+
+---
+
+## Новая админка (8 ноября 2026)
+
+Решения — `docs/stages/admin-v2.md`. Оболочка и «Записи» уже нарисованы (`design/stitch/cabinet`: 17 — компьютер, 16 — карточка Записи на телефоне, 18 — часы работы Тренера, screen.png — недоставленные уведомления). Ниже — остальные разделы в том же виде. Генерировать в том же проекте Stitch рядом с экраном 17, каждый экран — телефон (390) и компьютер (1440).
+
+Чего в админке нет (не рисовать): загрузки зала в процентах, синхронизации с 1С, экспорта табеля, оплаты и абонементов, расписания групповых занятий, «Зон», чата техподдержки, нескольких сотрудников — Владелец один. Обращения — это только счётчик нажатий на кнопки связи на сайте, без имён и телефонов.
+
+### Общее для админки (добавлять к каждому экрану)
+
+```
+Admin panel for the same Athletic's Gym website, same look as the existing admin screen with the trainers' bookings grid in this project (screen 17): background #131315, cards #1F1F23 with 16px radius and 1px border #2E2E33, accent yellow #F5E642 (text on yellow #363100) only for the main action, the active menu item and small highlights, text #F4F4F5, muted #A1A1AA, success green #25D366, danger #EF4444; Manrope, bold headings without excessive uppercase, Material Symbols Outlined icons. Only one user — the gym owner; all text in Russian; no language switcher.
+Desktop 1440: top bar (logo, "ATHLETIC'S · Admin Panel", link "Сайт ↗", round profile button) and a left sidebar "Управление клубом" with items: Обращения, Записи, Тарифы, Тренеры, Направления, Фото, Отзывы, Сайт, Аккаунт; the active item is a yellow pill. Content area to the right.
+Mobile 390: compact top bar (logo, section title, round profile button) and a bottom tab bar with 4 items: Записи, Обращения, Тренеры, Ещё (three dots). Large touch targets (min 48px).
+```
+
+### А1 — Вход
+
+```
+Admin login. Centered card: logo, title "Вход в админку", fields "Логин" and "Пароль" (with show/hide eye), yellow button "Войти", muted note "Только для владельца Athletic's Gym". Error example under the button in a red-tinted box: "Неверный логин или пароль". No sidebar and no tab bar on this screen.
+```
+
+### А2 — Обращения (главная админки)
+
+```
+Admin home "Обращения" — clicks on the website contact buttons, no personal data. Top: three stat cards "Сегодня 12", "7 дней 64", "30 дней 241". Card "По дням за 30 дней": simple bar chart, today highlighted yellow. Two cards side by side: "По каналам" (WhatsApp / Телефон / Instagram — horizontal bars with numbers) and "Откуда нажимали" (Первый экран, Цены, Карточка тренера, Женский зал, Контакты, Нижняя панель — list with numbers). Muted footnote "Разбивки — за последние 30 дней. Кто нажал и написал ли — сайт не знает."
+```
+
+### А3 — «Ещё» на телефоне
+
+```
+Mobile bottom sheet opened from the "Ещё" tab: grabber, list of sections with icons — Тарифы, Направления, Фото, Отзывы (with a yellow badge "2 новых"), Сайт, Аккаунт; a divider; "Открыть сайт ↗"; "Выйти" in muted red.
+```
+
+### А4 — Тарифы
+
+```
+"Тарифы": hall switch "Общий зал / Женский зал" (segmented, like on the website prices). Groups by fixed category headers: "Разовое посещение", "Абонемент на посещения", "Безлимит", "Персональная тренировка". Each tariff row: name (e.g. "Безлимит 1 месяц"), price "от 9 000 ₸" or "15 000 ₸", small chips for access time "Весь день" / "Дневной" and audience "Студенты" / "Женщины", a visibility toggle "На сайте" and an edit pencil. Yellow button "+ Добавить тариф". Edit form (second screen): category select, title RU / title KZ ("Если пусто — покажем русский"), price and optional "до", visits per month or months, access time, audience, toggle "Показывать на сайте", sticky "Сохранить" and muted red "Удалить тариф".
+```
+
+### А5 — Тренеры
+
+```
+"Тренеры": hall switch, list of trainer cards — poster thumbnail (vertical 3:4), name, short description, "Тарифов: 3", "Часы: пн–сб", visibility toggle "На сайте", edit pencil. Yellow "+ Добавить тренера". Trainer page (second screen): poster upload area 3:4 with "Заменить" / "Удалить", fields name, hall, description RU/KZ, order, toggle "На сайте"; section "Тарифы тренера" with rows and "+ Добавить тариф"; section "Часы работы" (use the existing screen 18 style); muted red "Удалить тренера".
+```
+
+### А6 — Направления
+
+```
+"Направления": reorderable list (drag handle) of cards — icon or photo, title, one-line description, toggle "На сайте", edit pencil. Yellow "+ Добавить направление". Edit form: title RU/KZ, description RU/KZ, picture choice — icon grid (dumbbell, boxing glove, running, scale, stretching…) or "Загрузить фото", toggle, "Сохранить".
+```
+
+### А7 — Фото
+
+```
+"Фото" with four groups: "Главная" (hero photo and women's hall photo — two large slots), "Плакаты прайса" (one per hall), "Плакаты тренеров" (vertical 3:4 thumbnails with names), "Галерея" (grid of photos with captions, reorder, hide/show eye, delete). Upload slot style: dashed border, "Загрузить" button, note "JPG или PNG — сожмём сами". Storage meter "Занято 120 МБ из 500".
+```
+
+### А8 — Отзывы
+
+```
+"Отзывы": status tabs "Новые 2 / Опубликованы 14 / Скрыты 3". Review cards: author name, 1–5 stars, source chip ("Сайт", "2ГИС", "Instagram"), hall chip, date, full text (never edited), for "Новые": buttons "Опубликовать" (yellow), "Скрыть", "Удалить" (muted red). Yellow "+ Добавить отзыв" (manual review copied from 2GIS: author, rating, text, source, link, date).
+```
+
+### А9 — Сайт
+
+```
+"Сайт": list of cards, each opens its own form — "Блоки главной" (toggles: Бегущая строка, О зале, С чем помогут тренеры, Женский зал, Цены, Галерея, Тренеры, Отзывы, Контакты; first screen is always shown), "Первый экран" (motto and subtitle RU/KZ), "Бегущая строка" (up to 8 items, placeholders {часы} and {рейтинг}), "О зале" (4 cards), "Женский зал", "Контакты" (address, hours, phone, WhatsApp, Instagram), "Рейтинг 2ГИС", "Реквизиты и документы". Each card shows a one-line preview of the current value and a chevron. Show one opened form too ("Контакты") with a sticky "Сохранить" and a green toast "Сохранено — уже на сайте".
+```
+
+### А10 — Аккаунт
+
+```
+"Аккаунт": card "Логин" (read-only), card "Смена пароля" (current password, new password twice, rules hint "от 8 символов", yellow "Сменить пароль"), card "Устройства" with dark button "Выйти на всех устройствах" and note "Понадобится войти заново на этом и других устройствах".
+```
