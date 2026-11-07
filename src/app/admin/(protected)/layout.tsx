@@ -6,7 +6,7 @@ import { isAuthed } from "@/lib/auth";
 import { logout } from "../actions";
 import { AdminNav } from "./AdminNav";
 import { logo } from "@/lib/brand";
-import { countNewReviews } from "@/lib/services/reviews";
+import { countNewReviews } from "@/modules/reviews";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   // Только для интерфейса: сессию проверяют middleware и requireOwner() перед каждым чтением и записью данных

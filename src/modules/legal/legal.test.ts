@@ -4,7 +4,7 @@ import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
 import { ATTEMPT_KEEP_MS, MAX_FAILED_ATTEMPTS, evaluateAttempts } from "@/lib/auth/login-limit.rules";
 import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/lib/auth/session";
-import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS, SUBMISSION_WINDOW_MS } from "@/lib/domain/review";
+import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS, SUBMISSION_WINDOW_MS } from "@/modules/reviews/client";
 import { toSiteContent } from "@/lib/domain/site-settings";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_DATA_LOCATION, DEFAULT_SETTINGS } from "@/lib/domain/site-settings.defaults";
 import { locales, type Locale } from "@/lib/i18n";
@@ -293,10 +293,10 @@ describe("политика говорит то же, что делает код"
     expect(LEGAL_UPDATED).toEqual({ privacy: "2026-10-15", terms: "2026-10-12" });
     expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^15 октября 2026/);
     expect(build("privacy", "kk").updated).toBe(LEGAL_UPDATED.privacy);
-    // Сервис берёт дату из той же константы, своей копии у него нет
-    const service = fs.readFileSync("src/lib/services/reviews.ts", "utf8");
-    expect(service).toContain("consentPolicyDate: LEGAL_UPDATED.privacy");
-    expect(fs.readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts")).filter((f) => /"2026-10-1[12]"/.test(fs.readFileSync(`src/${f}`, "utf8"))).map((f) => f.replace(/\\/g, "/"))).toEqual(["lib/legal/meta.ts"]);
+    // Дату для Согласия Отзывы получают от действия сайта, а оно — из той же константы; своей копии нет нигде
+    const action = fs.readFileSync("src/app/[locale]/actions.ts", "utf8");
+    expect(action).toContain("createVisitorReview(parsed.data, ipHash, LEGAL_UPDATED.privacy)");
+    expect(fs.readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts")).filter((f) => /"2026-10-1[12]"/.test(fs.readFileSync(`src/${f}`, "utf8"))).map((f) => f.replace(/\\/g, "/"))).toEqual(["modules/legal/meta.ts"]);
   });
 
   it("о том, у кого есть доступ, сказано один раз — в разделе о защите; в «Где хранятся данные» — только место и журналы", () => {

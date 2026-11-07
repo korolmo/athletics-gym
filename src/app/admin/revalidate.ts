@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { locales } from "@/lib/i18n";
-import { LEGAL_PAGES, legalPath } from "@/lib/legal/meta";
+import { LEGAL_PAGES, legalPath } from "@/modules/legal/client";
 
 /** После любого изменения в админке: обновить сайт на обоих языках и списки админки. */
 export function revalidateSite(): void {

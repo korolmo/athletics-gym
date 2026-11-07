@@ -3,10 +3,10 @@
 import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/admin/guard";
 import { text } from "@/lib/admin/form";
-import { revalidateSite } from "@/lib/admin/revalidate";
-import { isOwnerStatus } from "@/lib/domain/review";
-import { parseOwnerReviewForm } from "@/lib/validation/review";
-import * as reviews from "@/lib/services/reviews";
+import { revalidateSite } from "@/app/admin/revalidate";
+import { isOwnerStatus } from "@/modules/reviews/client";
+import { parseOwnerReviewForm } from "@/modules/reviews";
+import * as reviews from "@/modules/reviews";
 
 // Действия — тонкие: права → валидация → сервис → обновить страницы
 

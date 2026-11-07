@@ -74,7 +74,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/lib/admin/guard", () => ({ requireOwner }));
 
-import { LEGAL_UPDATED } from "@/lib/legal/meta";
+import { LEGAL_UPDATED } from "@/modules/legal/client";
 import * as reviews from "./reviews";
 
 const NOW = new Date("2026-10-10T09:00:00Z");
@@ -107,7 +107,7 @@ beforeEach(() => {
 describe("отзыв Посетителя с сайта", () => {
   it("принятый отзыв — «Новый», источник «сайт», помечен как отзыв Посетителя; дата — сегодня в зале", async () => {
     expect(await reviews.checkVisitorSubmission(human(), NOW)).toEqual({ verdict: "accept" });
-    await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.reviews).toHaveLength(1);
     expect(state.reviews[0]).toMatchObject({
       ...written,
@@ -120,7 +120,7 @@ describe("отзыв Посетителя с сайта", () => {
   });
 
   it("вместе с отзывом записаны время Согласия на обработку данных и дата редакции политики; самой галочки в записи нет", async () => {
-    await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.reviews[0].consentAt).toEqual(NOW);
     expect(state.reviews[0].consentPolicyDate).toBe(LEGAL_UPDATED.privacy);
     expect(state.reviews[0]).not.toHaveProperty("consent");
@@ -131,7 +131,7 @@ describe("отзыв Посетителя с сайта", () => {
     ["согласие — не «да»", { ...written, consent: false }],
     ["согласие строкой", { ...written, consent: "on" }],
   ])("без Согласия отзыв не сохраняется: %s", async (_name, input) => {
-    await expect(reviews.createVisitorReview(input as typeof visitor, "ip-1", NOW)).rejects.toThrow(/согласия/);
+    await expect(reviews.createVisitorReview(input as typeof visitor, "ip-1", LEGAL_UPDATED.privacy, NOW)).rejects.toThrow(/согласия/);
     expect(state.reviews).toEqual([]);
     expect(state.submissions).toEqual([]);
     expect(db.review.create).not.toHaveBeenCalled();
@@ -143,7 +143,7 @@ describe("отзыв Посетителя с сайта", () => {
   });
 
   it("до одобрения на сайте его нет", async () => {
-    await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(await reviews.listPublishedReviews()).toEqual([]);
   });
 
@@ -164,7 +164,7 @@ describe("отзыв Посетителя с сайта", () => {
   it("лимит: три отзыва с одного адреса за сутки, четвёртый — отказ; с другого адреса — можно", async () => {
     for (let i = 0; i < 3; i++) {
       expect(await reviews.checkVisitorSubmission(human(), NOW)).toEqual({ verdict: "accept" });
-      await reviews.createVisitorReview(visitor, "ip-1", NOW);
+      await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     }
     expect(await reviews.checkVisitorSubmission(human(), NOW)).toEqual({ verdict: "limit" });
     expect(await reviews.checkVisitorSubmission(human("ip-2"), NOW)).toEqual({ verdict: "accept" });
@@ -172,20 +172,20 @@ describe("отзыв Посетителя с сайта", () => {
   });
 
   it("через сутки лимит снова свободен", async () => {
-    for (let i = 0; i < 3; i++) await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    for (let i = 0; i < 3; i++) await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     const tomorrow = new Date(NOW.getTime() + 25 * HOUR);
     expect(await reviews.checkVisitorSubmission(human(), tomorrow)).toEqual({ verdict: "accept" });
   });
 
   it("в записи об отправке — только хэш адреса", async () => {
-    await reviews.createVisitorReview(visitor, "ip-hash-abc", NOW);
+    await reviews.createVisitorReview(visitor, "ip-hash-abc", LEGAL_UPDATED.privacy, NOW);
     expect(state.submissions).toEqual([{ ipHash: "ip-hash-abc", createdAt: NOW }]);
     expect(JSON.stringify(state.reviews)).not.toContain("ip-hash-abc");
   });
 
   it("старые записи об отправках вычищаются", async () => {
     state.submissions.push({ ipHash: "old", createdAt: new Date(NOW.getTime() - 72 * HOUR) });
-    await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.submissions.map((s) => s.ipHash)).toEqual(["ip-1"]);
   });
 });
@@ -194,7 +194,7 @@ describe("на сайте видны только опубликованные",
   beforeEach(async () => {
     await reviews.saveOwnerReview({ ...manual, authorName: "Опубликован" });
     await reviews.saveOwnerReview({ ...manual, authorName: "Скрыт", status: "HIDDEN" });
-    await reviews.createVisitorReview({ ...visitor, authorName: "Новый" }, "ip-1", NOW);
+    await reviews.createVisitorReview({ ...visitor, authorName: "Новый" }, "ip-1", LEGAL_UPDATED.privacy, NOW);
   });
 
   it("новые и скрытые не попадают в выдачу сайта", async () => {
@@ -238,7 +238,7 @@ describe("админка", () => {
   });
 
   it("текст отзыва Посетителя править нельзя — ни текст, ни имя, ни оценку", async () => {
-    await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     const id = state.reviews[0].id;
     const r = await reviews.saveOwnerReview({ ...manual, id, text: "Исправленный текст", authorName: "Другой", rating: 1 });
     expect(r.ok === false && r.error).toMatch(/править нельзя/);
@@ -253,17 +253,17 @@ describe("админка", () => {
 
   it("новые идут первыми, дальше — по времени добавления", async () => {
     await reviews.saveOwnerReview({ ...manual, authorName: "ручной-1" });
-    await reviews.createVisitorReview({ ...visitor, authorName: "новый-1" }, "ip-1", NOW);
+    await reviews.createVisitorReview({ ...visitor, authorName: "новый-1" }, "ip-1", LEGAL_UPDATED.privacy, NOW);
     await reviews.saveOwnerReview({ ...manual, authorName: "ручной-2" });
-    await reviews.createVisitorReview({ ...visitor, authorName: "новый-2" }, "ip-2", NOW);
+    await reviews.createVisitorReview({ ...visitor, authorName: "новый-2" }, "ip-2", LEGAL_UPDATED.privacy, NOW);
     expect((await reviews.listReviews()).map((r) => r.authorName)).toEqual(["новый-2", "новый-1", "ручной-2", "ручной-1"]);
   });
 
   it("фильтр по статусу и счётчики; счётчик новых — для меню", async () => {
     await reviews.saveOwnerReview(manual);
     await reviews.saveOwnerReview({ ...manual, status: "HIDDEN" });
-    await reviews.createVisitorReview(visitor, "ip-1", NOW);
-    await reviews.createVisitorReview(visitor, "ip-2", NOW);
+    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview(visitor, "ip-2", LEGAL_UPDATED.privacy, NOW);
     expect((await reviews.listReviews("NEW")).every((r) => r.status === "NEW")).toBe(true);
     expect(await reviews.listReviews("HIDDEN")).toHaveLength(1);
     expect(await reviews.countReviewsByStatus()).toEqual({ NEW: 2, PUBLISHED: 1, HIDDEN: 1 });
@@ -294,7 +294,7 @@ describe("права: без сессии Владельца нельзя одо
   });
 
   it.each(owner)("%s: отказ, база не тронута", async (_name, call) => {
-    await reviews.createVisitorReview(visitor, "ip-1", NOW);
+    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     const before = JSON.stringify(state.reviews);
     vi.clearAllMocks();
     requireOwner.mockRejectedValue(NO_SESSION);
@@ -308,7 +308,7 @@ describe("права: без сессии Владельца нельзя одо
 
   it("функции сайта сессию не спрашивают, но опубликовать отзыв через них нельзя", async () => {
     requireOwner.mockRejectedValue(NO_SESSION);
-    await reviews.createVisitorReview({ ...visitor, ...({ status: "PUBLISHED", fromVisitor: false } as object) }, "ip-1", NOW);
+    await reviews.createVisitorReview({ ...visitor, ...({ status: "PUBLISHED", fromVisitor: false } as object) }, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.reviews[0]).toMatchObject({ status: "NEW", fromVisitor: true, source: "SITE" });
     expect(await reviews.listPublishedReviews()).toEqual([]);
     expect(requireOwner).not.toHaveBeenCalled();

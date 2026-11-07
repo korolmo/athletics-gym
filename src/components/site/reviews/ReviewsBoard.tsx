@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { Dictionary } from "@/dictionaries/ru";
 import type { Locale } from "@/lib/i18n";
-import { REVIEWS_FIRST, REVIEW_COLLAPSE_AT, type ReviewSource } from "@/lib/domain/review";
+import { REVIEWS_FIRST, REVIEW_COLLAPSE_AT, type ReviewSource } from "@/modules/reviews/client";
 import { OpenInNewSym } from "@/components/symbols";
 import { label } from "@/components/ui/styles";
 

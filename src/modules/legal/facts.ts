@@ -3,7 +3,7 @@
 
 import { ATTEMPT_KEEP_MS } from "@/lib/auth/login-limit.rules";
 import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/lib/auth/session";
-import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS } from "@/lib/domain/review";
+import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS } from "@/modules/reviews/client";
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

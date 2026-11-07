@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { issueFormToken, readFormToken } from "@/lib/reviews/form-token";
-import { parseOwnerReviewForm, parseVisitorReview } from "@/lib/validation/review";
+import { issueFormToken, readFormToken } from "../service/form-token";
+import { parseOwnerReviewForm, parseVisitorReview } from "../validation/review";
 import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
 import {
@@ -15,7 +15,7 @@ import {
   parseReviewDate,
   todayInGym,
 } from "./review";
-import { BLOCKS } from "./site-settings";
+import { BLOCKS } from "@/lib/domain/site-settings";
 
 const NOW = new Date("2026-10-10T09:00:00Z");
 const SECRET = "test-secret-test-secret-test-secret-0123456789";

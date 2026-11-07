@@ -1,10 +1,11 @@
 "use server";
 
 import { currentIpHash } from "@/lib/auth/login-limit";
-import { issueFormToken, readFormToken } from "@/lib/reviews/form-token";
-import { parseVisitorReview, type VisitorReviewError } from "@/lib/validation/review";
-import { checkVisitorSubmission, createVisitorReview } from "@/lib/services/reviews";
+import { issueFormToken, readFormToken } from "@/modules/reviews";
+import { parseVisitorReview, type VisitorReviewError } from "@/modules/reviews";
+import { checkVisitorSubmission, createVisitorReview } from "@/modules/reviews";
 import { logError } from "@/lib/observability/log";
+import { LEGAL_UPDATED } from "@/modules/legal/client";
 
 // Отзыв Посетителя с сайта. Сессии здесь нет — вместо неё антиспам: ловушка, время заполнения, лимит с адреса.
 // Ошибки возвращаются кодами: текст на языке страницы берётся из словаря.
@@ -47,7 +48,7 @@ export async function submitReview(_prev: ReviewFormState, fd: FormData): Promis
     const parsed = parseVisitorReview(fd);
     if (!parsed.ok) return fail(parsed.error);
 
-    await createVisitorReview(parsed.data, ipHash);
+    await createVisitorReview(parsed.data, ipHash, LEGAL_UPDATED.privacy);
     return { status: "sent" };
   } catch (e) {
     logError("Отзыв с сайта: не удалось принять.", e);

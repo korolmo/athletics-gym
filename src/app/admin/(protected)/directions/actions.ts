@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/admin/guard";
 import { text } from "@/lib/admin/form";
-import { revalidateSite } from "@/lib/admin/revalidate";
+import { revalidateSite } from "@/app/admin/revalidate";
 import { parseDirectionForm } from "@/modules/directions";
 import * as directions from "@/modules/directions";
 

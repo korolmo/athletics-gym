@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/admin/guard";
 import { text } from "@/lib/admin/form";
-import { revalidateSite } from "@/lib/admin/revalidate";
+import { revalidateSite } from "@/app/admin/revalidate";
 import { parseGalleryCaptionForm } from "@/modules/photos";
 import * as photos from "@/modules/photos";
 import { photoSlots } from "./slots";

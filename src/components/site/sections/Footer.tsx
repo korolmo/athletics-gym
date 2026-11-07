@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { site, whatsappUrl } from "@/lib/site";
 import { requisitesParts } from "@/lib/domain/site-settings";
-import { LEGAL_PAGES, legalPath } from "@/lib/legal/meta";
+import { LEGAL_PAGES, legalPath } from "@/modules/legal/client";
 import { NavLink } from "@/components/ui/NavLink";
 import { container, label } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
