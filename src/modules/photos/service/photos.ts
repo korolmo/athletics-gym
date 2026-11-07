@@ -164,7 +164,11 @@ export async function attachPhoto(targetRaw: string, path: string, slots: PhotoS
   if (OWNED_KINDS.includes(target.kind) && !slotFor(target, slots)) return { ok: false, error: BAD_TARGET };
   // Место владельца: id из браузера проверяет сам владелец (у Зала — ещё и по списку Залов)
   const slot = slotFor(target, slots);
-  if (slot && !(await slot.exists(targetId(target)))) return { ok: false, error: NOT_FOUND_MESSAGE };
+  if (slot && !(await slot.exists(targetId(target)))) {
+    // Место удалили, пока шла загрузка (Зал — маловероятно, но так же, как у Тренера): файл без записи не оставляем
+    await removeQuietly([path]);
+    return { ok: false, error: NOT_FOUND_MESSAGE };
+  }
 
   try {
     if (!(await storage.photoUploaded(path))) {

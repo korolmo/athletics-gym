@@ -470,6 +470,7 @@ describe("места для Фото, которые ведут модули-в�
     const path = `hall/${uuid(8)}.webp`;
     uploaded(path);
     expect(await withSlots.attachPhoto("hall:vip", path)).toMatchObject({ ok: false });
+    expect(state.files.has(path)).toBe(false); // файл без записи в базе не остаётся
     expect(db.hall.update).not.toHaveBeenCalled();
   });
 
