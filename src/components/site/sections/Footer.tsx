@@ -13,11 +13,14 @@ export function Footer({
   s,
   home = "",
   bar = true,
+  cabinet = false,
 }: SectionProps & {
   /** Адрес главной перед якорями: на главной пусто, на юридических страницах — «/ru» */
   home?: string;
   /** Есть ли на странице нижняя панель на телефоне: под неё подвалу нужен запас снизу */
   bar?: boolean;
+  /** Ссылка на кабинет Клиента — только где он работает (Лаборатория), как кнопка в шапке */
+  cabinet?: boolean;
 }) {
   const links = (["about", "prices", "contacts"] as const)
     .filter((block) => s.show[block])
@@ -66,6 +69,11 @@ export function Footer({
         <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-surface-border pt-4 text-body-sm text-text-muted sm:flex-row sm:items-start">
           {requisites.length > 0 && <p className="text-center sm:text-left">{requisites.join(" · ")}</p>}
           <nav aria-label={t.footer.documents} className="flex shrink-0 flex-wrap justify-center gap-x-6 gap-y-2 sm:ml-auto">
+            {cabinet && (
+              <Link href={`/${locale}/cabinet`} prefetch={false} className="py-1 font-semibold text-text-primary underline-offset-2 transition-colors hover:text-primary-container hover:underline">
+                {t.footer.cabinet}
+              </Link>
+            )}
             {LEGAL_PAGES.map((page) => (
               <Link key={page} href={legalPath(locale, page)} prefetch={false} className="py-1 underline-offset-2 transition-colors hover:text-primary-container hover:underline">
                 {t.footer[page]}

@@ -22,6 +22,7 @@ export const kk: Dictionary = {
     prices: "Бағалар",
     trainers: "Жаттықтырушылар",
     contacts: "Байланыс",
+    cabinet: "Кабинет",
   },
   cta: {
     trial: "Тегін келу",
@@ -173,6 +174,7 @@ export const kk: Dictionary = {
     documents: "Құжаттар",
     privacy: "Құпиялылық саясаты",
     terms: "Пайдаланушы келісімі",
+    cabinet: "Жеке кабинет",
   },
   // Проверить носителем языка
   lab: {
