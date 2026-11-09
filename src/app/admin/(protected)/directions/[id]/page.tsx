@@ -20,7 +20,7 @@ export default async function EditDirectionPage({
   if (!d) notFound();
 
   return (
-    <>
+    <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 text-3xl font-extrabold lg:text-4xl [overflow-wrap:anywhere]">{d.titleRu}</h1>
 
       {created && (
@@ -57,6 +57,6 @@ export default async function EditDirectionPage({
       <div className="mt-8 border-t border-line pt-4">
         <DeleteDirectionButton id={d.id} title={d.titleRu} />
       </div>
-    </>
+    </div>
   );
 }

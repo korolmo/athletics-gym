@@ -8,7 +8,7 @@ export default async function NewTrainerPage({ searchParams }: { searchParams: P
   const hallId = rawHall && isHall(rawHall) ? rawHall : "general";
 
   return (
-    <>
+    <div className="mx-auto max-w-2xl">
       <h1 className="mb-1 text-3xl font-extrabold lg:text-4xl">Новый тренер</h1>
       <p className="mb-6 text-sm text-muted">
         Тарифы добавите после сохранения. Фото можно будет загрузить на следующем этапе — пока карточка на сайте будет без
@@ -17,6 +17,6 @@ export default async function NewTrainerPage({ searchParams }: { searchParams: P
       <TrainerForm
         initial={{ name: "", hallId, descriptionRu: "", descriptionKk: "", sortOrder: "", isVisible: true }}
       />
-    </>
+    </div>
   );
 }

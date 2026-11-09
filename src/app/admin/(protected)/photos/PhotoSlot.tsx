@@ -31,10 +31,10 @@ export function PhotoSlot({
 }) {
   const shown = url ?? fallback ?? null;
   return (
-    <div className="rounded-2xl bg-card p-4">
+    <div className="rounded-2xl border border-line bg-card p-4">
       <div className="flex items-start gap-4">
         <div
-          className={`relative shrink-0 overflow-hidden rounded-xl bg-bg ${shape === "tall" ? "h-32 w-24" : "h-24 w-32"}`}
+          className={`relative shrink-0 overflow-hidden rounded-xl bg-bg ${shape === "tall" ? "h-36 w-28" : "h-28 w-40"}`}
         >
           {shown ? (
             <Image src={shown} alt="" fill sizes="128px" className={url ? "object-cover" : "object-cover opacity-50"} />
@@ -43,7 +43,7 @@ export function PhotoSlot({
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-semibold leading-snug">{title}</div>
+          <div className="text-lg font-bold leading-snug">{title}</div>
           <div className="mt-0.5 text-sm text-muted">{note}</div>
           <div className={`mt-1 text-xs ${url ? "text-wa" : "text-muted"}`}>
             {url ? "Загружено своё фото" : fallback ? "Сейчас — картинка по умолчанию" : emptyNote}

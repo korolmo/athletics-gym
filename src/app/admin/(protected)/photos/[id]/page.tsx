@@ -11,7 +11,7 @@ export default async function EditGalleryPhotoPage({ params }: { params: Promise
   if (!photo) notFound();
 
   return (
-    <>
+    <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 text-3xl font-extrabold lg:text-4xl">Фото Галереи</h1>
 
       {photo.url && (
@@ -27,6 +27,6 @@ export default async function EditGalleryPhotoPage({ params }: { params: Promise
       <div className="mt-8 border-t border-line pt-4">
         <DeleteGalleryPhotoButton id={photo.id} />
       </div>
-    </>
+    </div>
   );
 }

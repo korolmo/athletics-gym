@@ -12,6 +12,7 @@ import { BLOCK_LABEL_RU, SETTINGS_FORM_LABEL_RU } from "@/modules/site/client";
 import { plural } from "@/lib/plural";
 import { PencilIcon } from "@/components/icons";
 import { toggleBlock } from "./actions";
+import { Notice, PageHead, card } from "../../ui";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ const BLOCK_NOTE: Record<BlockId, string> = {
 };
 
 const pencil =
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line text-muted hover:border-accent hover:text-accent";
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg text-accent hover:brightness-110";
 
 export default async function SitePage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   const { saved } = await searchParams;
@@ -37,24 +38,32 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-3xl font-extrabold lg:text-4xl">Сайт</h1>
-        <p className="mt-1 text-sm text-muted">Тексты и контакты главной страницы. Изменения сразу появляются на сайте.</p>
-      </div>
+      <PageHead title="Настройки сайта" subtitle="Блоки, тексты и контакты главной страницы. Изменения сразу появляются на сайте." />
 
       {saved && (
-        <div role="status" className="mb-6 rounded-xl border border-wa/40 bg-wa/10 px-4 py-3 text-sm text-wa">
-          Сохранено — уже на сайте
+        <div className="mb-6">
+          <Notice tone="ok">Сохранено — уже на сайте</Notice>
         </div>
       )}
 
+      {/* Сводка — по макету А9: сколько Блоков на сайте и ссылка на сайт */}
+      <div className={`${card} mb-8 flex items-center justify-between gap-3`}>
+        <p className="flex items-center gap-3 text-lg font-bold">
+          <span aria-hidden="true" className="h-3 w-3 rounded-full bg-accent" />
+          {BLOCKS.filter((b) => settings[SHOW_COLUMN[b]]).length} из {BLOCKS.length} блоков на сайте
+        </p>
+        <a href="/ru" target="_blank" className="rounded-xl bg-card-2 px-4 py-2 font-bold text-accent">
+          Сайт ↗
+        </a>
+      </div>
+
       <section>
         <h2 className="mb-3 text-xl font-bold">Блоки главной</h2>
-        <ul className="space-y-2">
+        <ul className="grid gap-3 lg:grid-cols-2">
           {/* Первый экран есть всегда: его можно править, но нельзя скрыть */}
-          <li className="flex items-center gap-3 rounded-2xl bg-card p-4">
+          <li className="flex items-center gap-3 rounded-2xl border border-line bg-card p-4">
             <div className="min-w-0 flex-1">
-              <div className="font-semibold leading-snug">{SETTINGS_FORM_LABEL_RU.hero}</div>
+              <div className="text-lg font-semibold leading-snug">{SETTINGS_FORM_LABEL_RU.hero}</div>
               <div className="mt-0.5 text-sm text-muted">Девиз и подзаголовок. Показывается всегда</div>
             </div>
             <Link href="/admin/site/hero" aria-label={`Редактировать: ${SETTINGS_FORM_LABEL_RU.hero}`} className={pencil}>
@@ -65,9 +74,9 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
             const shown = settings[SHOW_COLUMN[block]];
             const name = BLOCK_LABEL_RU[block];
             return (
-              <li key={block} className={`flex items-center gap-3 rounded-2xl bg-card p-4 ${shown ? "" : "opacity-80"}`}>
+              <li key={block} className={`flex items-center gap-3 rounded-2xl border border-line bg-card p-4 ${shown ? "" : "opacity-80"}`}>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold leading-snug">{name}</div>
+                  <div className="text-lg font-semibold leading-snug">{name}</div>
                   <div className="mt-0.5 text-sm text-muted">{shown ? BLOCK_NOTE[block] : "Скрыт с сайта"}</div>
                 </div>
                 <form action={toggleBlock}>
@@ -80,7 +89,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
                     title={shown ? "Показывается на сайте" : "Скрыт с сайта"}
                     className={`relative h-7 w-12 shrink-0 rounded-full transition ${shown ? "bg-accent" : "bg-line"}`}
                   >
-                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-bg transition-all ${shown ? "left-6" : "left-1"}`} />
+                    <span className={`absolute top-1 h-5 w-5 rounded-full transition-all ${shown ? "left-6 bg-accent-ink" : "left-1 bg-muted"}`} />
                   </button>
                 </form>
                 {isSettingsForm(block) ? (
@@ -102,7 +111,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
 
       <section className="mt-8">
         <h2 className="mb-3 text-xl font-bold">Рейтинг 2ГИС</h2>
-        <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-line bg-card p-4">
           <div className="min-w-0 flex-1">
             <div className="font-semibold leading-snug">
               ★ {formatRating(settings.ratingTenths)} · {settings.ratingCount}{" "}
@@ -118,7 +127,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
 
       <section className="mt-8">
         <h2 className="mb-3 text-xl font-bold">Реквизиты и документы</h2>
-        <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-line bg-card p-4">
           <div className="min-w-0 flex-1">
             <div className="font-semibold leading-snug">{settings.legalName || "Реквизиты не заполнены"}</div>
             <div className="mt-0.5 text-sm text-muted">

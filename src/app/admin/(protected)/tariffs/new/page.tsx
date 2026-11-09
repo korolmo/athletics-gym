@@ -17,7 +17,7 @@ export default async function NewTariffPage({
   const hallId = trainer && isHall(trainer.hallId) ? trainer.hallId : rawHall && isHall(rawHall) ? rawHall : "general";
 
   return (
-    <>
+    <div className="mx-auto max-w-2xl">
       <h1 className="mb-1 text-3xl font-extrabold lg:text-4xl">Новый тариф</h1>
       <p className="mb-6 text-sm text-muted">
         {trainer ? `Персональные тренировки · тренер ${trainer.name}` : "Позиция прайса зала"}
@@ -39,6 +39,6 @@ export default async function NewTariffPage({
           isVisible: true,
         }}
       />
-    </>
+    </div>
   );
 }

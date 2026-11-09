@@ -16,8 +16,8 @@ import { DEFAULT_DATA_LOCATION } from "@/modules/site/client";
 import { saveAbout, saveContacts, saveHero, saveLegal, saveMarquee, saveRating, saveWomen, type SettingsFormState } from "./actions";
 
 const field =
-  "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
-const labelCls = "mb-1.5 block text-sm text-muted";
+  "w-full rounded-xl border border-line bg-bg px-4 py-3 text-base outline-none transition placeholder:text-muted/70 focus:border-accent";
+const labelCls = "mb-2 block text-sm font-semibold text-muted";
 const hint = "mt-1 block text-xs text-muted";
 
 /** То, что Владелец ввёл перед ошибкой: после отправки форма сбрасывается к этим значениям, а не к сохранённым. */
@@ -101,7 +101,7 @@ function Form({
 }) {
   const [state, formAction, pending] = useActionState<SettingsFormState, FormData>(action, undefined);
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} className="space-y-6 rounded-2xl border border-line bg-card p-5 lg:p-6">
       <Typed.Provider value={state?.values}>{children}</Typed.Provider>
 
       {state?.error && (
@@ -111,13 +111,13 @@ function Form({
       )}
 
       <div className="flex gap-3">
-        <Link href="/admin/site" className="rounded-xl border border-line px-5 py-3.5 font-semibold text-muted">
+        <Link href="/admin/site" className="inline-flex items-center rounded-xl bg-card-2 px-5 py-3.5 font-semibold text-fg hover:bg-line">
           К списку
         </Link>
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-xl bg-accent py-3.5 font-semibold text-accent-ink transition hover:brightness-95 disabled:opacity-60"
+          className="flex-1 rounded-xl bg-accent py-3.5 font-bold uppercase tracking-wide text-accent-ink transition hover:brightness-95 disabled:opacity-60"
         >
           {pending ? "Сохраняем…" : "Сохранить"}
         </button>
@@ -160,7 +160,7 @@ export function MarqueeForm({ s }: { s: SiteSettingsData }) {
         {formatRating(s.ratingTenths)}).
       </p>
       {Array.from({ length: MARQUEE_MAX_ITEMS }, (_, i) => (
-        <fieldset key={i} className="space-y-3 rounded-2xl bg-card-2/40 p-4">
+        <fieldset key={i} className="space-y-3 rounded-2xl bg-bg p-4">
           <legend className="text-xl font-bold">Пункт {i + 1}</legend>
           <Input name={`marquee${i + 1}Ru`} label="Текст (RU)" saved={s.marqueeRu[i] ?? ""} max={max} autoComplete="off" />
           <Input name={`marquee${i + 1}Kk`} label="Текст (KZ)" saved={s.marqueeKk[i] ?? ""} max={max} autoComplete="off" />
