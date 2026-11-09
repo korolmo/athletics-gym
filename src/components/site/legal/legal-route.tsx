@@ -7,6 +7,7 @@ import { getDictionary, isLocale } from "@/lib/i18n";
 import { legalContext, legalDoc, legalHead, type LegalPageId } from "@/modules/legal";
 import { buildMetadata, readSeoEnv } from "@/lib/seo";
 import { getSiteSettings } from "@/modules/site";
+import { resolveCodeChannel } from "@/modules/clients";
 
 // Общее для страниц /privacy и /terms: сами файлы страниц только называют документ.
 
@@ -26,5 +27,7 @@ export async function LegalRoute({ page, params }: { page: LegalPageId; params: 
   const t = getDictionary(locale);
   const { settings, cards } = await getSiteSettings();
   const s = toSiteContent(locale, settings, cards);
-  return <LegalPage locale={locale} t={t} s={s} page={page} doc={legalDoc(page, legalContext(locale, t, s))} />;
+  return (
+    <LegalPage locale={locale} t={t} s={s} page={page} doc={legalDoc(page, legalContext(locale, t, s))} cabinet={resolveCodeChannel() !== null} />
+  );
 }

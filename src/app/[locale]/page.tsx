@@ -11,6 +11,7 @@ import { logoIconUrl } from "@/lib/brand";
 import { ContactTracker } from "@/components/site/ContactTracker";
 import { Motion } from "@/components/site/Motion";
 import { mediaUrl } from "@/modules/photos";
+import { resolveCodeChannel } from "@/modules/clients";
 import { toSiteContent } from "@/modules/site/client";
 import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
 import {
@@ -92,6 +93,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   }));
 
   const props = { locale, t, s };
+  // Кнопка «Кабинет» — только где вход работает (Лаборатория); на боевом сайте канала доставки кода нет
+  const cabinet = resolveCodeChannel() !== null;
   const directions = toDirectionViews(locale, directionRows, mediaUrl);
   // Разметка зала для поисковиков — из Настроек сайта; рейтинг 2ГИС и Отзывы в неё не входят (см. buildGymJsonLd)
   const jsonLd = buildGymJsonLd({
@@ -127,7 +130,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <ContactTracker locale={locale} />
       <Motion />
-      <Header {...props} hasDirections={directions.length > 0} />
+      <Header {...props} hasDirections={directions.length > 0} cabinet={cabinet} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <Hero {...props} photo={photos.hero} />
         {s.show.marquee && s.marquee.length > 0 && <Marquee items={s.marquee} />}
@@ -142,7 +145,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         {s.show.reviews && <Reviews {...props} reviews={reviews} />}
         {s.show.contacts && <Contacts {...props} />}
       </main>
-      <Footer {...props} />
+      <Footer {...props} cabinet={cabinet} />
       <MobileBar {...props} />
     </>
   );

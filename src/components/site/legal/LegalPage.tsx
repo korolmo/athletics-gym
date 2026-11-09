@@ -29,13 +29,13 @@ function Text({ parts }: { parts: Inline[] }) {
  * Шапка и подвал — те же, что на главной (их ссылки ведут на главную); текст — колонкой читаемой ширины,
  * вверху дата редакции и оглавление. Движения и нижней панели на телефоне здесь нет.
  */
-export function LegalPage({ locale, t, s, doc, page }: SectionProps & { doc: LegalDoc; page: LegalPageId }) {
+export function LegalPage({ locale, t, s, doc, page, cabinet = false }: SectionProps & { doc: LegalDoc; page: LegalPageId; cabinet?: boolean }) {
   const home = `/${locale}`;
   const other = LEGAL_PAGES.filter((p) => p !== page);
   return (
     <>
       <ContactTracker locale={locale} />
-      <Header locale={locale} t={t} s={s} home={home} path={`/${page}`} hasDirections={false} />
+      <Header locale={locale} t={t} s={s} home={home} path={`/${page}`} hasDirections={false} cabinet={cabinet} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <article className={`${container} py-10`}>
           <div className="mx-auto max-w-[70ch]">
@@ -98,7 +98,7 @@ export function LegalPage({ locale, t, s, doc, page }: SectionProps & { doc: Leg
           </div>
         </article>
       </main>
-      <Footer locale={locale} t={t} s={s} home={home} bar={false} />
+      <Footer locale={locale} t={t} s={s} home={home} bar={false} cabinet={cabinet} />
     </>
   );
 }
