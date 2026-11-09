@@ -123,8 +123,8 @@ export function AdminShell({ newReviews, children }: { /** Сколько Отз
           </nav>
         </aside>
 
-        {/* Ширина колонки — прежняя (3xl): разделы ещё свёрстаны под узкую колонку; широкие появятся с их макетами */}
-        <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-6 lg:pb-12">{children}</main>
+        {/* Широкая область, как в макетах: узкие формы ограничивают ширину сами */}
+        <main className="mx-auto w-full min-w-0 max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12 lg:pt-8">{children}</main>
       </div>
 
       <nav aria-label="Разделы" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg lg:hidden">
