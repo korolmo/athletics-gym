@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={fontVars} data-lab={isLab() ? "" : undefined}>
+    <html lang="ru" className={fontVars} data-admin="" data-lab={isLab() ? "" : undefined}>
       <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
         {isLab() && <LabBanner texts={getDictionary("ru").lab} path="/ru" />}
         {children}

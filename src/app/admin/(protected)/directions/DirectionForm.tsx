@@ -19,8 +19,8 @@ export type DirectionFormValues = {
 };
 
 const field =
-  "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
-const labelCls = "mb-1.5 block text-sm text-muted";
+  "w-full rounded-xl border border-line bg-bg px-4 py-3 text-base outline-none transition placeholder:text-muted/70 focus:border-accent";
+const labelCls = "mb-2 block text-sm font-semibold text-muted";
 const hint = "mt-1 block text-xs text-muted";
 
 export function DirectionForm({ initial, hasPhoto = false }: { initial: DirectionFormValues; hasPhoto?: boolean }) {
@@ -30,7 +30,7 @@ export function DirectionForm({ initial, hasPhoto = false }: { initial: Directio
   const visible = typed ? typed.isVisible === "on" : initial.isVisible;
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className="space-y-5 rounded-2xl border border-line bg-card p-5 lg:p-6">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
 
       <label className="block">
@@ -62,7 +62,7 @@ export function DirectionForm({ initial, hasPhoto = false }: { initial: Directio
             return (
               <label key={key} className="cursor-pointer">
                 <input type="radio" name="icon" value={key} required defaultChecked={value("icon") === key} className="peer sr-only" />
-                <span className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-xl border border-line bg-card px-1 py-2.5 text-center text-xs text-muted peer-checked:border-accent peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
+                <span className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-line bg-bg px-1 py-2.5 text-center text-xs text-muted peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
                   <Icon className="h-6 w-6" />
                   {label}
                 </span>
@@ -79,9 +79,9 @@ export function DirectionForm({ initial, hasPhoto = false }: { initial: Directio
         </span>
       </fieldset>
 
-      <label className="flex items-center justify-between gap-4 rounded-xl bg-card px-4 py-3.5">
+      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-bg px-4 py-4 font-semibold">
         <span>Показывать на сайте</span>
-        <input name="isVisible" type="checkbox" defaultChecked={visible} className="h-6 w-6 accent-[#f5e642]" />
+        <input name="isVisible" type="checkbox" defaultChecked={visible} className="relative h-7 w-12 shrink-0 cursor-pointer appearance-none rounded-full bg-line transition before:absolute before:left-1 before:top-1 before:h-5 before:w-5 before:rounded-full before:bg-muted before:transition checked:bg-accent checked:before:translate-x-5 checked:before:bg-accent-ink" />
       </label>
 
       {state?.error && (
@@ -91,13 +91,13 @@ export function DirectionForm({ initial, hasPhoto = false }: { initial: Directio
       )}
 
       <div className="flex gap-3">
-        <Link href="/admin/directions" className="rounded-xl border border-line px-5 py-3.5 font-semibold text-muted">
+        <Link href="/admin/directions" className="inline-flex items-center rounded-xl bg-card-2 px-5 py-3.5 font-semibold text-fg hover:bg-line">
           {initial.id ? "К списку" : "Отмена"}
         </Link>
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-xl bg-accent py-3.5 font-semibold text-accent-ink transition hover:brightness-95 disabled:opacity-60"
+          className="flex-1 rounded-xl bg-accent py-3.5 font-bold uppercase tracking-wide text-accent-ink transition hover:brightness-95 disabled:opacity-60"
         >
           {pending ? "Сохраняем…" : initial.id ? "Сохранить" : "Добавить направление"}
         </button>

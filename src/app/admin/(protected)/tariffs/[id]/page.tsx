@@ -16,8 +16,8 @@ export default async function EditTariffPage({ params }: { params: Promise<{ id:
   const trainer = t.trainerId ? await getTrainer(t.trainerId) : null;
 
   return (
-    <>
-      <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">Редактировать тариф</h1>
+    <div className="mx-auto max-w-2xl">
+      <h1 className="mb-1 text-3xl font-extrabold lg:text-4xl">Редактировать тариф</h1>
       <p className="mb-6 text-sm text-muted">
         {trainer ? `Персональные тренировки · тренер ${trainer.name}` : "Позиция прайса зала"}
       </p>
@@ -42,6 +42,6 @@ export default async function EditTariffPage({ params }: { params: Promise<{ id:
       <div className="mt-6 border-t border-line pt-4">
         <DeleteButton id={t.id} name={tariffLabelRu(t)} />
       </div>
-    </>
+    </div>
   );
 }

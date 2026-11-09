@@ -13,9 +13,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   if (!r) notFound();
 
   return (
-    <>
+    <div className="mx-auto max-w-2xl">
       <div className="mb-6 flex items-start justify-between gap-3">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Отзыв</h1>
+        <h1 className="text-3xl font-extrabold lg:text-4xl">Отзыв</h1>
         <StatusChip status={r.status} />
       </div>
 
@@ -62,6 +62,6 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
       <div className="mt-8 border-t border-line pt-4">
         <DeleteReviewButton id={r.id} author={r.authorName} />
       </div>
-    </>
+    </div>
   );
 }

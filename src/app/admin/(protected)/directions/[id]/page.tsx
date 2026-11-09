@@ -20,8 +20,8 @@ export default async function EditDirectionPage({
   if (!d) notFound();
 
   return (
-    <>
-      <h1 className="mb-6 font-display text-3xl uppercase tracking-wide [overflow-wrap:anywhere]">{d.titleRu}</h1>
+    <div className="mx-auto max-w-2xl">
+      <h1 className="mb-6 text-3xl font-extrabold lg:text-4xl [overflow-wrap:anywhere]">{d.titleRu}</h1>
 
       {created && (
         <div role="status" className="mb-6 rounded-xl border border-wa/40 bg-wa/10 px-4 py-3 text-sm text-wa">
@@ -43,7 +43,7 @@ export default async function EditDirectionPage({
       />
 
       <section className="mt-10 border-t border-line pt-6">
-        <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Своё фото</h2>
+        <h2 className="mb-3 text-xl font-bold">Своё фото</h2>
         <PhotoSlot
           target={`direction:${d.id}`}
           title="Фото вместо иконки"
@@ -57,6 +57,6 @@ export default async function EditDirectionPage({
       <div className="mt-8 border-t border-line pt-4">
         <DeleteDirectionButton id={d.id} title={d.titleRu} />
       </div>
-    </>
+    </div>
   );
 }

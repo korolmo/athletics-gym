@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { formatClock } from "@/lib/time";
 import { MAX_INTERVALS_PER_DAY, SESSION_MINUTES_MAX, SESSION_MINUTES_MIN, SESSION_MINUTES_STEP, type WorkInterval } from "@/modules/schedule/client";
 import { addTimeOffAction, deleteTimeOffAction, saveWorkWeekAction, type ScheduleFormState } from "./schedule-actions";
+import { btnDark, btnPrimary, toggle } from "../../ui";
 
 /** Что карточке нужно от модуля Окна Тренера; даты исключений уже подписаны сервером («15 ноября»). */
 export type ScheduleForAdminView = {
@@ -12,7 +13,7 @@ export type ScheduleForAdminView = {
   timeOff: { id: string; fromDay: string; toDay: string; note: string | null; label: { from: string; to: string } }[];
 };
 
-// Часы работы и исключения Тренера — по макету 18 (design/stitch/cabinet), в стиле админки.
+// Часы работы и исключения Тренера — по макетам 18 и А5 (design/stitch/admin/trener-chasy-mobile.png, a5-trener-forma-mobile.png).
 
 const DAYS = [
   ["ПН", "Понедельник"],
@@ -26,7 +27,7 @@ const DAYS = [
 
 type Interval = { start: string; end: string };
 
-const timeInput = "w-24 rounded-lg border border-line bg-bg px-2 py-1.5 text-center text-sm tabular-nums outline-none focus:border-accent";
+const timeInput = "h-11 w-24 rounded-lg border border-line bg-bg px-2 text-center font-semibold tabular-nums outline-none focus:border-accent";
 
 function Status({ state }: { state: ScheduleFormState }) {
   if (state?.error)
@@ -61,12 +62,12 @@ export function ScheduleCard({ trainerId, schedule }: { trainerId: string; sched
     setWeek((w) => w.map((day, i) => (i === d ? fn(day) : day)));
 
   return (
-    <section className="mt-10 border-t border-line pt-6">
-      <form action={weekAction} className="rounded-2xl bg-card p-5">
+    <section className="space-y-5">
+      <form action={weekAction} className="rounded-2xl border border-line bg-card p-5">
         <input type="hidden" name="trainerId" value={trainerId} />
         <input type="hidden" name="sessionMinutes" value={minutes} />
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl uppercase tracking-wide">Часы работы</h2>
+          <h2 className="text-xl font-bold">Часы работы</h2>
           <span className="text-sm text-muted">{week.filter((d) => d.on).length} дн.</span>
         </div>
 
@@ -106,14 +107,14 @@ export function ScheduleCard({ trainerId, schedule }: { trainerId: string; sched
               <li key={short} className="py-4">
                 <label className="flex cursor-pointer items-center justify-between gap-3">
                   <span className="flex items-center gap-3">
-                    <span className={`w-7 text-sm font-semibold ${day.on ? "text-accent" : "text-muted"}`}>{short}</span>
+                    <span className={`flex h-8 w-9 items-center justify-center rounded-md text-xs font-extrabold ${day.on ? "bg-accent text-accent-ink" : "bg-card-2 text-muted"}`}>{short}</span>
                     <span className={day.on ? "" : "text-muted"}>{long}</span>
                   </span>
                   <input
                     type="checkbox"
                     checked={day.on}
                     onChange={(e) => update(d, (x) => ({ ...x, on: e.target.checked }))}
-                    className="h-6 w-11 cursor-pointer appearance-none rounded-full bg-line transition before:block before:h-5 before:w-5 before:translate-x-0.5 before:rounded-full before:bg-muted before:transition checked:bg-accent checked:before:translate-x-[1.35rem] checked:before:bg-accent-ink"
+                    className={toggle}
                     aria-label={`${long}: рабочий день`}
                   />
                 </label>
@@ -173,14 +174,14 @@ export function ScheduleCard({ trainerId, schedule }: { trainerId: string; sched
           })}
         </ul>
         <Status state={weekState} />
-        <button type="submit" disabled={savingWeek} className="mt-5 w-full rounded-xl bg-accent py-3.5 font-semibold text-accent-ink disabled:opacity-60">
+        <button type="submit" disabled={savingWeek} className={`${btnPrimary} mt-5 w-full`}>
           {savingWeek ? "Сохраняем…" : "Сохранить часы работы"}
         </button>
       </form>
 
-      <div className="mt-4 rounded-2xl bg-card p-5">
+      <div className="rounded-2xl border border-line bg-card p-5">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl uppercase tracking-wide">Исключения</h2>
+          <h2 className="text-xl font-bold">Исключения</h2>
           <span className="text-sm text-accent">{schedule.timeOff.length}</span>
         </div>
         {schedule.timeOff.length === 0 ? (
@@ -220,7 +221,7 @@ export function ScheduleCard({ trainerId, schedule }: { trainerId: string; sched
           </label>
           <div className="col-span-2">
             <Status state={offState} />
-            <button type="submit" disabled={savingOff} className="mt-2 w-full rounded-xl border border-accent py-3 font-semibold text-accent disabled:opacity-60">
+            <button type="submit" disabled={savingOff} className={`${btnDark} mt-2 w-full text-accent`}>
               + Добавить исключение
             </button>
           </div>

@@ -1,11 +1,7 @@
-import Image from "next/image";
-import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { isAuthed } from "@/modules/owner";
-import { logout } from "../actions";
-import { AdminNav } from "./AdminNav";
-import { logo } from "@/lib/brand";
+import { AdminShell } from "./AdminShell";
 import { countNewReviews } from "@/modules/reviews";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -15,32 +11,11 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   const newReviews = await countNewReviews().catch(() => 0);
 
   return (
-    <div className="min-h-dvh">
-      <header data-admin-header className="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
-          <Link href="/admin" className="flex items-center gap-2">
-            <Image src={logo} alt="" width={32} height={32} className="rounded-full" />
-            <span className="font-display text-lg uppercase tracking-wide">Админка</span>
-          </Link>
-          <div className="flex items-center gap-2 text-sm">
-            <a href="/ru" target="_blank" className="rounded-lg px-3 py-1.5 text-muted hover:text-fg">
-              Сайт ↗
-            </a>
-            <form action={logout}>
-              <button type="submit" className="rounded-lg border border-line px-3 py-1.5 text-muted hover:text-fg">
-                Выйти
-              </button>
-            </form>
-          </div>
-        </div>
-        <AdminNav newReviews={newReviews} />
-      </header>
+    <AdminShell newReviews={newReviews}>
       {/* Suspense — ради страниц ошибок раздела. У проекта два корневых layout без общего, и Next 15 не может отрисовать
           notFound() или ошибку раздела на сервере: без границы падала вся оболочка (пустая страница и global-error).
           С ней шапка и меню отрисованы сервером, а not-found.tsx / error.tsx раздела показывает браузер. */}
-      <div className="mx-auto max-w-3xl px-4 pb-28 pt-6">
-        <Suspense>{children}</Suspense>
-      </div>
-    </div>
+      <Suspense>{children}</Suspense>
+    </AdminShell>
   );
 }

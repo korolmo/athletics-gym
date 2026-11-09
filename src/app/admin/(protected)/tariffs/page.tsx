@@ -4,8 +4,11 @@ import { HALL_CATEGORIES, isHall } from "@/modules/tariffs/client";
 import { CATEGORY_LABEL_RU, formatPrice } from "@/modules/tariffs/client";
 import { PlusIcon } from "@/components/icons";
 import { HallFilter } from "../AdminNav";
+import { Empty, Notice, PageHead, btnPrimary, card } from "../../ui";
 import { TariffRow } from "./TariffRow";
 
+// Тарифы — по макету А4 (design/stitch/admin/a4-tarify-mobile.png): Зал, «Добавить тариф», группы по Категориям
+// с «от … на сайте» и карточки Тарифов. Пометку «хит» и «синхронизировано» из макета не взяли — таких полей нет.
 export const dynamic = "force-dynamic";
 
 export default async function TariffsPage({
@@ -20,16 +23,19 @@ export default async function TariffsPage({
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Тарифы</h1>
-        <p className="mt-1 text-sm text-muted">Изменения сразу появляются на сайте.</p>
+      <PageHead title="Тарифы и абонементы" subtitle="Цены на сайте клуба — изменения появляются сразу" />
+
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,24rem)_auto] lg:items-center lg:justify-between">
+        <HallFilter base="/admin/tariffs" hall={hall} />
+        <Link href={`/admin/tariffs/new?hall=${hall}`} className={`${btnPrimary} mb-6 normal-case tracking-normal`}>
+          <PlusIcon />
+          Добавить тариф
+        </Link>
       </div>
 
-      <HallFilter base="/admin/tariffs" hall={hall} />
-
       {(saved || deleted) && (
-        <div role="status" className="mb-6 rounded-xl border border-wa/40 bg-wa/10 px-4 py-3 text-sm text-wa">
-          {saved ? "Сохранено — уже на сайте" : "Тариф удалён"}
+        <div className="mb-6">
+          <Notice tone="ok">{saved ? "Сохранено — уже на сайте" : "Тариф удалён"}</Notice>
         </div>
       )}
 
@@ -40,18 +46,17 @@ export default async function TariffsPage({
           const min = visible.length ? Math.min(...visible.map((t) => t.price)) : null;
           return (
             <section key={cat}>
-              <div className="mb-3 flex items-baseline justify-between gap-3">
-                <h2 className="font-display text-xl uppercase tracking-wide">{CATEGORY_LABEL_RU[cat]}</h2>
-                <span className="text-xs text-muted">
-                  На сайте: {min !== null ? `от ${formatPrice(min)}` : "«уточняйте»"}
-                </span>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="flex items-center gap-2 text-xl font-bold">
+                  {CATEGORY_LABEL_RU[cat]}
+                  <span className="rounded-md bg-card-2 px-2 text-sm text-muted">{list.length}</span>
+                </h2>
+                <span className="text-sm text-muted">{min !== null ? `от ${formatPrice(min)} на сайте` : "на сайте «уточняйте»"}</span>
               </div>
               {list.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
-                  Пока нет тарифов в этой категории.
-                </p>
+                <Empty>Пока нет тарифов в этой категории.</Empty>
               ) : (
-                <ul className="space-y-2">
+                <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {list.map((t) => (
                     <TariffRow key={t.id} t={t} />
                   ))}
@@ -62,10 +67,9 @@ export default async function TariffsPage({
         })}
 
         <section>
-          <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Персональные тренировки</h2>
-          <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
-            Цены на персональные тренировки — у каждого тренера свои ({trainerTariffCount} в этом зале). Они правятся в
-            разделе{" "}
+          <h2 className="mb-3 text-xl font-bold">Персональная тренировка</h2>
+          <p className={`${card} text-sm text-muted`}>
+            Цены на персональные тренировки у каждого тренера свои ({trainerTariffCount} в этом зале). Они правятся в разделе{" "}
             <Link href={`/admin/trainers?hall=${hall}`} className="text-accent underline underline-offset-2">
               Тренеры
             </Link>
@@ -73,14 +77,6 @@ export default async function TariffsPage({
           </p>
         </section>
       </div>
-
-      <Link
-        href={`/admin/tariffs/new?hall=${hall}`}
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-4 font-semibold text-accent-ink shadow-lg shadow-black/40"
-      >
-        <PlusIcon />
-        Добавить тариф
-      </Link>
     </>
   );
 }
