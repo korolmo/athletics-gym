@@ -18,7 +18,7 @@ export default async function NewTariffPage({
 
   return (
     <>
-      <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">Новый тариф</h1>
+      <h1 className="mb-1 text-3xl font-extrabold lg:text-4xl">Новый тариф</h1>
       <p className="mb-6 text-sm text-muted">
         {trainer ? `Персональные тренировки · тренер ${trainer.name}` : "Позиция прайса зала"}
       </p>

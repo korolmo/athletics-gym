@@ -10,7 +10,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <div className="mb-6">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Аккаунт</h1>
+        <h1 className="text-3xl font-extrabold lg:text-4xl">Аккаунт</h1>
         {login && (
           <p className="mt-1 text-sm text-muted">
             Логин: <span className="text-fg">{login}</span>
@@ -25,7 +25,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       )}
 
       <section>
-        <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Смена пароля</h2>
+        <h2 className="mb-3 text-xl font-bold">Смена пароля</h2>
         <PasswordForm />
         <p className="mt-3 text-xs text-muted">
           После смены пароля все остальные устройства выйдут из админки. Забытый пароль восстанавливает разработчик.
@@ -33,7 +33,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       </section>
 
       <section className="mt-10 border-t border-line pt-6">
-        <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Устройства</h2>
+        <h2 className="mb-3 text-xl font-bold">Устройства</h2>
         <p className="mb-4 text-sm text-muted">
           Если админка осталась открытой на чужом телефоне или компьютере — выйдите везде сразу.
         </p>

@@ -9,7 +9,7 @@ export default async function NewTrainerPage({ searchParams }: { searchParams: P
 
   return (
     <>
-      <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">Новый тренер</h1>
+      <h1 className="mb-1 text-3xl font-extrabold lg:text-4xl">Новый тренер</h1>
       <p className="mb-6 text-sm text-muted">
         Тарифы добавите после сохранения. Фото можно будет загрузить на следующем этапе — пока карточка на сайте будет без
         фото.

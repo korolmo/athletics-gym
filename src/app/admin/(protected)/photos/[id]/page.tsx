@@ -12,7 +12,7 @@ export default async function EditGalleryPhotoPage({ params }: { params: Promise
 
   return (
     <>
-      <h1 className="mb-6 font-display text-3xl uppercase tracking-wide">Фото Галереи</h1>
+      <h1 className="mb-6 text-3xl font-extrabold lg:text-4xl">Фото Галереи</h1>
 
       {photo.url && (
         <div className="relative mb-6 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-card">

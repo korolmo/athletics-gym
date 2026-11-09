@@ -15,7 +15,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   return (
     <>
       <div className="mb-6 flex items-start justify-between gap-3">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Отзыв</h1>
+        <h1 className="text-3xl font-extrabold lg:text-4xl">Отзыв</h1>
         <StatusChip status={r.status} />
       </div>
 

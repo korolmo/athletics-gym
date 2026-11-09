@@ -161,7 +161,7 @@ export function MarqueeForm({ s }: { s: SiteSettingsData }) {
       </p>
       {Array.from({ length: MARQUEE_MAX_ITEMS }, (_, i) => (
         <fieldset key={i} className="space-y-3 rounded-2xl bg-card-2/40 p-4">
-          <legend className="font-display text-xl uppercase tracking-wide">Пункт {i + 1}</legend>
+          <legend className="text-xl font-bold">Пункт {i + 1}</legend>
           <Input name={`marquee${i + 1}Ru`} label="Текст (RU)" saved={s.marqueeRu[i] ?? ""} max={max} autoComplete="off" />
           <Input name={`marquee${i + 1}Kk`} label="Текст (KZ)" saved={s.marqueeKk[i] ?? ""} max={max} autoComplete="off" />
         </fieldset>
@@ -184,7 +184,7 @@ export function AboutForm({ cards }: { cards: AboutCardData[] }) {
     <Form action={saveAbout}>
       {cards.map((card, i) => (
         <fieldset key={card.position} className="space-y-3 rounded-2xl bg-card-2/40 p-4">
-          <legend className="font-display text-xl uppercase tracking-wide">Карточка {i + 1}</legend>
+          <legend className="text-xl font-bold">Карточка {i + 1}</legend>
           <p className="text-xs text-muted">{CARD_NOTES[i]}</p>
           <RuKk name={`card${i + 1}.kicker`} label="Подпись" ru={card.kickerRu} kk={card.kickerKk} max={LIMITS.cardKicker} />
           <RuKk name={`card${i + 1}.title`} label="Заголовок" ru={card.titleRu} kk={card.titleKk} max={LIMITS.cardTitle} />
@@ -292,7 +292,7 @@ export function LegalForm({ s }: { s: SiteSettingsData }) {
         note="На этот адрес люди пишут, чтобы узнать, исправить или удалить свои данные. Он виден на сайте."
       />
       <fieldset className="space-y-3 rounded-2xl bg-card-2/40 p-4">
-        <legend className="font-display text-xl uppercase tracking-wide">Место хранения данных</legend>
+        <legend className="text-xl font-bold">Место хранения данных</legend>
         <p className="text-xs text-muted">
           Продолжение фразы «Данные хранятся …» в политике конфиденциальности. Если пусто — «{DEFAULT_DATA_LOCATION.ru}».
         </p>

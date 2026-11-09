@@ -11,7 +11,7 @@ import { PhotoUploader } from "./PhotoUploader";
 
 export const dynamic = "force-dynamic";
 
-const h2 = "mb-3 font-display text-xl uppercase tracking-wide";
+const h2 = "mb-3 text-xl font-bold";
 const square =
   "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line text-muted hover:border-accent hover:text-accent disabled:opacity-30 disabled:hover:border-line disabled:hover:text-muted";
 
@@ -24,7 +24,7 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <div className="mb-6">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Фото</h1>
+        <h1 className="text-3xl font-extrabold lg:text-4xl">Фото</h1>
         <p className="mt-1 text-sm text-muted">
           Фото сжимается на телефоне перед загрузкой. Подходят JPEG, PNG и WebP, после сжатия — до{" "}
           {formatMegabytes(MAX_FILE_BYTES)}.
@@ -98,7 +98,7 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
 
       <section id="gallery" className="mt-8 scroll-mt-28">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-xl uppercase tracking-wide">Галерея</h2>
+          <h2 className="text-xl font-bold">Галерея</h2>
           <span className="text-xs text-muted">
             На сайте: {visible > 0 ? `${visible}, сразу видно ${Math.min(visible, GALLERY_FIRST)}` : "демо-картинки"}
           </span>

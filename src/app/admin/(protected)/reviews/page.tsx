@@ -38,7 +38,7 @@ export default async function ReviewsPage({
   return (
     <>
       <div className="mb-6">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Отзывы</h1>
+        <h1 className="text-3xl font-extrabold lg:text-4xl">Отзывы</h1>
         <p className="mt-1 text-sm text-muted">
           Только настоящие отзывы клиентов. На сайте видны опубликованные; отзыв, оставленный на сайте, ждёт вашего решения.
         </p>

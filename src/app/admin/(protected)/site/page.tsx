@@ -38,7 +38,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
   return (
     <>
       <div className="mb-6">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Сайт</h1>
+        <h1 className="text-3xl font-extrabold lg:text-4xl">Сайт</h1>
         <p className="mt-1 text-sm text-muted">Тексты и контакты главной страницы. Изменения сразу появляются на сайте.</p>
       </div>
 
@@ -49,7 +49,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
       )}
 
       <section>
-        <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Блоки главной</h2>
+        <h2 className="mb-3 text-xl font-bold">Блоки главной</h2>
         <ul className="space-y-2">
           {/* Первый экран есть всегда: его можно править, но нельзя скрыть */}
           <li className="flex items-center gap-3 rounded-2xl bg-card p-4">
@@ -101,7 +101,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Рейтинг 2ГИС</h2>
+        <h2 className="mb-3 text-xl font-bold">Рейтинг 2ГИС</h2>
         <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
           <div className="min-w-0 flex-1">
             <div className="font-semibold leading-snug">
@@ -117,7 +117,7 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 font-display text-xl uppercase tracking-wide">Реквизиты и документы</h2>
+        <h2 className="mb-3 text-xl font-bold">Реквизиты и документы</h2>
         <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
           <div className="min-w-0 flex-1">
             <div className="font-semibold leading-snug">{settings.legalName || "Реквизиты не заполнены"}</div>

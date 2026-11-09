@@ -9,6 +9,7 @@ import { PhotoSlot } from "../../photos/PhotoSlot";
 import { isStorageConfigured, mediaUrl } from "@/modules/photos";
 import { getScheduleForAdmin } from "@/modules/schedule";
 import { ScheduleCard } from "../ScheduleCard";
+import { CardTitle, Empty, Notice, PageHead, btnDark, card } from "../../../ui";
 
 const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 /** «2026-11-15» → «15 ноября» */
@@ -29,68 +30,72 @@ export default async function EditTrainerPage({
   if (!tr || !isHall(tr.hallId)) notFound();
   const schedule = await getScheduleForAdmin(tr.id);
 
+
   return (
     <>
-      <h1 className="mb-6 font-display text-3xl uppercase tracking-wide">{tr.name}</h1>
+      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-accent">
+        <Link href={`/admin/trainers?hall=${tr.hallId}`} className="hover:underline">
+          Тренеры
+        </Link>{" "}
+        · <span className={tr.isVisible ? "text-wa" : "text-muted"}>{tr.isVisible ? "на сайте" : "скрыт с сайта"}</span>
+      </p>
+      <PageHead title={tr.name} />
 
       {(saved || deleted) && (
-        <div role="status" className="mb-6 rounded-xl border border-wa/40 bg-wa/10 px-4 py-3 text-sm text-wa">
-          {saved ? "Сохранено — уже на сайте" : "Тариф удалён"}
+        <div className="mb-6">
+          <Notice tone="ok">{saved ? "Сохранено — уже на сайте" : "Тариф удалён"}</Notice>
         </div>
       )}
 
-      <div className="mb-6">
-        <PhotoSlot
-          target={`trainer:${tr.id}`}
-          title="Плакат тренера"
-          note="Карточка-плакат: на сайте заполняет рамку 3:4 и прижата к верху, по нажатию открывается целиком."
-          url={mediaUrl(tr.uploadedPhoto)}
-          fallback={tr.photo}
-          shape="tall"
-          disabled={!isStorageConfigured()}
-        />
-      </div>
-
-      <TrainerForm
-        initial={{
-          id: tr.id,
-          name: tr.name,
-          hallId: tr.hallId,
-          descriptionRu: tr.descriptionRu ?? "",
-          descriptionKk: tr.descriptionKk ?? "",
-          sortOrder: tr.sortOrder,
-          isVisible: tr.isVisible,
-        }}
-      />
-
-      <section className="mt-10 border-t border-line pt-6">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="font-display text-xl uppercase tracking-wide">Тарифы тренера</h2>
-          <Link
-            href={`/admin/tariffs/new?trainer=${tr.id}`}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink"
-          >
-            <PlusIcon />
-            Добавить тариф
-          </Link>
+      {/* Макет А5: плакат и основное — слева, тарифы и часы работы — справа (на телефоне — друг под другом) */}
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <div className="space-y-5">
+          <PhotoSlot
+            target={`trainer:${tr.id}`}
+            title="Плакат тренера (3:4)"
+            note="Карточка-плакат: на сайте заполняет рамку 3:4 и прижата к верху, по нажатию открывается целиком."
+            url={mediaUrl(tr.uploadedPhoto)}
+            fallback={tr.photo}
+            shape="tall"
+            disabled={!isStorageConfigured()}
+          />
+          <TrainerForm
+            initial={{
+              id: tr.id,
+              name: tr.name,
+              hallId: tr.hallId,
+              descriptionRu: tr.descriptionRu ?? "",
+              descriptionKk: tr.descriptionKk ?? "",
+              sortOrder: tr.sortOrder,
+              isVisible: tr.isVisible,
+            }}
+          />
         </div>
-        {tr.tariffs.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-sm text-muted">
-            У тренера пока нет тарифов — на сайте будет только кнопка «Записаться».
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {tr.tariffs.map((t) => (
-              <TariffRow key={t.id} t={t} />
-            ))}
-          </ul>
-        )}
-      </section>
 
-      <ScheduleCard
-        trainerId={tr.id}
-        schedule={{ ...schedule, timeOff: schedule.timeOff.map((t) => ({ ...t, label: { from: dayLabel(t.fromDay), to: dayLabel(t.toDay) } })) }}
-      />
+        <div className="space-y-5">
+          <section className={card}>
+            <CardTitle title="Тарифы тренера" aside={`${tr.tariffs.length} тариф.`} />
+            {tr.tariffs.length === 0 ? (
+              <Empty>У тренера пока нет тарифов — на сайте будет только кнопка «Записаться».</Empty>
+            ) : (
+              <ul className="space-y-3">
+                {tr.tariffs.map((t) => (
+                  <TariffRow key={t.id} t={t} />
+                ))}
+              </ul>
+            )}
+            <Link href={`/admin/tariffs/new?trainer=${tr.id}`} className={`${btnDark} mt-4 w-full text-accent`}>
+              <PlusIcon />
+              Добавить тариф
+            </Link>
+          </section>
+
+          <ScheduleCard
+            trainerId={tr.id}
+            schedule={{ ...schedule, timeOff: schedule.timeOff.map((t) => ({ ...t, label: { from: dayLabel(t.fromDay), to: dayLabel(t.toDay) } })) }}
+          />
+        </div>
+      </div>
 
       <div className="mt-8 border-t border-line pt-4">
         <DeleteTrainerButton id={tr.id} name={tr.name} tariffCount={tr.tariffs.length} />

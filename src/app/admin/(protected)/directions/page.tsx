@@ -19,7 +19,7 @@ export default async function DirectionsPage({ searchParams }: { searchParams: P
   return (
     <>
       <div className="mb-6">
-        <h1 className="font-display text-3xl uppercase tracking-wide">Направления</h1>
+        <h1 className="text-3xl font-extrabold lg:text-4xl">Направления</h1>
         <p className="mt-1 text-sm text-muted">
           С чем помогают тренеры зала — блок «С чем помогут тренеры» на сайте. На сайте: {visible}
           {visible === 0 ? " — блок не показывается, пока нет ни одного видимого направления." : "."}

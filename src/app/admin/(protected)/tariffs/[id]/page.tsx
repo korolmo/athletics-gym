@@ -17,7 +17,7 @@ export default async function EditTariffPage({ params }: { params: Promise<{ id:
 
   return (
     <>
-      <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">Редактировать тариф</h1>
+      <h1 className="mb-1 text-3xl font-extrabold lg:text-4xl">Редактировать тариф</h1>
       <p className="mb-6 text-sm text-muted">
         {trainer ? `Персональные тренировки · тренер ${trainer.name}` : "Позиция прайса зала"}
       </p>

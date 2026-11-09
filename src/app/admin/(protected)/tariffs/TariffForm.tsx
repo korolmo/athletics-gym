@@ -16,6 +16,11 @@ import {
 } from "@/modules/tariffs/client";
 import { ACCESS_LABEL_RU, AUDIENCE_LABEL_RU, CATEGORY_LABEL_RU, HALL_LABEL_RU } from "@/modules/tariffs/client";
 import { LIMITS } from "@/lib/admin/limits";
+import { CardTitle, Notice, btnDark, btnPrimary, card, field, hint, label, toggle } from "../../ui";
+
+// Форма Тарифа — по макету А4 (design/stitch/admin/a4-tarif-forma-mobile.png): карточки «Основное», «Стоимость»,
+// «Параметры и доступ», «Отображение на сайте». Поля и их имена — прежние; «Утренний» доступ и аудитория «Школьники»
+// из макета не добавлены: таких Времени доступа и Аудитории у Тарифов нет (GLOSSARY).
 
 export type TariffInput = {
   id?: string;
@@ -32,10 +37,21 @@ export type TariffInput = {
   isVisible: boolean;
 };
 
-const field =
-  "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
-const labelCls = "mb-1.5 block text-sm text-muted";
-const hint = "mt-1 block text-xs text-muted";
+/** Выбор плашками (Зал, Время доступа, Аудитория): обычные radio, выбранная — жёлтая. */
+function Pills<T extends string>({ name, options, labels, defaultValue }: { name: string; options: readonly T[]; labels: Record<T, string>; defaultValue: T }) {
+  return (
+    <div className={`grid gap-2 ${options.length > 2 ? "grid-cols-2" : "grid-cols-2"}`}>
+      {options.map((o) => (
+        <label key={o} className="cursor-pointer">
+          <input type="radio" name={name} value={o} defaultChecked={o === defaultValue} className="peer sr-only" />
+          <span className="flex h-12 items-center justify-center rounded-xl border border-line bg-bg px-3 text-center text-sm font-semibold text-muted transition peer-checked:border-accent peer-checked:bg-accent peer-checked:text-accent-ink peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
+            {labels[o]}
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
 
 export function TariffForm({
   initial,
@@ -54,177 +70,159 @@ export function TariffForm({
   const personal = category === "PERSONAL";
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className="mx-auto max-w-2xl space-y-5">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
 
-      {trainer ? (
-        <>
-          <input type="hidden" name="trainerId" value={trainer.id} />
-          <input type="hidden" name="hallId" value={initial.hallId} />
-          <input type="hidden" name="category" value="PERSONAL" />
-        </>
-      ) : (
-        <>
-          <label className="block">
-            <span className={labelCls}>Зал</span>
-            <select name="hallId" defaultValue={initial.hallId} className={field}>
-              {HALLS.map((h) => (
-                <option key={h} value={h}>
-                  {HALL_LABEL_RU[h]}
-                </option>
-              ))}
-            </select>
-          </label>
+      <section className={card}>
+        <CardTitle title="Основное" />
+        {trainer ? (
+          <>
+            <input type="hidden" name="trainerId" value={trainer.id} />
+            <input type="hidden" name="hallId" value={initial.hallId} />
+            <input type="hidden" name="category" value="PERSONAL" />
+            <p className="mb-4 rounded-xl bg-bg px-4 py-3 text-sm text-muted">
+              Персональная тренировка тренера <b className="text-fg">{trainer.name}</b> — Зал и Категория берутся у тренера.
+            </p>
+          </>
+        ) : (
+          <div className="space-y-5">
+            <label className="block">
+              <span className={label}>Категория тарифа</span>
+              <select name="category" value={category} onChange={(e) => setCategory(e.target.value as Category)} className={field}>
+                {HALL_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {CATEGORY_LABEL_RU[c]}
+                  </option>
+                ))}
+              </select>
+              <span className={hint}>Персональные тренировки заводятся в карточке тренера.</span>
+            </label>
+            <div>
+              <span className={label}>Зал</span>
+              <Pills name="hallId" options={HALLS} labels={HALL_LABEL_RU} defaultValue={initial.hallId} />
+            </div>
+          </div>
+        )}
 
-          <label className="block">
-            <span className={labelCls}>Категория</span>
-            <select name="category" value={category} onChange={(e) => setCategory(e.target.value as Category)} className={field}>
-              {HALL_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {CATEGORY_LABEL_RU[c]}
-                </option>
-              ))}
-            </select>
-            <span className={hint}>Персональные тренировки заводятся в карточке тренера.</span>
-          </label>
-        </>
-      )}
+        {fields.title && (
+          <div className="mt-5 space-y-5">
+            <label className="block">
+              <span className={`${label} flex justify-between`}>
+                Уточнение (RU) <span className="text-xs uppercase tracking-wide">необязательно</span>
+              </span>
+              <input name="titleRu" maxLength={LIMITS.title} defaultValue={initial.titleRu} placeholder="1+1 (подходит для подруг)" className={field} />
+              <span className={hint}>Если пусто — название соберётся из полей ниже.</span>
+            </label>
+            <label className="block">
+              <span className={`${label} flex justify-between`}>
+                Нақтылау (KZ) <span className="text-xs uppercase tracking-wide">необязательно</span>
+              </span>
+              <input name="titleKk" maxLength={LIMITS.title} defaultValue={initial.titleKk} className={field} />
+              <span className={hint}>Если пусто — на казахской версии покажем русский.</span>
+            </label>
+          </div>
+        )}
+      </section>
 
-      {fields.title && (
-        <>
+      <section className={card}>
+        <CardTitle title="Стоимость" />
+        <div className={fields.priceTo ? "grid grid-cols-2 gap-3" : ""}>
           <label className="block">
-            <span className={labelCls}>Уточнение (RU)</span>
+            <span className={label}>{fields.priceTo ? "Цена от, ₸ *" : "Цена, ₸ *"}</span>
             <input
-              name="titleRu"
-              maxLength={LIMITS.title}
-              defaultValue={initial.titleRu}
-              placeholder="1+1 (подходит для подруг)"
-              className={field}
-            />
-            <span className={hint}>Необязательно. Если пусто — название соберётся из полей ниже.</span>
-          </label>
-          <label className="block">
-            <span className={labelCls}>Нақтылау (KZ)</span>
-            <input name="titleKk" maxLength={LIMITS.title} defaultValue={initial.titleKk} className={field} />
-            <span className={hint}>Если пусто — на казахской версии покажем русский.</span>
-          </label>
-        </>
-      )}
-
-      {fields.visits && (
-        <label className="block">
-          <span className={labelCls}>{personal ? "Тренировок в месяц" : "Посещений в месяц *"}</span>
-          <input
-            name="visitsPerMonth"
-            type="number"
-            min={1}
-            max={LIMITS.visitsPerMonth}
-            inputMode="numeric"
-            required={!personal}
-            defaultValue={initial.visitsPerMonth}
-            placeholder="12"
-            className={field}
-          />
-          {personal && <span className={hint}>Пусто — разовая тренировка.</span>}
-        </label>
-      )}
-
-      {fields.months && (
-        <label className="block">
-          <span className={labelCls}>Срок, месяцев *</span>
-          <input
-            name="durationMonths"
-            type="number"
-            min={1}
-            max={LIMITS.durationMonths}
-            inputMode="numeric"
-            required
-            defaultValue={initial.durationMonths}
-            placeholder="1"
-            className={field}
-          />
-          <span className={hint}>Безлимит — 1 вход в день.</span>
-        </label>
-      )}
-
-      {fields.access && (
-        <label className="block">
-          <span className={labelCls}>Время доступа</span>
-          <select name="access" defaultValue={initial.access} className={field}>
-            {ACCESS.map((a) => (
-              <option key={a} value={a}>
-                {ACCESS_LABEL_RU[a]}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-
-      {fields.audience && (
-        <label className="block">
-          <span className={labelCls}>Аудитория</span>
-          <select name="audience" defaultValue={initial.audience} className={field}>
-            {AUDIENCES.map((a) => (
-              <option key={a} value={a}>
-                {AUDIENCE_LABEL_RU[a]}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-
-      <div className={fields.priceTo ? "grid grid-cols-2 gap-3" : ""}>
-        <label className="block">
-          <span className={labelCls}>{fields.priceTo ? "Цена от, ₸ *" : "Цена, ₸ *"}</span>
-          <input
-            name="price"
-            required
-            maxLength={12}
-            inputMode="numeric"
-            pattern="[0-9 ]*"
-            defaultValue={initial.price}
-            placeholder="12000"
-            className={`${field} font-display text-3xl`}
-          />
-        </label>
-        {fields.priceTo && (
-          <label className="block">
-            <span className={labelCls}>до, ₸</span>
-            <input
-              name="priceTo"
+              name="price"
+              required
               maxLength={12}
               inputMode="numeric"
               pattern="[0-9 ]*"
-              defaultValue={initial.priceTo}
-              placeholder="—"
-              className={`${field} font-display text-3xl`}
+              defaultValue={initial.price}
+              placeholder="12000"
+              className={`${field} h-16 text-3xl font-extrabold text-accent`}
             />
           </label>
-        )}
-      </div>
-      {fields.priceTo && <span className={hint}>«до» заполняйте только для диапазона, например 15 000 – 25 000 ₸.</span>}
+          {fields.priceTo && (
+            <label className="block">
+              <span className={label}>до, ₸</span>
+              <input name="priceTo" maxLength={12} inputMode="numeric" pattern="[0-9 ]*" defaultValue={initial.priceTo} placeholder="—" className={`${field} h-16 text-3xl font-extrabold`} />
+            </label>
+          )}
+        </div>
+        {fields.priceTo && <span className={hint}>«до» — только для диапазона, например 15 000 – 25 000 ₸.</span>}
+      </section>
 
-      <label className="flex items-center justify-between gap-4 rounded-xl bg-card px-4 py-3.5">
-        <span>Показывать на сайте</span>
-        <input name="isVisible" type="checkbox" defaultChecked={initial.isVisible} className="h-6 w-6 accent-[#f5e642]" />
-      </label>
-
-      {state?.error && (
-        <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
-          {state.error}
-        </p>
+      {(fields.visits || fields.months || fields.access || fields.audience) && (
+        <section className={card}>
+          <CardTitle title="Параметры и доступ" />
+          <div className="space-y-5">
+            {fields.visits && (
+              <label className="block">
+                <span className={label}>{personal ? "Тренировок в месяц" : "Посещений в месяц *"}</span>
+                <input
+                  name="visitsPerMonth"
+                  type="number"
+                  min={1}
+                  max={LIMITS.visitsPerMonth}
+                  inputMode="numeric"
+                  required={!personal}
+                  defaultValue={initial.visitsPerMonth}
+                  placeholder="12"
+                  className={field}
+                />
+                {personal && <span className={hint}>Пусто — разовая тренировка.</span>}
+              </label>
+            )}
+            {fields.months && (
+              <label className="block">
+                <span className={label}>Срок, месяцев *</span>
+                <input
+                  name="durationMonths"
+                  type="number"
+                  min={1}
+                  max={LIMITS.durationMonths}
+                  inputMode="numeric"
+                  required
+                  defaultValue={initial.durationMonths}
+                  placeholder="1"
+                  className={field}
+                />
+                <span className={hint}>Безлимит — 1 вход в день.</span>
+              </label>
+            )}
+            {fields.access && (
+              <div>
+                <span className={label}>Время доступа</span>
+                <Pills name="access" options={ACCESS} labels={ACCESS_LABEL_RU} defaultValue={initial.access} />
+              </div>
+            )}
+            {fields.audience && (
+              <div>
+                <span className={label}>Аудитория</span>
+                <Pills name="audience" options={AUDIENCES} labels={AUDIENCE_LABEL_RU} defaultValue={initial.audience} />
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
-      <div className="sticky bottom-0 -mx-4 flex gap-3 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur">
-        <Link href={cancelHref} className="rounded-xl border border-line px-5 py-3.5 font-semibold text-muted">
+      <section className={card}>
+        <CardTitle title="Отображение на сайте" />
+        <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-bg px-4 py-4">
+          <span>
+            <span className="block font-semibold">Показывать на сайте</span>
+            <span className="text-sm text-muted">Тариф виден посетителям в блоке цен</span>
+          </span>
+          <input name="isVisible" type="checkbox" defaultChecked={initial.isVisible} className={toggle} />
+        </label>
+      </section>
+
+      {state?.error && <Notice tone="error">{state.error}</Notice>}
+
+      <div className="sticky bottom-20 z-10 flex gap-3 rounded-2xl border border-line bg-bg/95 p-3 lg:bottom-4">
+        <Link href={cancelHref} className={btnDark}>
           Отмена
         </Link>
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex-1 rounded-xl bg-accent py-3.5 font-semibold text-accent-ink transition hover:brightness-95 disabled:opacity-60"
-        >
-          {pending ? "Сохраняем…" : "Сохранить"}
+        <button type="submit" disabled={pending} className={`${btnPrimary} flex-1`}>
+          {pending ? "Сохраняем…" : "Сохранить изменения"}
         </button>
       </div>
     </form>

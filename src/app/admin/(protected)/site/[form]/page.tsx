@@ -13,7 +13,7 @@ export default async function EditSettingsPage({ params }: { params: Promise<{ f
 
   return (
     <>
-      <h1 className="mb-6 font-display text-3xl uppercase tracking-wide">{SETTINGS_FORM_LABEL_RU[form]}</h1>
+      <h1 className="mb-6 text-3xl font-extrabold lg:text-4xl">{SETTINGS_FORM_LABEL_RU[form]}</h1>
       {form === "hero" && <HeroForm s={settings} />}
       {form === "marquee" && <MarqueeForm s={settings} />}
       {form === "about" && <AboutForm cards={cards} />}
