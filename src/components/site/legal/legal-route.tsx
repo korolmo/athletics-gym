@@ -27,7 +27,9 @@ export async function LegalRoute({ page, params }: { page: LegalPageId; params: 
   const t = getDictionary(locale);
   const { settings, cards } = await getSiteSettings();
   const s = toSiteContent(locale, settings, cards);
+  // Разделы о личном кабинете — только там, где он работает (Лаборатория)
+  const cabinet = resolveCodeChannel() !== null;
   return (
-    <LegalPage locale={locale} t={t} s={s} page={page} doc={legalDoc(page, legalContext(locale, t, s))} cabinet={resolveCodeChannel() !== null} />
+    <LegalPage locale={locale} t={t} s={s} page={page} doc={legalDoc(page, legalContext(locale, t, s, cabinet))} cabinet={cabinet} />
   );
 }

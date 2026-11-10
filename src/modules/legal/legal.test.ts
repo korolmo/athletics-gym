@@ -20,9 +20,9 @@ const requisites = {
   privacyEmail: "privacy@athletics-gym.kz",
 };
 
-function build(page: (typeof LEGAL_PAGES)[number], locale: Locale, settings = DEFAULT_SETTINGS): LegalDoc {
+function build(page: (typeof LEGAL_PAGES)[number], locale: Locale, settings = DEFAULT_SETTINGS, cabinet = false): LegalDoc {
   const t = dictionaries[locale];
-  return legalDoc(page, legalContext(locale, t, toSiteContent(locale, settings, DEFAULT_ABOUT_CARDS)));
+  return legalDoc(page, legalContext(locale, t, toSiteContent(locale, settings, DEFAULT_ABOUT_CARDS), cabinet));
 }
 const text = (doc: LegalDoc) => legalDocText(doc, "");
 const hrefs = (doc: LegalDoc) =>
@@ -289,14 +289,14 @@ describe("политика говорит то же, что делает код"
     );
   });
 
-  it("дата редакции: Политика — 15 октября 2026 (переезд на hoster.kz), Соглашение — 12 октября; дата Политики записывается в Отзыв", () => {
-    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-10-15", terms: "2026-10-12" });
-    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^15 октября 2026/);
+  it("дата редакции обоих документов — 10 ноября 2026 (личный кабинет); дата Политики записывается в Отзыв", () => {
+    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-11-10", terms: "2026-11-10" });
+    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^10 ноября 2026/);
     expect(build("privacy", "kk").updated).toBe(LEGAL_UPDATED.privacy);
     // Дату для Согласия Отзывы получают от действия сайта, а оно — из той же константы; своей копии нет нигде
     const action = fs.readFileSync("src/app/[locale]/actions.ts", "utf8");
     expect(action).toContain("createVisitorReview(parsed.data, ipHash, LEGAL_UPDATED.privacy)");
-    expect(fs.readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts")).filter((f) => /"2026-10-1[12]"/.test(fs.readFileSync(`src/${f}`, "utf8"))).map((f) => f.replace(/\\/g, "/"))).toEqual(["modules/legal/meta.ts"]);
+    expect(fs.readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts")).filter((f) => /"2026-11-10"/.test(fs.readFileSync(`src/${f}`, "utf8"))).map((f) => f.replace(/\\/g, "/"))).toEqual(["modules/legal/meta.ts"]);
   });
 
   it("о том, у кого есть доступ, сказано один раз — в разделе о защите; в «Где хранятся данные» — только место и журналы", () => {
@@ -346,5 +346,32 @@ describe("политика говорит то же, что делает код"
   it("русские числительные склоняются", () => {
     const year = ["год", "года", "лет"] as const;
     expect([1, 2, 5, 11, 21, 22, 25].map((n) => ruPlural(n, year))).toEqual(["год", "года", "лет", "лет", "год", "года", "лет"]);
+  });
+});
+
+describe("личный кабинет в документах (этап 1)", () => {
+  it("там, где кабинета нет (боевой сайт), о нём ни слова", () => {
+    for (const locale of ["ru", "kk"] as const) {
+      for (const page of LEGAL_PAGES) {
+        const t = text(build(page, locale));
+        expect(t, `${page} ${locale}`).not.toMatch(/кабинет/i);
+        expect(t).not.toContain(LEGAL_FACTS.clientCookie);
+      }
+    }
+  });
+
+  it("где кабинет есть — его данные, cookie и сроки названы числами из кода", () => {
+    const privacy = text(build("privacy", "ru", DEFAULT_SETTINGS, true));
+    expect(privacy).toContain(`${LEGAL_FACTS.clientCookie} — вход в личный кабинет`);
+    expect(privacy).toContain(`${LEGAL_FACTS.clientCookieDays} дней`);
+    expect(privacy).toContain(`${LEGAL_FACTS.inactiveMonths} месяцев`);
+    expect(privacy).toContain(`действует ${LEGAL_FACTS.codeTtlMin} минут`);
+    expect(LEGAL_FACTS).toMatchObject({ clientCookie: "ag_client", clientCookieDays: 30, inactiveMonths: 12, codeTtlMin: 5, maxFutureBookings: 3, cancelHours: 12 });
+    const terms = text(build("terms", "ru", DEFAULT_SETTINGS, true));
+    expect(terms).toContain(`не больше ${LEGAL_FACTS.maxFutureBookings} будущих записей`);
+    expect(terms).toContain(`не позже чем за ${LEGAL_FACTS.cancelHours} часов`);
+    const kk = text(build("privacy", "kk", DEFAULT_SETTINGS, true));
+    expect(kk).toContain(LEGAL_FACTS.clientCookie);
+    expect(kk).toContain(`${LEGAL_FACTS.inactiveMonths} ай`);
   });
 });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { demoChannel, resolveCodeChannel, type CodeChannel } from "./code-channel";
 import { MAX_CODE_ATTEMPTS, CODE_TTL_MS } from "../domain/login-code.rules";
+import { INACTIVE_DELETE_MS } from "../domain/client";
 
 // Вход Клиента проверяем без базы: Prisma подменён таблицами в памяти.
 
@@ -42,6 +43,11 @@ const { state, db } = vi.hoisted(() => {
       }),
     },
     client: {
+      deleteMany: vi.fn(async ({ where }: { where: { lastLoginAt: { lt: Date } } }) => {
+        const before = state.clients.length;
+        state.clients = state.clients.filter((c) => !(c.lastLoginAt < where.lastLoginAt.lt));
+        return { count: before - state.clients.length };
+      }),
       findUnique: vi.fn(async ({ where }: { where: { phone: string } }) => {
         const row = state.clients.find((c) => c.phone === where.phone);
         return row ? { id: row.id, sessionVersion: row.sessionVersion } : null;
@@ -115,6 +121,16 @@ describe("запрос кода", () => {
     for (let i = 0; i < 10; i++) await codeFor(phones[i % 4], "ip1", later(i * 1000));
     expect(await requestLoginCode("+77000000005", "ip1", demoChannel, later(20_000))).toMatchObject({ ok: false, reason: "tooMany" });
     expect((await requestLoginCode("+77000000005", "ip2", demoChannel, later(20_000))).ok).toBe(true);
+  });
+
+  it("запрос кода удаляет аккаунты без входа дольше 12 месяцев — и только их", async () => {
+    const base = { name: "К", sessionVersion: 1, consentAt: now, consentPolicyDate: "d" };
+    state.clients = [
+      { ...base, id: "old", phone: "+77000000008", lastLoginAt: new Date(now.getTime() - INACTIVE_DELETE_MS - 1000) },
+      { ...base, id: "fresh", phone: "+77000000009", lastLoginAt: new Date(now.getTime() - INACTIVE_DELETE_MS + 60_000) },
+    ];
+    await codeFor();
+    expect(state.clients.map((c) => c.id)).toEqual(["fresh"]);
   });
 
   it("недоставленный код — отказ", async () => {

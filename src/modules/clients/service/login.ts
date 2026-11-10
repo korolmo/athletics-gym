@@ -11,6 +11,7 @@ import {
   PHONE_WINDOW_MS,
   evaluateRequests,
 } from "../domain/login-code.rules";
+import { INACTIVE_DELETE_MS } from "../domain/client";
 import type { CodeChannel } from "./code-channel";
 import type { CodeVerifyInput } from "../validation/login";
 
@@ -56,6 +57,9 @@ export async function requestLoginCode(
     data: { phone, ipHash, codeHash: hashCode(phone, code), expiresAt: new Date(now.getTime() + CODE_TTL_MS), createdAt: now },
   });
   await db.clientLoginCode.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - CODE_KEEP_MS) } } });
+  // Аккаунты без входа дольше срока из правил удаляются здесь же, при запросе кода (так сказано в Политике): отдельного
+  // планировщика на hoster.kz нет. Будущих Записей у них быть не может — запись возможна на 14 дней и только после входа.
+  await db.client.deleteMany({ where: { lastLoginAt: { lt: new Date(now.getTime() - INACTIVE_DELETE_MS) } } });
 
   const delivery = await channel.deliver(phone, code);
   if (!delivery.delivered) return { ok: false, reason: "unavailable" };
