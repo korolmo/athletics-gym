@@ -8,6 +8,7 @@ export { resolveSender, telegramSender, type SendResult, type Sender } from "./s
 export {
   countDead,
   countPending,
+  deliveryStats,
   deliverPending,
   enqueue,
   listProblemEvents,
