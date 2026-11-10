@@ -14,7 +14,7 @@ main { max-width:860px; margin:0 auto; padding:32px 16px 48px; }
 h1 { font-size:1.6rem; margin:0 0 4px; }
 .sub { color:var(--muted); margin:0 0 24px; }
 .state { display:inline-flex; align-items:center; gap:8px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); }
-.dot { width:10px; height:10px; border-radius:50%; background:var(--bad); }
+.dot { width:10px; height:10px; border-radius:50%; background:var(--warn); }
 .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:24px 0; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
 .card b { display:block; font-size:1.5rem; font-variant-numeric:tabular-nums; }
@@ -33,27 +33,27 @@ a { color:inherit; }
 <body>
 <main>
 <h1>Лаборатория Athletic's Gym — статус</h1>
-<p class="sub">Проверки UptimeRobot каждые 5 минут: страницы <code>/ru</code> и <code>/kk</code> (SLO), <code>/api/health/ready</code> (диагностика). Пересчёт раз в сутки, обновлено <span id="gen">2026-11-09 12:47</span> UTC.</p>
+<p class="sub">Проверки UptimeRobot каждые 5 минут: страницы <code>/ru</code> и <code>/kk</code> (SLO), <code>/api/health/ready</code> (диагностика). Пересчёт раз в сутки, обновлено <span id="gen">2026-11-10 12:34</span> UTC.</p>
 <p class="stale" id="stale" hidden>Данные старше 36 часов: суточный пересчёт не запускался.</p>
-<span class="state"><span class="dot"></span>Тревога</span>
-<ul class="alerts"><li>быстрое выгорание бюджета: burn за час до 18,18 (порог 14,4)</li></ul>
+<span class="state"><span class="dot"></span>SLO нарушен</span>
+
 <div class="grid">
-<div class="card"><span>Доступность страниц за 30 дней</span><b>98,633 %</b><span>SLO 99,5 %: ответ 200 со страницей быстрее 1000 мс</span></div>
-<div class="card"><span>Остаток бюджета ошибок</span><b>-100,0 %</b><span>ошибок 15 из допустимых 5,49</span></div>
-<div class="card"><span>Задержка p50 / p95</span><b>81 мс / 330 мс</b><span>страницы, успешные ответы</span></div>
-<div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>0,00 / 0,00 / 1,79</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
-<div class="card"><span>Холодный старт (после выкаток)</span><b>100 %</b><span>16 из 16 быстрее 1500 мс, цель 90 %; p50 869 мс</span></div>
+<div class="card"><span>Доступность страниц за 30 дней</span><b>99,036 %</b><span>SLO 99,5 %: ответ 200 со страницей быстрее 1000 мс</span></div>
+<div class="card"><span>Остаток бюджета ошибок</span><b>-92,8 %</b><span>ошибок 16 из допустимых 8,30</span></div>
+<div class="card"><span>Задержка p50 / p95</span><b>83 мс / 292 мс</b><span>страницы, успешные ответы</span></div>
+<div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>0,00 / 0,00 / 0,35</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
+<div class="card"><span>Холодный старт (после выкаток)</span><b>100 %</b><span>21 из 21 быстрее 1500 мс, цель 90 %; p50 869 мс</span></div>
 </div>
 <div class="table"><table>
 <thead><tr><th>Адрес</th><th>Роль</th><th>Доступность</th><th>p50</th><th>p95</th><th>За сутки</th><th>Последняя</th></tr></thead>
-<tbody><tr><td><code>/ru</code></td><td>SLO</td><td>98,72 %</td><td>83 мс</td><td>288 мс</td><td>280</td><td>200, 51 мс</td></tr><tr><td><code>/kk</code></td><td>SLO</td><td>98,54 %</td><td>79 мс</td><td>472 мс</td><td>280</td><td>200, 81 мс</td></tr><tr><td><code>/api/health/ready</code></td><td>диагностика</td><td>79,78 %</td><td>421 мс</td><td>1678 мс</td><td>280</td><td>200, 1027 мс</td></tr></tbody>
+<tbody><tr><td><code>/ru</code></td><td>SLO</td><td>99,16 %</td><td>83 мс</td><td>284 мс</td><td>283</td><td>200, 93 мс</td></tr><tr><td><code>/kk</code></td><td>SLO</td><td>98,92 %</td><td>81 мс</td><td>372 мс</td><td>283</td><td>200, 67 мс</td></tr><tr><td><code>/api/health/ready</code></td><td>диагностика</td><td>78,93 %</td><td>423 мс</td><td>1749 мс</td><td>284</td><td>200, 326 мс</td></tr></tbody>
 </table></div>
-<p class="note">Проверок страниц за окно: 1097. Опрос раз в 5 минут сам держит функцию Vercel тёплой, поэтому холодный старт меряется отдельно — сразу после выкатки, по заголовку <code>X-Cold-Start</code>. Синтетика GitHub Actions до 25 октября 2026 в расчёт не входит: cron запускался в 40 раз реже плана, измерение невалидно (ADR 0014). Это демо-стенд с синтетическими данными; боевой сайт клиента здесь не проверяется. Данные — <a href="status.json">status.json</a> и <code>data/</code> в ветке <code>monitoring</code>.</p>
+<p class="note">Проверок страниц за окно: 1660. Опрос раз в 5 минут сам держит функцию Vercel тёплой, поэтому холодный старт меряется отдельно — сразу после выкатки, по заголовку <code>X-Cold-Start</code>. Синтетика GitHub Actions до 25 октября 2026 в расчёт не входит: cron запускался в 40 раз реже плана, измерение невалидно (ADR 0014). Это демо-стенд с синтетическими данными; боевой сайт клиента здесь не проверяется. Данные — <a href="status.json">status.json</a> и <code>data/</code> в ветке <code>monitoring</code>.</p>
 </main>
 <script>
 // Суточный пересчёт может не запуститься (cron GitHub) — тогда страница сама скажет, что данные старые
 (function () {
-  var gen = Date.parse("2026-11-09T12:47:38.469Z");
+  var gen = Date.parse("2026-11-10T12:34:42.013Z");
   if (Date.now() - gen > 36 * 3600 * 1000) document.getElementById("stale").hidden = false;
 })();
 </script>
