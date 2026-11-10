@@ -4,7 +4,8 @@ import type { Access, Audience, TariffCategory } from "@prisma/client";
 
 export const HALLS = [
   { id: "general", nameRu: "Общий зал", nameKk: "Жалпы зал", sortOrder: 0 },
-  { id: "women", nameRu: "Женский зал", nameKk: "Әйелдер залы", sortOrder: 1 },
+  // Логотип Зала (этап П1): у Женского зала — свой файл, как в миграции 20261111020000_club_logo
+  { id: "women", nameRu: "Женский зал", nameKk: "Әйелдер залы", sortOrder: 1, logo: "/logo-women.png?v=1" },
 ] as const;
 
 export type HallId = "general" | "women";

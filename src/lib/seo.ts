@@ -168,7 +168,8 @@ export function buildGymJsonLd(input: {
   city: string;
   /** Точка на карте; нет — без geo */
   coords: { lat: number; lng: number } | null;
-  logoPath: string;
+  /** Логотип (путь от корня сайта); монограмма — без логотипа */
+  logoPath: string | null;
   extraLinks: string[];
   content: SeoSiteContent;
 }): Record<string, unknown> {
@@ -182,7 +183,7 @@ export function buildGymJsonLd(input: {
     description: input.description,
     url: `${siteUrl}/${locale}`,
     inLanguage: locale,
-    logo: `${siteUrl}${input.logoPath}`,
+    ...(input.logoPath ? { logo: `${siteUrl}${input.logoPath}` } : {}),
     image: `${siteUrl}/${locale}/opengraph-image`,
     telephone: content.contacts.phoneTel,
     address: {

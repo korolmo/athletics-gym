@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, type ReactNode } from "react";
-import { logo } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
+import type { LogoView } from "@/modules/club/client";
 import { logout } from "../actions";
 import {
   AdsClickSym,
@@ -63,12 +63,15 @@ function Badge({ n, on }: { n: number; on?: boolean }) {
 
 export function AdminShell({
   clubName,
+  logo,
   newReviews,
   undelivered = 0,
   children,
 }: {
   /** Название Клуба — подпись над меню (этап П1) */
   clubName: string;
+  /** Логотип Клуба: картинка или монограмма */
+  logo: LogoView;
   /** Сколько Отзывов ждут решения */
   newReviews: number;
   /** Сколько уведомлений о Записях не доставлено (плашка «Не доставлено: N», макет 19) */
@@ -88,7 +91,7 @@ export function AdminShell({
       <header data-admin-header className="sticky top-0 z-40 border-b border-line bg-bg/95 md:backdrop-blur">
         <div className="flex h-16 items-center justify-between gap-3 px-4 lg:h-[72px] lg:px-6">
           <Link href="/admin" className="flex min-w-0 items-center gap-3">
-            <Image src={logo} alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full" />
+            <ClubLogo logo={logo} size={36} className="h-9 w-9 shrink-0 rounded-full" />
             <span className="flex min-w-0 flex-col leading-tight">
               <span className="truncate text-xs font-extrabold uppercase tracking-widest text-accent">{clubName} · Admin</span>
               <span className="truncate text-lg font-bold lg:hidden">{current?.label ?? "Админка"}</span>

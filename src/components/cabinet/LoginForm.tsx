@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { requestCodeAction, verifyCodeAction, type LoginState } from "@/app/[locale]/cabinet/actions";
 import type { Locale } from "@/lib/i18n";
 import type { CabinetDictionary } from "@/dictionaries/cabinet/ru";
-import { logo } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
+import type { LogoView } from "@/modules/club/client";
 import { formatPhone, CODE_LENGTH } from "@/modules/clients/client";
 import { ArrowForwardSym, ChatSym } from "./icons";
 import { ArrowBackSym, BadgeSym, ContentCopySym, ErrorSym, HistorySym, LockOpenSym, ScienceSym } from "./icons";
@@ -21,9 +21,9 @@ function dispatch(prev: LoginState, fd: FormData): Promise<LoginState> {
   return fd.get("intent") === "verify" && fd.get("resend") !== "1" ? verifyCodeAction(prev, fd) : requestCodeAction(prev, fd);
 }
 
-type Props = { locale: Locale; t: CabinetDictionary; demoPhones: string | null; waHref: string; privacyHref: string };
+type Props = { locale: Locale; t: CabinetDictionary; demoPhones: string | null; waHref: string; privacyHref: string; logo: LogoView };
 
-export function LoginForm({ locale, t, demoPhones, waHref, privacyHref }: Props) {
+export function LoginForm({ locale, t, demoPhones, waHref, privacyHref, logo }: Props) {
   const [state, action, pending] = useActionState<LoginState, FormData>(dispatch, { step: "phone" });
   // «Изменить номер» возвращает к первому шагу, пока сервер не ответит новым состоянием
   const [dismissed, setDismissed] = useState<LoginState | null>(null);
@@ -32,7 +32,7 @@ export function LoginForm({ locale, t, demoPhones, waHref, privacyHref }: Props)
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[540px] flex-col px-4 pb-12 pt-6 md:justify-center md:pt-12">
       <Link href={`/${locale}`} className="mx-auto mb-6 hidden items-center gap-3 md:flex">
-        <Image src={logo} alt="" width={36} height={36} className="h-9 w-9 object-contain" priority />
+        <ClubLogo logo={logo} size={36} className="h-9 w-9 object-contain" priority />
         <span className="text-label-uppercase uppercase tracking-[0.2em] text-text-muted">{t.brand.name}</span>
       </Link>
 

@@ -13,7 +13,8 @@ export type ClubData = {
   foundedYear: number | null;
   /** #rrggbb */
   accentColor: string;
-  logoPhoto: string | null;
+  /** «/…» — файл из public/, «gallery/…» — Фото, null — монограмма */
+  logo: string | null;
   twoGisUrl: string | null;
   twoGisReviewsUrl: string | null;
   twoGisRouteUrl: string | null;
@@ -41,7 +42,7 @@ export const DEFAULT_CLUB: ClubData = {
   seoDescriptionKk: "Қызылордадағы спорт зал: жаңа тренажерлар, бөлек әйелдер залы, жаттықтырушымен жеке жаттығулар. Алғашқы келу тегін.",
   foundedYear: 2022,
   accentColor: "#f5e642",
-  logoPhoto: null,
+  logo: "/logo.png?v=2",
   twoGisUrl: "https://2gis.kz/kyzylorda/firm/70000001069365221",
   twoGisReviewsUrl: "https://2gis.kz/kyzylorda/firm/70000001069365221/tab/reviews",
   twoGisRouteUrl: "https://2gis.kz/kyzylorda/directions/points/%7C65.512295%2C44.784253%3B70000001069365221",
@@ -61,7 +62,7 @@ export const CLUB_FIELDS = {
   seoDescriptionKk: true,
   foundedYear: true,
   accentColor: true,
-  logoPhoto: true,
+  logo: true,
   twoGisUrl: true,
   twoGisReviewsUrl: true,
   twoGisRouteUrl: true,

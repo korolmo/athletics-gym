@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useActionState, useState } from "react";
 import { login, type LoginState } from "../actions";
 import { AlertIcon, ArrowRightIcon, EyeIcon, UserIcon } from "@/components/icons";
-import { logo } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
+import type { LogoView } from "@/modules/club/client";
 import { btnPrimary, field, label } from "../ui";
 
 // Вход в админку — по макету Stitch А1 (design/stitch/admin/a1-vhod-desktop.png). «Запомнить вход» из макета нет:
@@ -27,7 +27,7 @@ function ShieldIcon({ className }: { className?: string }) {
   );
 }
 
-export function LoginForm({ clubName, city }: { clubName: string; city: string }) {
+export function LoginForm({ clubName, city, logo }: { clubName: string; city: string; logo: LogoView }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);
   const [show, setShow] = useState(false);
 
@@ -35,7 +35,7 @@ export function LoginForm({ clubName, city }: { clubName: string; city: string }
     <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-line bg-card px-6 py-8 shadow-2xl sm:px-10 sm:py-10">
         <div aria-hidden="true" className="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-accent/70 to-transparent" />
-        <Image src={logo} alt={clubName} width={80} height={80} className="mx-auto rounded-full ring-4 ring-bg" priority />
+        <ClubLogo logo={logo} alt={clubName} size={80} className="mx-auto rounded-full ring-4 ring-bg" priority />
         <h1 className="mt-5 text-center text-2xl font-extrabold">Вход в админку</h1>
         <p className="mt-1 text-center text-sm text-muted">Панель управления клубом</p>
 
