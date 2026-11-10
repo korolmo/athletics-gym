@@ -12,6 +12,8 @@ export function telegramSender(token: string, chatId: string, fetchImpl: typeof 
   return {
     name: "telegram",
     async send(text) {
+      // Частая ошибка настройки: в чат вписан id самого бота (число до двоеточия в токене)
+      if (chatId === token.split(":")[0]) return { ok: false, error: `TELEGRAM_CHAT_ID — это id самого бота (…${chatId.slice(-2)}), нужен id чата Владельца` };
       try {
         const res = await fetchImpl(`https://api.telegram.org/bot${token}/sendMessage`, {
           method: "POST",
@@ -22,7 +24,7 @@ export function telegramSender(token: string, chatId: string, fetchImpl: typeof 
         if (res.ok) return { ok: true };
         // Текст ошибки Telegram — без адреса запроса: в нём токен бота
         const body = (await res.text().catch(() => "")).slice(0, 300);
-        return { ok: false, error: `Telegram ${res.status}: ${body}` };
+        return { ok: false, error: `Telegram ${res.status} (чат …${chatId.slice(-2)}): ${body}` };
       } catch (e) {
         return { ok: false, error: `Telegram недоступен: ${e instanceof Error ? e.name : "ошибка сети"}` };
       }
