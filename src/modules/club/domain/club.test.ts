@@ -1,33 +1,82 @@
 import { describe, expect, it } from "vitest";
 import { CLUB_TIME_ZONE } from "@/lib/time";
-import { site } from "@/lib/site";
+import { fillBrand, hasBrandToken } from "@/lib/brand-text";
 import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
-import { DEFAULT_CLUB, clubCity } from "./club";
+import { cabinetRu } from "@/dictionaries/cabinet/ru";
+import { DEFAULT_CLUB, clubCity, clubTextVars, mapEmbedUrl } from "./club";
 
-// Перенос «один в один» (решение 7 этапа П1): начальный Клуб совпадает с константами, которые он заменит.
-// Миграцию сверяет с DEFAULT_CLUB тест на MariaDB (src/lib/mariadb.integration.test.ts). Когда следующие PR
-// уберут константы из кода, эти сверки уйдут вместе с ними.
+// Перенос «один в один» (решение 7 этапа П1): начальный Клуб в шаблонах словарей даёт ровно те строки, что
+// были в коде до П1. Миграцию сверяет с DEFAULT_CLUB тест на MariaDB (src/lib/mariadb.integration.test.ts).
 
-describe("начальный Клуб = прежние константы", () => {
-  it("название, 2ГИС и точка на карте — из src/lib/site.ts", () => {
-    expect(DEFAULT_CLUB.name).toBe(site.name);
-    expect(DEFAULT_CLUB.twoGisUrl).toBe(site.twoGis);
-    expect(DEFAULT_CLUB.twoGisReviewsUrl).toBe(site.twoGisReviews);
-    expect(DEFAULT_CLUB.twoGisRouteUrl).toBe(site.twoGisRoute);
-    expect([DEFAULT_CLUB.latitude, DEFAULT_CLUB.longitude]).toEqual([site.coords.lat, site.coords.lng]);
+const fill = <T,>(dict: T, locale: "ru" | "kk", since: string, club = DEFAULT_CLUB) =>
+  fillBrand(dict, clubTextVars(club, locale, since));
+
+describe("начальный Клуб в шаблонах = тексты до П1", () => {
+  it("русский", () => {
+    const t = fill(ru, "ru", ru.brand.since);
+    expect(t.meta.title).toBe("Athletic's Gym — тренажёрный зал в Кызылорде");
+    expect(t.meta.description.startsWith("Тренажёрный зал в Кызылорде: новые тренажёры")).toBe(true);
+    expect(t.seo.title).toBe("Athletic's Gym — спортзал в Кызылорде");
+    expect(t.seo.description).toBe(
+      "Спортзал в Кызылорде: тренажёрный зал с новыми тренажёрами, отдельный женский зал, персональные тренировки с тренером. Первое посещение бесплатно.",
+    );
+    expect(t.seo.tagline).toBe("Спортзал в Кызылорде");
+    expect(t.hero.kicker).toBe("Кызылорда · с 2022 года");
+    expect(t.contacts.city).toBe("Кызылорда");
+    expect(t.contacts.mapTitle).toBe("Карта: Athletic's Gym");
+    expect(t.footer.rights).toBe("Athletic's Gym, Кызылорда");
+    expect(t.errors.notFound.title).toBe("Страница не найдена — Athletic's Gym");
+    expect(t.brand.twoGis).toBe("https://2gis.kz/kyzylorda/firm/70000001069365221");
+    expect(t.brand.mapEmbed).toBe(
+      "https://www.openstreetmap.org/export/embed.html?bbox=65.504295,44.780253,65.52029499999999,44.788253&layer=mapnik&marker=44.784253,65.512295",
+    );
   });
 
-  it("пояс — CLUB_TIME_ZONE, описание для поиска — из словарей", () => {
+  it("казахский", () => {
+    const t = fill(kk, "kk", kk.brand.since);
+    expect(t.meta.title).toBe("Athletic's Gym — Қызылордадағы тренажер залы");
+    expect(t.seo.title).toBe("Athletic's Gym — Қызылордадағы спорт зал");
+    expect(t.seo.tagline).toBe("Қызылордадағы спорт зал");
+    expect(t.hero.kicker).toBe("Қызылорда · 2022 жылдан бері");
+    expect(t.footer.rights).toBe("Athletic's Gym, Қызылорда");
+  });
+
+  it("кабинет", () => {
+    const t = fill(cabinetRu, "ru", ru.brand.since);
+    expect(t.meta.title).toBe("Личный кабинет — Athletic's Gym");
+    expect(t.brand.name).toBe("Athletic's Gym");
+  });
+
+  it("пояс — CLUB_TIME_ZONE: функции времени переходят на пояс Клуба на П2", () => {
     expect(DEFAULT_CLUB.timeZone).toBe(CLUB_TIME_ZONE);
-    expect(DEFAULT_CLUB.seoDescriptionRu).toBe(ru.seo.description);
-    expect(DEFAULT_CLUB.seoDescriptionKk).toBe(kk.seo.description);
   });
 });
 
-describe("город на языке страницы", () => {
-  it("казахского нет — русский", () => {
+describe("другой Клуб", () => {
+  const iron = { ...DEFAULT_CLUB, name: "Iron Club", cityRu: "Алматы", cityKk: null, cityInRu: "в Алматы", cityInKk: null, foundedYear: null, twoGisUrl: null, twoGisReviewsUrl: null, twoGisRouteUrl: null, seoDescriptionRu: "Зал в Алматы.", seoDescriptionKk: null };
+
+  it("ни одной метки и ни одного старого названия; без года — без подписи; казахского нет — русский", () => {
+    for (const [dict, locale, since] of [
+      [ru, "ru", ru.brand.since],
+      [kk, "kk", kk.brand.since],
+    ] as const) {
+      const text = JSON.stringify(fill(dict, locale, since, iron));
+      expect(hasBrandToken(text)).toBe(false);
+      expect(text).not.toMatch(/Athletic|Кызылорд|Қызылорд/);
+    }
+    const t = fill(kk, "kk", kk.brand.since, iron);
+    expect(t.hero.kicker).toBe("Алматы");
+    expect(t.seo.title).toBe("Iron Club — в Алматы спорт зал");
+    expect(t.brand.twoGis).toBe("");
+  });
+
+  it("город на языке страницы", () => {
     expect(clubCity(DEFAULT_CLUB, "kk")).toBe("Қызылорда");
-    expect(clubCity({ cityRu: "Алматы", cityKk: null }, "kk")).toBe("Алматы");
+    expect(clubCity(iron, "kk")).toBe("Алматы");
+  });
+
+  it("нет точки — нет карты", () => {
+    expect(mapEmbedUrl({ latitude: null, longitude: 1 })).toBe("");
   });
 });

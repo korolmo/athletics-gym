@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getCabinetDictionary, isLocale } from "@/lib/i18n";
+import { isLocale } from "@/lib/i18n";
+import { getCabinetTexts } from "@/app/brand";
 import { formatPhone, requireClient } from "@/modules/clients";
 import { legalPath } from "@/modules/legal/client";
 import { CabinetShell } from "@/components/cabinet/Shell";
@@ -10,7 +11,7 @@ export default async function CabinetProfilePage({ params }: { params: Promise<{
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const client = await requireClient(`/${locale}/cabinet/login`);
-  const t = await getCabinetDictionary(locale);
+  const t = await getCabinetTexts(locale);
   return (
     <CabinetShell locale={locale} t={t} tab="profile">
       <ProfileView

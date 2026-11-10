@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { locales } from "@/lib/i18n";
-import { site, whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/site";
 import { NavLink } from "@/components/ui/NavLink";
 import { container, label } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
@@ -44,7 +44,7 @@ export function Header({
       <div className={`${container} flex h-16 items-center justify-between gap-3 md:h-20 md:gap-6`}>
         <NavLink href={home || "#top"} className="flex min-w-0 items-center gap-2 md:gap-4">
           <Image src={logo} alt="" width={32} height={32} className="h-8 w-8 shrink-0 object-contain" priority />
-          <span className="whitespace-nowrap text-[15px] font-bold uppercase leading-6 tracking-wide text-text-primary md:text-headline-sm md:tracking-wider">{site.name}</span>
+          <span className="whitespace-nowrap text-[15px] font-bold uppercase leading-6 tracking-wide text-text-primary md:text-headline-sm md:tracking-wider">{t.brand.name}</span>
         </NavLink>
         <nav className="hidden items-center gap-4 lg:flex xl:gap-6">
           {links.map(([href, text]) => (

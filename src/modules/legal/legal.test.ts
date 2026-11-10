@@ -12,7 +12,12 @@ import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 import { LEGAL_FACTS, ruPlural } from "./facts";
 import { COOKIES_ANCHOR, LEGAL_PAGES, LEGAL_UPDATED, formatLegalDate, legalContext, legalDoc, legalDocText, legalHead, legalPath, type LegalDoc } from "./index";
 
-const dictionaries = { ru, kk };
+import { fillBrand } from "@/lib/brand-text";
+import { DEFAULT_CLUB, clubTextVars } from "@/modules/club/client";
+
+// Вымышленный Клуб: тексты документов берут название и город из Клуба, а не из кода (этап П1)
+const CLUB = { ...DEFAULT_CLUB, name: "Iron Club", cityRu: "Алматы", cityKk: "Алматы", cityInRu: "в Алматы", cityInKk: "Алматыдағы" };
+const dictionaries = { ru: fillBrand(ru, clubTextVars(CLUB, "ru", ru.brand.since)), kk: fillBrand(kk, clubTextVars(CLUB, "kk", kk.brand.since)) };
 const requisites = {
   legalName: "ИП Иванов Иван Иванович",
   legalBin: "880101300123",
@@ -70,8 +75,8 @@ describe("страницы privacy и terms на обоих языках", () =>
   });
 
   it("заголовок страницы для поисковиков — название документа и зала, от Настроек сайта не зависит", () => {
-    expect(legalHead("privacy", "ru")).toEqual({ title: "Политика конфиденциальности — Athletic's Gym", description: build("privacy", "ru").description });
-    expect(legalHead("terms", "kk").title).toBe(`${build("terms", "kk").title} — Athletic's Gym`);
+    expect(legalHead("privacy", "ru", CLUB.name)).toEqual({ title: "Политика конфиденциальности — Iron Club", description: build("privacy", "ru").description });
+    expect(legalHead("terms", "kk", CLUB.name).title).toBe(`${build("terms", "kk").title} — Iron Club`);
   });
 });
 
@@ -123,7 +128,8 @@ describe("реквизиты и контакты — из Настроек са�
     expect(text(doc)).not.toMatch(/ИИН\/БИН|ЖСН\/БСН|mailto|@/);
     expect(hrefs(doc).some((h) => h.startsWith("mailto:"))).toBe(false);
     // Кто отвечает за сайт и как связаться, сказано и без реквизитов
-    expect(text(doc)).toContain("Athletic's Gym");
+    expect(text(doc)).toContain("Iron Club");
+    expect(text(doc)).not.toContain("Athletic");
     expect(hrefs(doc)).toContain(`tel:${DEFAULT_SETTINGS.phone}`);
   });
 

@@ -2,17 +2,27 @@ import { errorsRu } from "./errors/ru";
 
 export const ru = {
   meta: {
-    title: "Athletic's Gym — тренажёрный зал в Кызылорде",
+    title: "{club} — тренажёрный зал {inCity}",
     description:
-      "Тренажёрный зал в Кызылорде: новые тренажёры, отдельный женский зал, персональные тренировки с тренером. Первое посещение бесплатно.",
+      "Тренажёрный зал {inCity}: новые тренажёры, отдельный женский зал, персональные тренировки с тренером. Первое посещение бесплатно.",
   },
   // Для поисковиков и превью ссылок: title, description и подписи на картинке-превью
   seo: {
-    title: "Athletic's Gym — спортзал в Кызылорде",
-    description:
-      "Спортзал в Кызылорде: тренажёрный зал с новыми тренажёрами, отдельный женский зал, персональные тренировки с тренером. Первое посещение бесплатно.",
-    kicker: "КЫЗЫЛОРДА · С 2022 ГОДА",
-    tagline: "Спортзал в Кызылорде",
+    title: "{club} — спортзал {inCity}",
+    description: "{seoDescription}",
+    kicker: "{city}{since}",
+    tagline: "Спортзал {inCity}",
+  },
+  // Бренд Клуба (этап П1, ADR 0018): метки {club}, {city}, {inCity}, {since}… заполняет слой приложения из Клуба
+  // (src/app/brand.ts). Здесь — только шаблоны; названия и города в коде нет.
+  brand: {
+    name: "{club}",
+    twoGis: "{twoGis}",
+    twoGisReviews: "{twoGisReviews}",
+    twoGisRoute: "{twoGisRoute}",
+    mapEmbed: "{mapEmbed}",
+    // Подпись к городу: {year} — год открытия Клуба; года нет — подписи нет
+    since: " · с {year} года",
   },
   nav: {
     about: "О зале",
@@ -39,7 +49,7 @@ export const ru = {
   },
   hero: {
     // Девиз и подзаголовок — в Настройках сайта
-    kicker: "Кызылорда · с 2022 года",
+    kicker: "{city}{since}",
     // Бейдж рейтинга: {n} — число оценок, {word} — слово из rating.words
     rating: "{n} {word} в 2ГИС",
   },
@@ -171,17 +181,17 @@ export const ru = {
   contacts: {
     // Адрес, часы, телефон, WhatsApp и Instagram — в Настройках сайта
     title: "Контакты",
-    city: "Кызылорда",
+    city: "{city}",
     route: "Построить маршрут",
     instagram: "Instagram",
-    mapTitle: "Карта: Athletic's Gym",
+    mapTitle: "Карта: {club}",
     // Карта грузится только по нажатию: до него — заглушка с адресом
     showMap: "Показать карту",
     open2gis: "Открыть в 2ГИС",
     mapNote: "Карту покажет сервис OpenStreetMap",
   },
   footer: {
-    rights: "Athletic's Gym, Кызылорда",
+    rights: "{club}, {city}",
     // Реквизиты — в Настройках сайта; здесь подписи к ним и названия документов
     bin: "ИИН/БИН",
     legalAddress: "юр. адрес:",

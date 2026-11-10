@@ -27,7 +27,7 @@ function ShieldIcon({ className }: { className?: string }) {
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ clubName, city }: { clubName: string; city: string }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);
   const [show, setShow] = useState(false);
 
@@ -35,7 +35,7 @@ export function LoginForm() {
     <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-line bg-card px-6 py-8 shadow-2xl sm:px-10 sm:py-10">
         <div aria-hidden="true" className="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-accent/70 to-transparent" />
-        <Image src={logo} alt="Athletic's Gym" width={80} height={80} className="mx-auto rounded-full ring-4 ring-bg" priority />
+        <Image src={logo} alt={clubName} width={80} height={80} className="mx-auto rounded-full ring-4 ring-bg" priority />
         <h1 className="mt-5 text-center text-2xl font-extrabold">Вход в админку</h1>
         <p className="mt-1 text-center text-sm text-muted">Панель управления клубом</p>
 
@@ -84,10 +84,12 @@ export function LoginForm() {
 
         <p className="mt-8 flex items-center justify-center gap-2 border-t border-line pt-6 text-sm text-muted">
           <ShieldIcon className="h-4 w-4" />
-          Только для владельца Athletic&apos;s Gym
+          Только для владельца {clubName}
         </p>
       </div>
-      <p className="mt-6 text-sm text-muted">Athletic&apos;s Gym · Кызылорда</p>
+      <p className="mt-6 text-sm text-muted">
+        {clubName} · {city}
+      </p>
     </main>
   );
 }

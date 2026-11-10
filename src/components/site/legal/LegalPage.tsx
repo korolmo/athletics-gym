@@ -4,7 +4,6 @@ import { Footer, Header } from "@/components/site/sections";
 import type { SectionProps } from "@/components/site/sections/types";
 import { container, eyebrow, h2, label } from "@/components/ui/styles";
 import { LEGAL_PAGES, formatLegalDate, legalPath, type Inline, type LegalDoc, type LegalPageId } from "@/modules/legal";
-import { site } from "@/lib/site";
 
 const link = "text-primary-container underline underline-offset-2 transition-colors hover:text-text-primary";
 
@@ -39,7 +38,7 @@ export function LegalPage({ locale, t, s, doc, page, cabinet = false }: SectionP
       <main className="w-full bg-background pt-16 md:pt-20">
         <article className={`${container} py-10`}>
           <div className="mx-auto max-w-[70ch]">
-            <div className={eyebrow}>{site.name}</div>
+            <div className={eyebrow}>{t.brand.name}</div>
             <h1 className={h2}>{doc.title}</h1>
             <p className="mt-2 text-body-sm text-text-muted">{t.legal.updated.replace("{date}", formatLegalDate(locale, doc.updated))}</p>
             <p className="mt-6 text-body-lg text-on-surface-variant">

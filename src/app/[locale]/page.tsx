@@ -6,14 +6,14 @@ import { listVisibleDirections } from "@/modules/directions";
 import { toDirectionViews } from "@/modules/directions/client";
 import { isSafeSourceUrl } from "@/modules/reviews/client";
 import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
-import { site } from "@/lib/site";
+import { getClubOnce, getSiteDictionary } from "@/app/brand";
 import { logoIconUrl } from "@/lib/brand";
 import { ContactTracker } from "@/components/site/ContactTracker";
 import { Motion } from "@/components/site/Motion";
 import { mediaUrl } from "@/modules/photos";
 import { resolveCodeChannel } from "@/modules/clients";
 import { toSiteContent } from "@/modules/site/client";
-import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
+import { isLocale, pick, type Locale } from "@/lib/i18n";
 import {
   About,
   Contacts,
@@ -69,7 +69,7 @@ function toTariffView(locale: Locale, x: TariffRow): TariffView {
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  const t = getDictionary(locale);
+  const [t, club] = await Promise.all([getSiteDictionary(locale), getClubOnce()]);
 
   const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos, publishedReviews, directionRows] = await Promise.all([
     getPriceListAndTrainers(),
@@ -100,12 +100,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const jsonLd = buildGymJsonLd({
     siteUrl: readSeoEnv().siteUrl,
     locale,
-    name: site.name,
+    name: club.name,
     description: t.seo.description,
     city: t.contacts.city,
-    coords: site.coords,
+    coords: club.latitude !== null && club.longitude !== null ? { lat: club.latitude, lng: club.longitude } : null,
     logoPath: logoIconUrl.split("?")[0],
-    extraLinks: [site.twoGis],
+    extraLinks: club.twoGisUrl ? [club.twoGisUrl] : [],
     content: s,
   });
   // Отзывы: текст — как написан, на обоих языках; дата — на языке страницы

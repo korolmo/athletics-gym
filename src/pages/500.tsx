@@ -1,5 +1,6 @@
 import Head from "next/head";
 import { OFFLINE_CSS, offlineBody } from "@/lib/errors/offline-page";
+import { OFFLINE_BRAND } from "@/app/offline-brand";
 
 // Страница 500 для статических страниц сайта (/ru, /kk, документы). Они собираются при первом запросе и лежат в кэше;
 // если сборка упала (не ответила база), Next отдаёт pages/500 из Pages Router — с кодом 500 и мимо кэша: следующий
@@ -11,11 +12,11 @@ export default function ServerErrorPage() {
   return (
     <>
       <Head>
-        <title>Athletic&apos;s Gym</title>
+        <title>{OFFLINE_BRAND.name}</title>
         <meta name="robots" content="noindex" />
       </Head>
       <style dangerouslySetInnerHTML={{ __html: OFFLINE_CSS }} />
-      <div dangerouslySetInnerHTML={{ __html: offlineBody(500) }} />
+      <div dangerouslySetInnerHTML={{ __html: offlineBody(OFFLINE_BRAND, 500) }} />
     </>
   );
 }

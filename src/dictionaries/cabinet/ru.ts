@@ -1,8 +1,9 @@
 // Личный кабинет Клиента (этап 1) — тексты по макетам Stitch (design/stitch/cabinet), правила — из кода:
 // {n} лимита и {h} срока отмены подставляются из констант модуля Записи, не пишутся руками.
 export const cabinetRu = {
-  meta: { title: "Личный кабинет — Athletic's Gym" },
-  badge: "Athletic Club ID",
+  meta: { title: "Личный кабинет — {club}" },
+  brand: { name: "{club}" },
+  badge: "{club} ID",
   badgeFirst: "Первый вход",
   step: "Шаг {n} / 02",
   login: {

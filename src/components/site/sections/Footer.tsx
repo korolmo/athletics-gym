@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site, whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/site";
 import { requisitesParts } from "@/modules/site/client";
 import { LEGAL_PAGES, legalPath } from "@/modules/legal/client";
 import { NavLink } from "@/components/ui/NavLink";
@@ -33,7 +33,7 @@ export function Footer({
         <div className="flex flex-col items-start justify-between gap-6 pb-6 md:flex-row md:items-center">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <span className="text-headline-sm uppercase text-text-primary">{site.name}</span>
+              <span className="text-headline-sm uppercase text-text-primary">{t.brand.name}</span>
               <span className={`${label} rounded-sm bg-primary-container/10 px-1 py-0.5 text-primary-container`}>
                 {s.about[3].title}
               </span>
@@ -60,7 +60,7 @@ export function Footer({
               {t.contacts.instagram}
             </a>{" "}
             ·{" "}
-            <a href={site.twoGis} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary-container">
+            <a href={t.brand.twoGis} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary-container">
               2ГИС
             </a>
           </p>

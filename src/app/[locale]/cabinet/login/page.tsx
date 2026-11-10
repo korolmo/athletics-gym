@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
-import { getCabinetDictionary, isLocale } from "@/lib/i18n";
+import { isLocale } from "@/lib/i18n";
+import { getCabinetTexts } from "@/app/brand";
 import { whatsappUrl } from "@/lib/site";
 import { legalPath } from "@/modules/legal/client";
 import { DEMO_PHONES, currentClient, formatPhone, resolveCodeChannel } from "@/modules/clients";
@@ -11,7 +12,7 @@ export default async function CabinetLoginPage({ params }: { params: Promise<{ l
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   if (await currentClient()) redirect(`/${locale}/cabinet`);
-  const t = await getCabinetDictionary(locale);
+  const t = await getCabinetTexts(locale);
   const { settings } = await getSiteSettings();
   const demo = resolveCodeChannel()?.name === "demo";
   const phones = `${formatPhone(DEMO_PHONES[0])} … ${DEMO_PHONES[DEMO_PHONES.length - 1].slice(-2)}`;

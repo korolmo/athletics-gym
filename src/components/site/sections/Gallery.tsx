@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { site } from "@/lib/site";
 import { container, label, sectionY } from "@/components/ui/styles";
 import { DemoBadge } from "@/components/ui/DemoBadge";
 import { SectionHead } from "@/components/ui/SectionHead";
@@ -25,7 +24,7 @@ export function Gallery({ t, s, photos }: SectionProps & { photos: GalleryView[]
             <div className="flex items-center gap-3">
               <Image src={logo} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
               <div className="flex flex-col">
-                <span className={`${label} text-text-primary`}>{site.name}</span>
+                <span className={`${label} text-text-primary`}>{t.brand.name}</span>
                 <span className="text-body-sm text-text-muted">{t.contacts.city}</span>
               </div>
             </div>

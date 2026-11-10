@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { mapEmbedUrl, site } from "@/lib/site";
 import { LocationOnSym, OpenInNewSym } from "@/components/symbols";
 import { logo } from "@/lib/brand";
 
@@ -13,11 +12,14 @@ import { logo } from "@/lib/brand";
  */
 export function MapPanel({
   labels,
+  brand,
   address,
   city,
   rating,
 }: {
   labels: { show: string; open2gis: string; note: string; route: string; mapTitle: string };
+  /** Название, карточка и маршрут в 2ГИС, карта — из Клуба */
+  brand: { name: string; twoGis: string; twoGisRoute: string; mapEmbed: string };
   address: string;
   city: string;
   /** Оценка 2ГИС: «5,0» */
@@ -30,19 +32,19 @@ export function MapPanel({
     <div className="relative h-[320px] overflow-hidden rounded-2xl bg-surface-card shadow-lg md:h-[420px] lg:col-span-7">
       {shown ? (
         <>
-          <iframe title={labels.mapTitle} src={mapEmbedUrl} className="absolute inset-0 h-full w-full [filter:brightness(0.75)]" />
+          <iframe title={labels.mapTitle} src={brand.mapEmbed} className="absolute inset-0 h-full w-full [filter:brightness(0.75)]" />
           <div className="pointer-events-none absolute inset-0 bg-background/20" />
           <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/95 p-4 shadow-xl backdrop-blur-md">
             <Image src={logo} alt="" width={32} height={32} className="h-8 w-8 object-contain" />
             <div>
-              <div className="text-[13px] uppercase leading-5 text-text-primary">{site.name}</div>
+              <div className="text-[13px] uppercase leading-5 text-text-primary">{brand.name}</div>
               <div className="text-[11px] leading-4 text-primary-container">
                 {address} · 2ГИС ★ {rating}
               </div>
             </div>
           </div>
           <a
-            href={site.twoGisRoute}
+            href={brand.twoGisRoute}
             target="_blank"
             rel="noopener noreferrer"
             className="absolute bottom-8 right-4 flex items-center gap-1.5 rounded-xl bg-surface-dim/90 px-4 py-2 text-[11px] uppercase text-text-primary shadow-md backdrop-blur-xs transition-colors hover:text-primary-container"
@@ -67,7 +69,7 @@ export function MapPanel({
               {labels.show}
             </button>
             <a
-              href={site.twoGis}
+              href={brand.twoGis}
               target="_blank"
               rel="noopener noreferrer"
               className={`${button} bg-surface-container text-text-primary hover:text-primary-container`}

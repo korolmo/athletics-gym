@@ -10,7 +10,9 @@
 import { errorsKk } from "@/dictionaries/errors/kk";
 import { errorsRu } from "@/dictionaries/errors/ru";
 import { logoIconUrl } from "@/lib/brand";
-import { site } from "@/lib/site";
+/** Название, город и карточка Клуба в 2ГИС. Страница без базы: значения начальные, их передаёт слой приложения
+ *  (src/app/offline-brand.ts) — платформа модули не импортирует. */
+export type OfflineBrand = { name: string; city: string; twoGis: string };
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -39,12 +41,12 @@ const BAR = `<svg class="e-bar" viewBox="0 0 180 20" fill="none" aria-hidden="tr
 export type OfflineKind = "offline" | "maintenance";
 
 /** Содержимое <body>: код, тексты на русском и казахском, «Обновить страницу» и 2ГИС. */
-export function offlineBody(code: 500 | 503, kind: OfflineKind = "offline"): string {
+export function offlineBody(brand: OfflineBrand, code: 500 | 503, kind: OfflineKind = "offline"): string {
   const ru = { ...errorsRu.offline, ...errorsRu[kind] };
   const kk = { ...errorsKk.offline, ...errorsKk[kind] };
   return [
     `<main class="e" data-error-page="${code}">`,
-    `<img class="e-logo" src="${esc(logoIconUrl)}" alt="${esc(site.name)}" width="96" height="96">`,
+    `<img class="e-logo" src="${esc(logoIconUrl)}" alt="${esc(brand.name)}" width="96" height="96">`,
     `<div class="e-code">${code}</div>`,
     BAR,
     `<div class="e-card">`,
@@ -55,15 +57,15 @@ export function offlineBody(code: 500 | 503, kind: OfflineKind = "offline"): str
     `<div class="e-actions">`,
     // Пустой адрес — та же страница: веб-сервер отдаёт этот файл вместо запрошенной
     `<a class="e-btn e-btn-primary" href="">${esc(ru.reload)} / ${esc(kk.reload)}</a>`,
-    `<a class="e-btn e-btn-secondary" href="${esc(site.twoGis)}" rel="noopener noreferrer">2ГИС</a>`,
+    `<a class="e-btn e-btn-secondary" href="${esc(brand.twoGis)}" rel="noopener noreferrer">2ГИС</a>`,
     `</div>`,
-    `<p class="e-foot">${esc(site.name)} · Кызылорда</p>`,
+    `<p class="e-foot">${esc(brand.name)} · ${esc(brand.city)}</p>`,
     `</main>`,
   ].join("\n");
 }
 
 /** Готовая страница 503: файл для веб-сервера ("offline") или ответ middleware на время технических работ. */
-export function offlinePage(kind: OfflineKind = "offline"): string {
+export function offlinePage(brand: OfflineBrand, kind: OfflineKind = "offline"): string {
   return [
     "<!doctype html>",
     `<html lang="ru">`,
@@ -71,11 +73,11 @@ export function offlinePage(kind: OfflineKind = "offline"): string {
     `<meta charset="utf-8">`,
     `<meta name="viewport" content="width=device-width, initial-scale=1">`,
     `<meta name="robots" content="noindex">`,
-    `<title>${esc(errorsRu[kind].heading)} — ${esc(site.name)}</title>`,
+    `<title>${esc(errorsRu[kind].heading)} — ${esc(brand.name)}</title>`,
     `<style>${OFFLINE_CSS.trim()}</style>`,
     "</head>",
     "<body>",
-    offlineBody(503, kind),
+    offlineBody(brand, 503, kind),
     "</body>",
     "</html>",
     "",
