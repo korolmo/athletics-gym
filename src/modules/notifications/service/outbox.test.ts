@@ -77,7 +77,7 @@ describe("правила очереди", () => {
 describe("отправщик", () => {
   it("без канала (нет токена бота) ничего не трогает", async () => {
     state.rows = [row("e1")];
-    expect(await deliverPending(null, now)).toEqual({ sent: 0, failed: 0, dead: 0, skipped: true });
+    expect(await deliverPending(null, now)).toEqual({ sent: 0, failed: 0, dead: 0, skipped: true, errors: [] });
     expect(state.rows[0]).toMatchObject({ status: "PENDING", attempts: 0 });
   });
 
@@ -93,7 +93,7 @@ describe("отправщик", () => {
     state.rows = [row("e1")];
     let t = now;
     for (let i = 1; i < MAX_ATTEMPTS; i++) {
-      expect(await deliverPending(failSender, t)).toMatchObject({ failed: 1 });
+      expect(await deliverPending(failSender, t)).toMatchObject({ failed: 1, errors: ["Telegram 502"] });
       expect(state.rows[0]).toMatchObject({ status: "PENDING", attempts: i, lastError: "Telegram 502" });
       expect(state.rows[0].nextAttemptAt.getTime() - t.getTime()).toBe(backoffMs(i));
       t = state.rows[0].nextAttemptAt;

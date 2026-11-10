@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { BATCH, LEASE_MS, MAX_ATTEMPTS, backoffMs, messageText, parseEvent, type BookingEvent, type OutboxEventType } from "../domain/outbox";
 import type { Sender } from "./telegram";
+import { log } from "@/lib/observability/log";
 
 // Transactional outbox (ADR 0017). Модуль ни от кого не зависит: событие ему передаёт модуль-хозяин в своей
 // транзакции (enqueue), а проверку Владельца для админки — слой приложения аргументом, как хранилище Фото для health.
@@ -12,14 +13,15 @@ export async function enqueue(tx: Prisma.TransactionClient, event: BookingEvent,
   await tx.outboxEvent.create({ data: { type, payload: JSON.stringify(payload), nextAttemptAt: now, createdAt: now } });
 }
 
-export type DeliveryReport = { sent: number; failed: number; dead: number; skipped: boolean };
+/** Итог прохода. `errors` — последние ошибки канала (без токена): по ним видно, почему не ушло, без доступа к базе. */
+export type DeliveryReport = { sent: number; failed: number; dead: number; skipped: boolean; errors: string[] };
 
 /**
  * Отправить ждущие события. Каждое сначала «занимается» (условный update по числу попыток): два отправщика
  * одновременно — cron и «сразу после ответа» — одно событие не отправят дважды. Без канала — ничего не трогаем.
  */
 export async function deliverPending(sender: Sender | null, now: Date = new Date()): Promise<DeliveryReport> {
-  const report: DeliveryReport = { sent: 0, failed: 0, dead: 0, skipped: sender === null };
+  const report: DeliveryReport = { sent: 0, failed: 0, dead: 0, skipped: sender === null, errors: [] };
   if (!sender) return report;
   const due = await db.outboxEvent.findMany({
     where: { status: "PENDING", nextAttemptAt: { lte: now } },
@@ -46,6 +48,8 @@ export async function deliverPending(sender: Sender | null, now: Date = new Date
         where: { id: ev.id },
         data: { status: dead ? "DEAD" : "PENDING", attempts, lastError: result.error, nextAttemptAt: new Date(now.getTime() + backoffMs(attempts)) },
       });
+      if (!report.errors.includes(result.error) && report.errors.length < 3) report.errors.push(result.error);
+      log("warn", `Очередь уведомлений: не отправлено (#${ev.id.slice(-6)}, попытка ${attempts})`, { error: result.error });
       if (dead) report.dead++;
       else report.failed++;
     }
