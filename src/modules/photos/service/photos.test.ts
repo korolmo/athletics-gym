@@ -169,7 +169,9 @@ const settingsSlot = (kind: "hero" | "women", column: "heroPhoto" | "womenPhoto"
   },
   paths: async () => [(await db.siteSettings.findUnique())[column]],
 });
-const slots = [hallSlot, trainerSlot, directionSlot, settingsSlot("hero", "heroPhoto"), settingsSlot("women", "womenPhoto")];
+// Логотип Клуба (этап П1) — место без id; здесь только чтобы набор мест был полным
+const logoSlot: photos.PhotoSlot = { kind: "logo", exists: async (id) => id === undefined, set: async () => null, clear: async () => null, paths: async () => [] };
+const slots = [hallSlot, trainerSlot, directionSlot, settingsSlot("hero", "heroPhoto"), settingsSlot("women", "womenPhoto"), logoSlot];
 /** Сервис так, как его вызывают действия админки: со всеми местами владельцев. */
 const withSlots = {
   requestUpload: (t: string, type: string, sizes: number[]) => photos.requestUpload(t, type, sizes, slots),
@@ -235,7 +237,7 @@ describe("ссылка на загрузку", () => {
   });
 
   it("неизвестное место или удалённый Тренер — ссылка не выдаётся", async () => {
-    expect(await withSlots.requestUpload("logo", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await withSlots.requestUpload("poster", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
     expect(await withSlots.requestUpload("trainer:ghost", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
     expect(storage.uploadUrls).not.toHaveBeenCalled();
   });

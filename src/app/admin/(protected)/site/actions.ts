@@ -16,6 +16,7 @@ import {
 } from "@/modules/site";
 import type { Parsed } from "@/lib/validation/shared";
 import * as settings from "@/modules/site";
+import { parseClubForm, saveClub as storeClub } from "@/modules/club";
 
 // Действия — тонкие: права → валидация → сервис → обновить страницы и вернуть Владельца в список
 
@@ -64,6 +65,11 @@ export async function saveRating(_prev: SettingsFormState, fd: FormData): Promis
 
 export async function saveLegal(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {
   return save(fd, parseLegalForm, settings.saveLegal);
+}
+
+/** Клуб: название, город, описание для поиска, цвет, логотип, 2ГИС и точка на карте (этап П1). */
+export async function saveClub(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {
+  return save(fd, parseClubForm, storeClub);
 }
 
 export async function toggleBlock(fd: FormData): Promise<void> {

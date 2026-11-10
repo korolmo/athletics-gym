@@ -2,3 +2,4 @@
 export * from "./domain/club";
 export * from "./domain/accent";
 export * from "./domain/logo";
+export { CLUB_LIMITS, LOGO_MODES, type LogoMode } from "./validation/club";
