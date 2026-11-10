@@ -99,6 +99,7 @@ jobs:
           # в Vercel он передаётся при выкатке; руками в переменные проекта его не кладём
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           # Проект — только из VERCEL_PROJECT_ID: старый athletics-gym сюда не попадёт ни при каких настройках
           test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
@@ -107,6 +108,7 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then PROD="--prod"; else DB=(--env "DATABASE_URL=$PREVIEW_DATABASE_URL"); fi
           if [ -n "$CRON_SECRET" ]; then DB+=(--env "CRON_SECRET=$CRON_SECRET"); fi
           if [ -n "$TELEGRAM_CHAT_ID" ]; then DB+=(--env "TELEGRAM_CHAT_ID=$TELEGRAM_CHAT_ID"); fi
+          if [ -n "$TELEGRAM_BOT_TOKEN" ]; then DB+=(--env "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN"); fi
           URL=$(npx --yes vercel@50.4.9 deploy $PROD --yes --token "$VERCEL_TOKEN" "${DB[@]}" \
             --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
