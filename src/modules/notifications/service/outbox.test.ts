@@ -134,7 +134,8 @@ describe("Telegram", () => {
   it("ошибка Telegram — текстом без токена; сбой сети — тоже ошибка, не исключение", async () => {
     const bad = telegramSender("SECRET", "1", (async () => new Response("Forbidden: bot was blocked", { status: 403 })) as typeof fetch);
     const r = await bad.send("x");
-    expect(r).toEqual({ ok: false, error: "Telegram 403: Forbidden: bot was blocked" });
+    expect(r).toEqual({ ok: false, error: "Telegram 403 (чат …1): Forbidden: bot was blocked" });
+    expect(await telegramSender("123:abc", "123").send("x")).toEqual({ ok: false, error: "TELEGRAM_CHAT_ID — это id самого бота (…23), нужен id чата Владельца" });
     expect(JSON.stringify(r)).not.toContain("SECRET");
     const down = telegramSender("SECRET", "1", (async () => {
       throw new TypeError("fetch failed");
