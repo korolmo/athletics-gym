@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { isNotFound } from "@/lib/admin/db-errors";
 import { settingsFromRow, settingsToRow } from "@/modules/site/client";
 import { DEFAULT_SETTINGS } from "@/modules/site/client";
+import { CLUB_FIELDS, CLUB_ID, DEFAULT_CLUB } from "@/modules/club/client";
 
 // Проверки на настоящей MariaDB 10.4 (ADR 0004): миграции нашим скриптом, типы колонок, кодировка, даты.
 // База должна быть отдельной — тест удаляет в ней все таблицы. В CI — сервис mariadb:10.4 (.github/workflows/ci.yml),
@@ -52,6 +53,10 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
     expect(row.checksum).toBe(crypto.createHash("sha256").update(file).digest("hex"));
     expect(Number(row.steps)).toBe(1);
     expect(log.filter((m) => m.startsWith("Внимание"))).toEqual([]);
+  });
+
+  it("Клуб после миграции — Athletic's Gym один в один с DEFAULT_CLUB (этап П1, решение 7)", async () => {
+    expect(await db.club.findUniqueOrThrow({ where: { id: CLUB_ID }, select: CLUB_FIELDS })).toEqual(DEFAULT_CLUB);
   });
 
   it("недоделанная миграция останавливает следующие", async () => {
