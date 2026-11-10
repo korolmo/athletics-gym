@@ -49,6 +49,8 @@ model Hall {
   nameRu      String
   nameKk      String?
   sortOrder   Int       @default(0)
+  /// Логотип Зала (этап П1): «/…» — файл из public/, «gallery/…» — Фото; пусто — логотип Клуба
+  logo        String?
   /// Плакат прайса: путь к Фото в хранилище; пусто — плаката на сайте нет
   pricePoster String?
   tariffs     Tariff[]
@@ -466,8 +468,8 @@ model Club {
   foundedYear      Int?
   /// Цвет акцента, #rrggbb; цвет текста на нём выбирает правило домена
   accentColor      String
-  /// Логотип: путь к Фото в хранилище; пусто — монограмма или логотип из public/
-  logoPhoto        String?
+  /// Логотип: «/…» — файл из public/, «gallery/…» — загруженное Фото, пусто — монограмма из названия
+  logo             String?
   twoGisUrl        String?
   twoGisReviewsUrl String?
   twoGisRouteUrl   String?  @db.Text

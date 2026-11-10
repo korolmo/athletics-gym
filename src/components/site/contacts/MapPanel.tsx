@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { LocationOnSym, OpenInNewSym } from "@/components/symbols";
-import { logo } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
+import type { LogoView } from "@/modules/club/client";
 
 /**
  * Карта в «Контактах». Пока Посетитель не нажал «Показать карту», стоит заглушка с адресом: карту показывает
@@ -13,6 +13,7 @@ import { logo } from "@/lib/brand";
 export function MapPanel({
   labels,
   brand,
+  logo,
   address,
   city,
   rating,
@@ -20,6 +21,8 @@ export function MapPanel({
   labels: { show: string; open2gis: string; note: string; route: string; mapTitle: string };
   /** Название, карточка и маршрут в 2ГИС, карта — из Клуба */
   brand: { name: string; twoGis: string; twoGisRoute: string; mapEmbed: string };
+  /** Логотип Клуба (этап П1) */
+  logo: LogoView;
   address: string;
   city: string;
   /** Оценка 2ГИС: «5,0» */
@@ -35,7 +38,7 @@ export function MapPanel({
           <iframe title={labels.mapTitle} src={brand.mapEmbed} className="absolute inset-0 h-full w-full [filter:brightness(0.75)]" />
           <div className="pointer-events-none absolute inset-0 bg-background/20" />
           <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/95 p-4 shadow-xl backdrop-blur-md">
-            <Image src={logo} alt="" width={32} height={32} className="h-8 w-8 object-contain" />
+            <ClubLogo logo={logo} size={32} className="h-8 w-8 object-contain" />
             <div>
               <div className="text-[13px] uppercase leading-5 text-text-primary">{brand.name}</div>
               <div className="text-[11px] leading-4 text-primary-container">

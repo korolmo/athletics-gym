@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { isAuthed } from "@/modules/owner";
 import { AdminShell } from "./AdminShell";
-import { getClubOnce } from "@/app/brand";
+import { getClubOnce, logosFor } from "@/app/brand";
 import { DEFAULT_CLUB } from "@/modules/club/client";
 import { countNewReviews } from "@/modules/reviews";
 import { countDead } from "@/modules/notifications";
@@ -21,7 +21,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   ]);
 
   return (
-    <AdminShell clubName={club.name} newReviews={newReviews} undelivered={undelivered}>
+    <AdminShell clubName={club.name} logo={logosFor(club).club} newReviews={newReviews} undelivered={undelivered}>
       {/* Suspense — ради страниц ошибок раздела. У проекта два корневых layout без общего, и Next 15 не может отрисовать
           notFound() или ошибку раздела на сервере: без границы падала вся оболочка (пустая страница и global-error).
           С ней шапка и меню отрисованы сервером, а not-found.tsx / error.tsx раздела показывает браузер. */}

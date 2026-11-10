@@ -6,8 +6,8 @@ import { listVisibleDirections } from "@/modules/directions";
 import { toDirectionViews } from "@/modules/directions/client";
 import { isSafeSourceUrl } from "@/modules/reviews/client";
 import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
-import { getClubOnce, getSiteDictionary } from "@/app/brand";
-import { logoIconUrl } from "@/lib/brand";
+import { getClubOnce, getSiteDictionary, logosFor } from "@/app/brand";
+import { listHallLogos } from "@/modules/tariffs";
 import { ContactTracker } from "@/components/site/ContactTracker";
 import { Motion } from "@/components/site/Motion";
 import { mediaUrl } from "@/modules/photos";
@@ -92,7 +92,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     tariffs: tr.tariffs.map((x) => toTariffView(locale, x)),
   }));
 
-  const props = { locale, t, s };
+  const logos = logosFor(club, await listHallLogos());
+  const props = { locale, t, s, logos };
   // Кнопка «Кабинет» — только где вход работает (Лаборатория); на боевом сайте канала доставки кода нет
   const cabinet = resolveCodeChannel() !== null;
   const directions = toDirectionViews(locale, directionRows, mediaUrl);
@@ -104,7 +105,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     description: t.seo.description,
     city: t.contacts.city,
     coords: club.latitude !== null && club.longitude !== null ? { lat: club.latitude, lng: club.longitude } : null,
-    logoPath: logoIconUrl.split("?")[0],
+    logoPath: logos.jsonLdPath,
     extraLinks: club.twoGisUrl ? [club.twoGisUrl] : [],
     content: s,
   });

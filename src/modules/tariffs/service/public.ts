@@ -16,3 +16,9 @@ export async function listPricePosterUrls(): Promise<Record<string, string | nul
   const halls = await db.hall.findMany({ select: { id: true, pricePoster: true } });
   return Object.fromEntries(halls.map((h) => [h.id, mediaUrl(h.pricePoster)]));
 }
+
+/** Логотипы Залов как есть в базе (этап П1, решение 16): «/…», путь к Фото или null — тогда логотип Клуба. */
+export async function listHallLogos(): Promise<Record<string, string | null>> {
+  const halls = await db.hall.findMany({ select: { id: true, logo: true } });
+  return Object.fromEntries(halls.map((h) => [h.id, h.logo]));
+}

@@ -3,10 +3,10 @@ import { whatsappUrl } from "@/lib/site";
 import { ChatSym, CheckCircleSym, LockSym, PhotoCameraSym } from "@/components/symbols";
 import { container, label, h2 } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
-import { logoWomen } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
 
 // Женский зал
-export function Women({ t, s, photo }: SectionProps & { /** Фото Женского зала; пусто — логотип */ photo: string | null }) {
+export function Women({ t, s, logos, photo }: SectionProps & { /** Фото Женского зала; пусто — логотип */ photo: string | null }) {
   return (
     <section id="women" className="w-full py-4">
       <div className={container}>
@@ -63,11 +63,10 @@ export function Women({ t, s, photo }: SectionProps & { /** Фото Женск�
               // Логотип Женского зала без подложки: тонкое жёлтое кольцо с отступом и мягкое свечение позади.
               // Свечение — градиент на псевдоэлементе (women-halo в globals.css): размытие (filter) браузеру дорого
               <div className="women-halo relative flex h-[204px] w-[204px] items-center justify-center rounded-full ring-2 ring-primary-container/40 lg:h-[244px] lg:w-[244px]">
-                <Image
-                  src={logoWomen}
+                <ClubLogo
+                  logo={logos.women}
                   alt={t.women.title}
-                  width={220}
-                  height={220}
+                  size={220}
                   // Показывается 180 px на телефоне и 220 px на десктопе: без sizes экран с плотностью 2 брал бы файл 640 px
                   sizes="(min-width: 1024px) 220px, 180px"
                   className="relative h-[180px] w-[180px] rounded-full object-contain lg:h-[220px] lg:w-[220px]"

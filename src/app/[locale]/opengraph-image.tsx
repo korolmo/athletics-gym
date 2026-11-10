@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { ImageResponse } from "next/og";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { fillBrand } from "@/lib/brand-text";
-import { brandVarsFor, getClubOnce } from "@/app/brand";
+import { brandVarsFor, getClubOnce, logosFor } from "@/app/brand";
+import { readSeoEnv } from "@/lib/seo";
 import { DEFAULT_CLUB } from "@/modules/club/client";
 import { getSiteSettings } from "@/modules/site";
 import { toSiteContent } from "@/modules/site/client";
@@ -35,12 +36,18 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
   const { settings, cards } = await getSiteSettings().catch(() => ({ settings: DEFAULT_SETTINGS, cards: DEFAULT_ABOUT_CARDS }));
   const s = toSiteContent(locale, settings, cards);
 
-  const [logo, bold, medium] = await Promise.all([
-    asset("public/logo.png"),
-    asset("src/assets/fonts/Onest-ExtraBold.ttf"),
-    asset("src/assets/fonts/Onest-Medium.ttf"),
-  ]);
-  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
+  const [bold, medium] = await Promise.all([asset("src/assets/fonts/Onest-ExtraBold.ttf"), asset("src/assets/fonts/Onest-Medium.ttf")]);
+  // Логотип Клуба (этап П1): прежний файл — с диска (он в outputFileTracingIncludes), Фото — по адресу сайта,
+  // монограмма — рисуется здесь же
+  const view = logosFor(club).club;
+  const logoSrc =
+    view.kind !== "image"
+      ? null
+      : view.src.startsWith("/media/")
+        ? new URL(view.src, readSeoEnv().siteUrl).toString()
+        : view.src.split("?")[0] === "/logo.png"
+          ? `data:image/png;base64,${(await asset("public/logo.png")).toString("base64")}`
+          : new URL(view.src, readSeoEnv().siteUrl).toString();
 
   return new ImageResponse(
     (
@@ -57,8 +64,14 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
           fontFamily: "Onest",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- next/og рисует картинку сам, компонент Image здесь не работает */}
-        <img src={logoSrc} alt="" width={300} height={300} />
+        {logoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element -- next/og рисует картинку сам, компонент Image здесь не работает
+          <img src={logoSrc} alt="" width={300} height={300} />
+        ) : view.kind === "monogram" ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 300, height: 300, borderRadius: 150, background: view.bg, color: view.fg, fontSize: view.text.length > 1 ? 120 : 156, fontWeight: 800 }}>
+            {view.text}
+          </div>
+        ) : null}
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: 4, color: club.accentColor, textTransform: "uppercase" }}>{t.seo.kicker}</div>
           <div style={{ display: "flex", fontSize: 84, fontWeight: 800, lineHeight: 1.05, marginTop: 14, textTransform: "uppercase" }}>{club.name}</div>
