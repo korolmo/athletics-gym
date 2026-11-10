@@ -14,6 +14,7 @@ import {
   ExerciseSym,
   LogoutSym,
   MoreHorizSym,
+  NotificationsSym,
   OpenInNewSym,
   PaymentsSym,
   PersonSym,
@@ -36,6 +37,7 @@ const SECTIONS: Section[] = [
   { href: "/admin/photos", label: "Фото", Icon: PhotoLibrarySym },
   { href: "/admin/reviews", label: "Отзывы", Icon: ReviewsSym },
   { href: "/admin/site", label: "Сайт", Icon: WebSym },
+  { href: "/admin/notifications", label: "Уведомления", Icon: NotificationsSym },
   { href: "/admin/account", label: "Аккаунт", Icon: PersonSym },
 ];
 
@@ -59,12 +61,22 @@ function Badge({ n, on }: { n: number; on?: boolean }) {
   );
 }
 
-export function AdminShell({ newReviews, children }: { /** Сколько Отзывов ждут решения */ newReviews: number; children: ReactNode }) {
+export function AdminShell({
+  newReviews,
+  undelivered = 0,
+  children,
+}: {
+  /** Сколько Отзывов ждут решения */
+  newReviews: number;
+  /** Сколько уведомлений о Записях не доставлено (плашка «Не доставлено: N», макет 19) */
+  undelivered?: number;
+  children: ReactNode;
+}) {
   // С папкой pages/ (pages/500.tsx) хук типизирован как «может быть null»
   const pathname = usePathname() ?? "";
   const more = useRef<HTMLDialogElement>(null);
   const current = SECTIONS.find((s) => isActive(pathname, s.href));
-  const badgeFor = (href: string) => (href === "/admin/reviews" ? newReviews : 0);
+  const badgeFor = (href: string) => (href === "/admin/reviews" ? newReviews : href === "/admin/notifications" ? undelivered : 0);
   const inMore = SECTIONS.filter((s) => !TABS.includes(s.href));
   const moreActive = inMore.some((s) => isActive(pathname, s.href));
 
@@ -81,6 +93,15 @@ export function AdminShell({ newReviews, children }: { /** Сколько Отз
             </span>
           </Link>
           <div className="flex items-center gap-2">
+            {undelivered > 0 && (
+              <Link
+                href="/admin/notifications"
+                className="flex items-center gap-1.5 rounded-lg bg-danger/15 px-3 py-2 text-sm font-bold text-danger hover:bg-danger/25"
+              >
+                <span aria-hidden="true">⚠</span>
+                <span className="hidden sm:inline">Не доставлено:</span> {undelivered}
+              </Link>
+            )}
             <a href="/ru" target="_blank" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted hover:text-fg sm:flex">
               Сайт <OpenInNewSym className="h-4 w-4" />
             </a>
@@ -151,7 +172,9 @@ export function AdminShell({ newReviews, children }: { /** Сколько Отз
           >
             <MoreHorizSym className="h-6 w-6" />
             Ещё
-            {newReviews > 0 && <span aria-hidden="true" className="absolute right-[30%] top-2 h-2.5 w-2.5 rounded-full bg-accent" />}
+            {(newReviews > 0 || undelivered > 0) && (
+              <span aria-hidden="true" className={`absolute right-[30%] top-2 h-2.5 w-2.5 rounded-full ${undelivered > 0 ? "bg-danger" : "bg-accent"}`} />
+            )}
           </button>
         </div>
       </nav>

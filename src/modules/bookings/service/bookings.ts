@@ -2,7 +2,9 @@ import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/modules/owner";
 import { lockClient, requireClient } from "@/modules/clients";
-import { getBookableTrainer } from "@/modules/trainers";
+import { getBookableTrainer, getTrainerNames } from "@/modules/trainers";
+import { enqueue } from "@/modules/notifications";
+import { HALL_LABEL_RU, isHall } from "@/modules/tariffs/client";
 import { BOOKING_HORIZON_DAYS, isWindowFree, sessionMinutesOf, type Busy } from "@/modules/schedule";
 import {
   MAX_FUTURE_BOOKINGS,
@@ -33,6 +35,8 @@ export type CreateResult = { ok: true; booking: CreatedBooking; repeated: boolea
 
 const bookingFields = { id: true, trainerId: true, hallId: true, startAt: true, endAt: true } as const;
 
+const hallName = (id: string) => (isHall(id) ? HALL_LABEL_RU[id] : id);
+
 /** Сколько раз повторить транзакцию Записи, которую база откатила из-за взаимной блокировки. */
 const DEADLOCK_RETRIES = 3;
 
@@ -55,7 +59,13 @@ async function findByKey(clientId: string, idempotencyKey: string): Promise<Crea
 /**
  * Создаёт Запись от имени Клиента `clientId` (сессию проверяет createBooking). Отдельно — для теста гонки на MariaDB.
  */
-export async function createBookingFor(clientId: string, input: BookingInput, now: Date = new Date()): Promise<CreateResult> {
+export async function createBookingFor(
+  clientId: string,
+  input: BookingInput,
+  now: Date = new Date(),
+  /** Для уведомления Владельцу: имя Клиента из сессии */
+  clientName = "Клиент",
+): Promise<CreateResult> {
   const { trainerId, startAt, idempotencyKey } = input;
 
   const repeated = await findByKey(clientId, idempotencyKey);
@@ -73,10 +83,17 @@ export async function createBookingFor(clientId: string, input: BookingInput, no
         await lockClient(tx, clientId);
         const future = await tx.booking.count({ where: { clientId, status: "ACTIVE", endAt: { gt: now } } });
         if (future >= MAX_FUTURE_BOOKINGS) return null;
-        return tx.booking.create({
+        const created = await tx.booking.create({
           data: { clientId, trainerId, hallId: trainer.hallId, startAt, endAt, activeTrainerId: trainerId, idempotencyKey },
           select: bookingFields,
         });
+        // Уведомление Владельцу — в той же транзакции (transactional outbox): нет Записи — нет и события
+        await enqueue(
+          tx,
+          { type: "booking.created", clientName, trainerName: trainer.name, hallName: hallName(trainer.hallId), startAt: startAt.toISOString(), endAt: endAt.toISOString() },
+          now,
+        );
+        return created;
       },
       // Под наплывом транзакции ждут соединение из пула и блокировку строки Клиента дольше обычных 2 и 5 секунд
       { maxWait: 10_000, timeout: 10_000 },
@@ -109,7 +126,7 @@ export async function createBookingFor(clientId: string, input: BookingInput, no
 
 export async function createBooking(input: BookingInput, now: Date = new Date()): Promise<CreateResult> {
   const client = await requireClient();
-  return createBookingFor(client.id, input, now);
+  return createBookingFor(client.id, input, now, client.name);
 }
 
 export type ClientBooking = CreatedBooking & { status: BookingStatus; view: BookingView; canCancel: boolean };
@@ -130,12 +147,27 @@ export async function listMyBookings(now: Date = new Date()): Promise<ClientBook
 /** Отмена самим Клиентом: только своя действующая Запись и не позже срока. Повторная отмена — notFound. */
 export async function cancelMyBooking(bookingId: string, now: Date = new Date()): Promise<{ ok: true } | { ok: false; error: CancelError }> {
   const client = await requireClient();
-  const row = await db.booking.findFirst({ where: { id: bookingId, clientId: client.id, status: "ACTIVE" }, select: { startAt: true, status: true } });
+  const row = await db.booking.findFirst({
+    where: { id: bookingId, clientId: client.id, status: "ACTIVE" },
+    select: { startAt: true, endAt: true, status: true, trainerId: true, hallId: true },
+  });
   if (!row) return { ok: false, error: "notFound" };
   if (!canClientCancel(row, now)) return { ok: false, error: "tooLate" };
-  const { count } = await db.booking.updateMany({
-    where: { id: bookingId, clientId: client.id, status: "ACTIVE" },
-    data: { status: "CANCELLED", activeTrainerId: null, cancelledAt: now, cancelledBy: "client" },
+  const trainerName = (row.trainerId && (await getTrainerNames([row.trainerId]))[row.trainerId]) || "Тренер";
+  // Отмена и уведомление Владельцу — одной транзакцией: отменилось — значит, Владелец узнает
+  const count = await db.$transaction(async (tx) => {
+    const { count } = await tx.booking.updateMany({
+      where: { id: bookingId, clientId: client.id, status: "ACTIVE" },
+      data: { status: "CANCELLED", activeTrainerId: null, cancelledAt: now, cancelledBy: "client" },
+    });
+    if (count === 1) {
+      await enqueue(
+        tx,
+        { type: "booking.cancelled", clientName: client.name, trainerName, hallName: hallName(row.hallId), startAt: row.startAt.toISOString(), endAt: row.endAt.toISOString() },
+        now,
+      );
+    }
+    return count;
   });
   return count === 1 ? { ok: true } : { ok: false, error: "notFound" };
 }

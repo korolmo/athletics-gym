@@ -42,7 +42,10 @@ describe("сервис Окон: доступ", () => {
   // Без сессии Владельца — только функции для кабинета и модуля Записи; всё остальное начинается с requireOwner
   const PUBLIC = ["isWindowFree", "listWindows", "sessionMinutesOf"];
   it("каждая экспортируемая функция либо проверяет сессию, либо в списке публичных", () => {
-    const src = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../service/schedule.ts"), "utf8");
+    // Переводы строк — как в CI (LF): на Windows git может выдать файл с CRLF
+    const src = fs
+      .readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../service/schedule.ts"), "utf8")
+      .replace(/\r\n/g, "\n");
     // Тело — после первой строки, которая кончается на « {»: сигнатура с типом-объектом в параметрах не мешает
     const fns = src
       .split("export async function ")
