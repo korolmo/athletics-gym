@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCabinetDictionary, isLocale } from "@/lib/i18n";
 import { resolveCodeChannel } from "@/modules/clients";
+import { kickOutbox } from "@/app/outbox-kick";
 
 // Личный кабинет Клиента (этап 1, ADR 0016). Страницы зависят от сессии — собираются на каждый запрос, в кэш не идут.
 // Без канала доставки кода (боевой сайт: демо-канала там нет) кабинета нет вовсе — 404.
@@ -16,5 +17,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default function CabinetLayout({ children }: { children: React.ReactNode }) {
   if (!resolveCodeChannel()) notFound();
+  kickOutbox();
   return children;
 }
