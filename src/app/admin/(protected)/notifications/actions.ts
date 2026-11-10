@@ -1,0 +1,20 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requireOwner } from "@/modules/owner";
+import { text } from "@/lib/admin/form";
+import { deliverPending, resolveEvent, resolveSender, retryEvent } from "@/modules/notifications";
+
+/** «Отправить ещё раз»: событие снова в очереди — и сразу попытка отправки. */
+export async function retryEventAction(fd: FormData): Promise<void> {
+  await requireOwner();
+  await retryEvent(text(fd, "id"), requireOwner);
+  await deliverPending(resolveSender());
+  revalidatePath("/admin", "layout");
+}
+
+export async function resolveEventAction(fd: FormData): Promise<void> {
+  await requireOwner();
+  await resolveEvent(text(fd, "id"), requireOwner);
+  revalidatePath("/admin", "layout");
+}

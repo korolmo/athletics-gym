@@ -62,6 +62,7 @@ const { state, db, mocks } = vi.hoisted(() => {
   const mocks = {
     requireOwner: vi.fn(async () => {}),
     lockClient: vi.fn(async () => {}),
+    enqueue: vi.fn(async () => {}),
   };
   return { state, db, mocks };
 });
@@ -70,7 +71,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/modules/owner", () => ({ requireOwner: mocks.requireOwner }));
 vi.mock("@/modules/clients", () => ({ requireClient: async () => ({ id: state.client, name: "К", phone: "+77000000001" }), lockClient: mocks.lockClient }));
-vi.mock("@/modules/trainers", () => ({ getBookableTrainer: async () => state.trainer }));
+vi.mock("@/modules/trainers", () => ({ getBookableTrainer: async () => state.trainer, getTrainerNames: async () => ({ t1: "Арман" }) }));
+vi.mock("@/modules/notifications", () => ({ enqueue: mocks.enqueue }));
 vi.mock("@/modules/schedule", () => ({
   BOOKING_HORIZON_DAYS: 14,
   isWindowFree: async () => state.windowFree,
@@ -87,6 +89,7 @@ const input = (n = 1, startAt = start) => ({ trainerId: "t1", startAt, idempoten
 beforeEach(() => {
   state.rows = [];
   state.seq = 0;
+  mocks.enqueue.mockClear();
   state.client = "k1";
   state.windowFree = true;
   state.trainer = { id: "t1", name: "Арман", hallId: "general" };
@@ -172,5 +175,34 @@ describe("Мои Записи", () => {
       ["b1", "upcoming", true],
       ["old", "past", false],
     ]);
+  });
+});
+
+describe("уведомления Владельцу (outbox)", () => {
+  it("новая Запись пишет событие в той же транзакции, с именами и временем", async () => {
+    await createBooking(input(), now);
+    expect(mocks.enqueue).toHaveBeenCalledTimes(1);
+    expect(mocks.enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({ booking: expect.anything() }),
+      expect.objectContaining({ type: "booking.created", clientName: "К", trainerName: "Арман", hallName: "Общий зал", startAt: start.toISOString() }),
+      now,
+    );
+  });
+
+  it("повтор формы и отказ по лимиту события не пишут", async () => {
+    await createBooking(input(), now);
+    await createBooking(input(), now);
+    for (let i = 2; i <= 4; i++) await createBooking(input(i, new Date(start.getTime() + i * 3_600_000)), now);
+    // 1 + 2 успешных (лимит 3), повтор и четвёртая — без события
+    expect(mocks.enqueue).toHaveBeenCalledTimes(3);
+  });
+
+  it("отмена Клиентом пишет событие отмены; неудачная отмена — нет", async () => {
+    await createBooking(input(), now);
+    mocks.enqueue.mockClear();
+    await cancelMyBooking("b1", now);
+    expect(mocks.enqueue).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: "booking.cancelled", trainerName: "Арман" }), now);
+    await cancelMyBooking("b1", now);
+    expect(mocks.enqueue).toHaveBeenCalledTimes(1);
   });
 });

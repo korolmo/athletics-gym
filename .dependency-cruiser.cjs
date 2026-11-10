@@ -133,6 +133,15 @@ module.exports = {
       to: { path: "^src/modules/(?!schedule/|owner/)" },
     },
     {
+      name: "notifications-knows-no-one",
+      severity: "error",
+      comment:
+        "Уведомления (этап 1, ADR 0017) — очередь и отправка, ни от одного модуля не зависят: событие передаёт " +
+        "модуль-хозяин в своей транзакции, проверку Владельца для админки — слой приложения аргументом.",
+      from: { path: "^src/modules/notifications/" },
+      to: { path: "^src/modules/(?!notifications/)" },
+    },
+    {
       name: "bookings-on-top-of-entities",
       severity: "error",
       comment:
