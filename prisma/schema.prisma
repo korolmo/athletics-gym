@@ -416,3 +416,34 @@ model Booking {
   @@index([trainerId, startAt])
   @@index([startAt])
 }
+
+/// Состояние события в очереди уведомлений
+enum OutboxStatus {
+  /// Ждёт отправки (в том числе повторной)
+  PENDING
+  SENT
+  /// Не доставлено после всех попыток — видно в админке
+  DEAD
+  /// Владелец пометил недоставленное решённым
+  RESOLVED
+}
+
+/// Событие для уведомления Владельца (этап 1, ADR 0017, transactional outbox): пишется в той же транзакции,
+/// что и изменение, которое его вызвало (Запись создана или отменена), отправляется отдельно — сразу после ответа
+/// и по расписанию с повторами. Доставка «хотя бы один раз»: повтор сообщения Владелец узнает по номеру события.
+model OutboxEvent {
+  id            String       @id @default(cuid())
+  /// booking.created | booking.cancelled
+  type          String
+  /// Данные события (JSON): что показать в сообщении
+  payload       String       @db.Text
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  /// Когда можно пытаться снова; во время отправки — время, до которого событие занято отправщиком
+  nextAttemptAt DateTime     @default(now())
+  lastError     String?      @db.Text
+  createdAt     DateTime     @default(now())
+  sentAt        DateTime?
+
+  @@index([status, nextAttemptAt])
+}

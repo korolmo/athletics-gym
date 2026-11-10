@@ -366,6 +366,7 @@ describe("личный кабинет в документах (этап 1)", () 
     expect(privacy).toContain(`${LEGAL_FACTS.clientCookieDays} дней`);
     expect(privacy).toContain(`${LEGAL_FACTS.inactiveMonths} месяцев`);
     expect(privacy).toContain(`действует ${LEGAL_FACTS.codeTtlMin} минут`);
+    expect(privacy).toContain("сообщение в Telegram");
     expect(LEGAL_FACTS).toMatchObject({ clientCookie: "ag_client", clientCookieDays: 30, inactiveMonths: 12, codeTtlMin: 5, maxFutureBookings: 3, cancelHours: 12 });
     const terms = text(build("terms", "ru", DEFAULT_SETTINGS, true));
     expect(terms).toContain(`не больше ${LEGAL_FACTS.maxFutureBookings} будущих записей`);

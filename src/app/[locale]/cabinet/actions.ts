@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { currentIpHash } from "@/lib/ip-hash";
 import { getCabinetDictionary, isLocale, type Locale } from "@/lib/i18n";
@@ -23,6 +24,12 @@ import { cancelMyBooking, cancelMyFutureBookings, createBooking, parseBookingFor
 import { getBookableTrainer } from "@/modules/trainers";
 import { listWindows, sessionMinutesOf } from "@/modules/schedule";
 import { fill } from "@/components/cabinet/format";
+import { deliverPending, resolveSender } from "@/modules/notifications";
+
+/** Уведомление Владельцу — сразу после ответа Клиенту, не задерживая его; не ушло — заберёт отправщик по расписанию. */
+function notifyOwnerSoon(): void {
+  after(() => deliverPending(resolveSender()).catch((e) => logError("Очередь уведомлений: отправка после ответа не удалась.", e)));
+}
 
 // Действия кабинета Клиента (этап 1). Тонкие: разбор формы и правила — в модулях Клиенты, Записи, Окна.
 // Язык приходит скрытым полем формы: от него зависят тексты ошибок и адреса переходов.
@@ -145,6 +152,7 @@ export async function bookAction(_prev: BookState, fd: FormData): Promise<BookSt
   const parsed = parseBookingForm(fd);
   if (!parsed.ok) return { status: "error", message: t.result.badRequest };
   const r = await createBooking(parsed.data);
+  if (r.ok && !r.repeated) notifyOwnerSoon();
   if (r.ok) return { status: "ok", start: r.booking.startAt.toISOString(), end: r.booking.endAt.toISOString(), trainerId: parsed.data.trainerId };
   if (r.error === "taken" || r.error === "limit") return { status: r.error, start: parsed.data.startAt.toISOString(), trainerId: parsed.data.trainerId };
   return { status: "error", message: r.error === "noTrainer" ? t.result.noTrainer : t.result.badRequest };
@@ -153,6 +161,7 @@ export async function bookAction(_prev: BookState, fd: FormData): Promise<BookSt
 export async function cancelBookingAction(fd: FormData): Promise<void> {
   const locale = localeOf(fd);
   await requireClient(loginPath(locale));
-  await cancelMyBooking(String(fd.get("bookingId") ?? ""));
+  const cancelled = await cancelMyBooking(String(fd.get("bookingId") ?? ""));
+  if (cancelled.ok) notifyOwnerSoon();
   redirect(`/${locale}/cabinet`);
 }
