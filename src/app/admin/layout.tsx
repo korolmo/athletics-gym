@@ -5,12 +5,14 @@ import { siteIcons } from "@/lib/brand";
 import { getDictionary } from "@/lib/i18n";
 import { isLab } from "@/lib/lab";
 import { LabBanner } from "@/components/LabBanner";
+import { getClubOnce } from "@/app/brand";
+import { DEFAULT_CLUB } from "@/modules/club/client";
 
-export const metadata: Metadata = {
-  title: "Админка — Athletic's Gym",
-  robots: { index: false, follow: false },
-  icons: { icon: siteIcons.small },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // Название — Клуба (этап П1); база недоступна — начальное, страница входа всё равно должна открыться
+  const club = await getClubOnce().catch(() => DEFAULT_CLUB);
+  return { title: `Админка — ${club.name}`, robots: { index: false, follow: false }, icons: { icon: siteIcons.small } };
+}
 
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (

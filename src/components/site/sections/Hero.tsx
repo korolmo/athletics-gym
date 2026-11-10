@@ -1,5 +1,5 @@
 import Image, { getImageProps } from "next/image";
-import { site, whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/site";
 import { mottoWords } from "@/modules/site/client";
 import { CountNumber, CountText } from "@/components/site/Count";
 import { ratingCountText } from "@/modules/site/client";
@@ -43,7 +43,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
               {s.contacts.phoneDisplay}
             </a>
             <a
-              href={site.twoGisReviews}
+              href={t.brand.twoGisReviews}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-sm bg-surface-card px-2.5 py-0.5 text-[12px] text-on-surface"
@@ -58,7 +58,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
         <div className={`${container} grid grid-cols-1 items-center gap-8 lg:grid-cols-12`}>
           <div className="z-10 flex flex-col items-start gap-4 lg:col-span-7">
             <a
-              href={site.twoGisReviews}
+              href={t.brand.twoGisReviews}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-surface-card px-3.5 py-1.5 shadow-xs"

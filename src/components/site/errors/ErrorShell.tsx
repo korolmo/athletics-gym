@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ErrorTexts } from "@/dictionaries/errors/ru";
 import type { Locale } from "@/lib/i18n";
 import { logo } from "@/lib/brand";
-import { site } from "@/lib/site";
+import { staticBrandVars } from "@/app/brand-static";
 import { container, label } from "@/components/ui/styles";
 
 // Страница ошибки сайта (404, app/global-not-found.tsx) — по макетам Stitch (проект 4810510334939218653).
@@ -33,6 +33,8 @@ export function ErrorShell({
   path?: string;
   children: React.ReactNode;
 }) {
+  // Без базы (ADR 0013): название и город — начальные Клуба (решение 20 этапа П1)
+  const brand = staticBrandVars(locale);
   return (
     <>
       <header data-site-header className="fixed inset-x-0 top-0 z-50 w-full bg-background/95 shadow-header md:bg-background/85 md:backdrop-blur-xl">
@@ -40,7 +42,7 @@ export function ErrorShell({
           <Link href={`/${locale}`} prefetch={false} className="flex min-w-0 items-center gap-2 md:gap-4">
             <Image src={logo} alt="" width={32} height={32} className="h-8 w-8 shrink-0 object-contain" priority />
             <span className="whitespace-nowrap text-[15px] font-bold uppercase leading-6 tracking-wide text-text-primary md:text-headline-sm md:tracking-wider">
-              {site.name}
+              {brand.club}
             </span>
           </Link>
           <div className={`${label} flex items-center gap-1 text-text-muted`}>
@@ -71,7 +73,7 @@ export function ErrorShell({
       </main>
       <footer className="w-full border-t border-surface-border bg-surface-container-lowest py-6">
         <p className={`${container} text-center text-body-sm text-text-muted`}>
-          © {new Date().getFullYear()} {site.name} · Кызылорда
+          © {new Date().getFullYear()} {brand.club} · {brand.city}
         </p>
       </footer>
     </>

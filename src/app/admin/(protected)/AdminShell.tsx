@@ -62,10 +62,13 @@ function Badge({ n, on }: { n: number; on?: boolean }) {
 }
 
 export function AdminShell({
+  clubName,
   newReviews,
   undelivered = 0,
   children,
 }: {
+  /** Название Клуба — подпись над меню (этап П1) */
+  clubName: string;
   /** Сколько Отзывов ждут решения */
   newReviews: number;
   /** Сколько уведомлений о Записях не доставлено (плашка «Не доставлено: N», макет 19) */
@@ -87,7 +90,7 @@ export function AdminShell({
           <Link href="/admin" className="flex min-w-0 items-center gap-3">
             <Image src={logo} alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full" />
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-accent">Athletic&apos;s · Admin</span>
+              <span className="truncate text-xs font-extrabold uppercase tracking-widest text-accent">{clubName} · Admin</span>
               <span className="truncate text-lg font-bold lg:hidden">{current?.label ?? "Админка"}</span>
               <span className="hidden text-lg font-bold lg:block">Админка</span>
             </span>

@@ -6,16 +6,17 @@ import { ErrorActions, ErrorChip, ErrorHeading, ErrorShell, errorButton } from "
 import { label } from "@/components/ui/styles";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/modules/site/client";
 import { toSiteContent } from "@/modules/site/client";
-import { getDictionary, type Locale } from "@/lib/i18n";
-import { site } from "@/lib/site";
+import type { Locale } from "@/lib/i18n";
+import { getStaticSiteDictionary } from "@/app/brand-static";
 
 // Страница 404 на одном языке — по макету Stitch. Рисуется при сборке (app/global-not-found.tsx), без базы:
-// адрес — начальный из кода, часы работы и номер зала не показываем (они в Настройках сайта), контакты — в 2ГИС.
+// адрес и Клуб — начальные из кода (решение 20 этапа П1), часы работы и номер зала не показываем (они в Настройках
+// сайта), контакты — в 2ГИС.
 
 const QUICK = ["trainers", "women", "contacts"] as const;
 
 export function NotFoundView({ locale }: { locale: Locale }) {
-  const t = getDictionary(locale);
+  const t = getStaticSiteDictionary(locale);
   const e = t.errors;
   const { address } = toSiteContent(locale, DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS).contacts;
   const home = `/${locale}`;
@@ -51,13 +52,13 @@ export function NotFoundView({ locale }: { locale: Locale }) {
           </span>
           <span className="flex flex-col">
             <span className="text-body-md font-bold text-text-primary">
-              {site.name} · {t.contacts.city}
+              {t.brand.name} · {t.contacts.city}
             </span>
             <span className="text-body-sm text-text-muted">{address}</span>
           </span>
         </div>
         <a
-          href={site.twoGis}
+          href={t.brand.twoGis}
           target="_blank"
           rel="noopener noreferrer"
           className="flex min-h-11 items-center gap-2 rounded-lg bg-surface-container-low px-3 py-1.5 text-body-sm text-text-primary underline underline-offset-2 transition-colors hover:text-primary-container"

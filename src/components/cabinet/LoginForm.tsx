@@ -7,7 +7,6 @@ import { requestCodeAction, verifyCodeAction, type LoginState } from "@/app/[loc
 import type { Locale } from "@/lib/i18n";
 import type { CabinetDictionary } from "@/dictionaries/cabinet/ru";
 import { logo } from "@/lib/brand";
-import { site } from "@/lib/site";
 import { formatPhone, CODE_LENGTH } from "@/modules/clients/client";
 import { ArrowForwardSym, ChatSym } from "./icons";
 import { ArrowBackSym, BadgeSym, ContentCopySym, ErrorSym, HistorySym, LockOpenSym, ScienceSym } from "./icons";
@@ -34,7 +33,7 @@ export function LoginForm({ locale, t, demoPhones, waHref, privacyHref }: Props)
     <main className="mx-auto flex min-h-dvh w-full max-w-[540px] flex-col px-4 pb-12 pt-6 md:justify-center md:pt-12">
       <Link href={`/${locale}`} className="mx-auto mb-6 hidden items-center gap-3 md:flex">
         <Image src={logo} alt="" width={36} height={36} className="h-9 w-9 object-contain" priority />
-        <span className="text-label-uppercase uppercase tracking-[0.2em] text-text-muted">{site.name}</span>
+        <span className="text-label-uppercase uppercase tracking-[0.2em] text-text-muted">{t.brand.name}</span>
       </Link>
 
       {current.step === "phone" ? (

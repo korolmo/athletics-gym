@@ -4,16 +4,26 @@ import { errorsKk } from "./errors/kk";
 // Перевод черновой — перед запуском показать носителю языка
 export const kk: Dictionary = {
   meta: {
-    title: "Athletic's Gym — Қызылордадағы тренажер залы",
+    title: "{club} — {inCity} тренажер залы",
     description:
-      "Қызылордадағы тренажер залы: жаңа тренажерлар, бөлек әйелдер залы, жаттықтырушымен жеке жаттығулар. Алғашқы келу тегін.",
+      "{inCity} тренажер залы: жаңа тренажерлар, бөлек әйелдер залы, жаттықтырушымен жеке жаттығулар. Алғашқы келу тегін.",
   },
   seo: {
-    title: "Athletic's Gym — Қызылордадағы спорт зал",
-    description:
-      "Қызылордадағы спорт зал: жаңа тренажерлар, бөлек әйелдер залы, жаттықтырушымен жеке жаттығулар. Алғашқы келу тегін.",
-    kicker: "ҚЫЗЫЛОРДА · 2022 ЖЫЛДАН БЕРІ",
-    tagline: "Қызылордадағы спорт зал",
+    title: "{club} — {inCity} спорт зал",
+    description: "{seoDescription}",
+    kicker: "{city}{since}",
+    tagline: "{inCity} спорт зал",
+  },
+  // Бренд Клуба (этап П1, ADR 0018): метки {club}, {city}, {inCity}, {since}… заполняет слой приложения из Клуба
+  // (src/app/brand.ts). Здесь — только шаблоны; названия и города в коде нет.
+  brand: {
+    name: "{club}",
+    twoGis: "{twoGis}",
+    twoGisReviews: "{twoGisReviews}",
+    twoGisRoute: "{twoGisRoute}",
+    mapEmbed: "{mapEmbed}",
+    // Подпись к городу: {year} — год открытия Клуба; года нет — подписи нет
+    since: " · {year} жылдан бері",
   },
   nav: {
     about: "Зал туралы",
@@ -38,7 +48,7 @@ export const kk: Dictionary = {
     trainer: "Жаттықтырушы {name} жеке жаттығуына жазылғым келеді",
   },
   hero: {
-    kicker: "Қызылорда · 2022 жылдан бері",
+    kicker: "{city}{since}",
     rating: "{n} {word} 2ГИС-те",
   },
   about: {
@@ -158,17 +168,17 @@ export const kk: Dictionary = {
   },
   contacts: {
     title: "Байланыс",
-    city: "Қызылорда",
+    city: "{city}",
     route: "Бағыт құру",
     instagram: "Instagram",
-    mapTitle: "Карта: Athletic's Gym",
+    mapTitle: "Карта: {club}",
     showMap: "Картаны көрсету",
     open2gis: "2ГИС-те ашу",
     mapNote: "Картаны OpenStreetMap сервисі көрсетеді",
   },
   // Проверить носителем языка
   footer: {
-    rights: "Athletic's Gym, Қызылорда",
+    rights: "{club}, {city}",
     bin: "ЖСН/БСН",
     legalAddress: "заңды мекенжайы:",
     documents: "Құжаттар",

@@ -5,15 +5,16 @@ import { errorsKk } from "@/dictionaries/errors/kk";
 import { errorsRu } from "@/dictionaries/errors/ru";
 import { DEFAULT_SETTINGS } from "@/modules/site/client";
 import { OFFLINE_FILE, offlineBody, offlinePage } from "./offline-page";
+import { OFFLINE_BRAND } from "@/app/offline-brand";
 
 describe("статическая страница 503", () => {
   it("файл в public/ собран из текущих словарей (иначе — npm run errors:build)", () => {
     const file = fs.readFileSync(path.join(process.cwd(), "public", OFFLINE_FILE), "utf8").replace(/\r\n/g, "\n");
-    expect(file).toBe(offlinePage());
+    expect(file).toBe(offlinePage(OFFLINE_BRAND));
   });
 
   it("тексты на обоих языках, без скриптов и сторонних ресурсов, кроме ссылки на 2ГИС", () => {
-    const html = offlinePage();
+    const html = offlinePage(OFFLINE_BRAND);
     for (const text of [errorsRu.offline.heading, errorsRu.offline.text, errorsKk.offline.heading, errorsKk.offline.text]) {
       expect(html).toContain(text);
     }
@@ -22,13 +23,13 @@ describe("статическая страница 503", () => {
   });
 
   it("номера зала в файле нет — он в Настройках сайта", () => {
-    const html = offlinePage();
+    const html = offlinePage(OFFLINE_BRAND);
     expect(html).not.toContain(DEFAULT_SETTINGS.whatsapp);
     expect(html).not.toContain(DEFAULT_SETTINGS.phone);
   });
 
   it("технические работы — свой заголовок на обоих языках, маркер 503", () => {
-    const html = offlinePage("maintenance");
+    const html = offlinePage(OFFLINE_BRAND, "maintenance");
     for (const text of [errorsRu.maintenance.heading, errorsRu.maintenance.text, errorsKk.maintenance.heading, errorsKk.maintenance.text]) {
       expect(html).toContain(text);
     }
@@ -38,7 +39,7 @@ describe("статическая страница 503", () => {
   });
 
   it("код в странице — тот, что передали", () => {
-    expect(offlineBody(500)).toContain(">500<");
-    expect(offlineBody(503)).toContain(">503<");
+    expect(offlineBody(OFFLINE_BRAND, 500)).toContain(">500<");
+    expect(offlineBody(OFFLINE_BRAND, 503)).toContain(">503<");
   });
 });

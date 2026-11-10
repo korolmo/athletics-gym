@@ -1,4 +1,5 @@
 import { requireOwner } from "@/modules/owner";
+import { CLUB_TIME_ZONE } from "@/lib/time";
 import { countPending, deliveryStats, listProblemEvents, resolveSender } from "@/modules/notifications";
 import { EVENT_LABEL_RU, MAX_ATTEMPTS, whenLabel } from "@/modules/notifications/client";
 import { Chip, Empty, Notice, PageHead, btnDark, btnPrimary, card } from "../../ui";
@@ -9,7 +10,7 @@ import { resolveEventAction, retryEventAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 const fmt = (d: Date) =>
-  new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Qyzylorda" }).format(d);
+  new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: CLUB_TIME_ZONE }).format(d);
 
 export default async function NotificationsPage() {
   await requireOwner();

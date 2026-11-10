@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { ru } from "@/dictionaries/ru";
-import { kk } from "@/dictionaries/kk";
+import { ru as ruRaw } from "@/dictionaries/ru";
+import { kk as kkRaw } from "@/dictionaries/kk";
+import { fillBrand } from "@/lib/brand-text";
+import { DEFAULT_CLUB, clubTextVars } from "@/modules/club/client";
 import { toSiteContent } from "@/modules/site/client";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/modules/site/client";
 import { LEGAL_PAGES, LEGAL_UPDATED, legalHead } from "@/modules/legal";
@@ -16,6 +18,10 @@ import {
   readSeoEnv,
   resolveSiteUrl,
 } from "./seo";
+
+// Словари с начальным Клубом (Athletic's Gym): SEO-тексты после шаблонов — те же, что были в коде (этап П1)
+const ru = fillBrand(ruRaw, clubTextVars(DEFAULT_CLUB, "ru", ruRaw.brand.since));
+const kk = fillBrand(kkRaw, clubTextVars(DEFAULT_CLUB, "kk", kkRaw.brand.since));
 
 const URL_ = "https://athletics-gym.vercel.app";
 const prod = { siteUrl: URL_, deployEnv: "production" };
@@ -85,7 +91,7 @@ describe("метаданные /ru и /kk", () => {
   });
 
   it.each(cases)("/%s: Open Graph и Twitter — свой язык, адрес страницы, большая картинка", (locale, text, _phrase, ogLocale) => {
-    const m = buildMetadata(locale, text, prod, ICON);
+    const m = buildMetadata(locale, text, prod, ICON, "", DEFAULT_CLUB.name);
     expect(m.openGraph).toMatchObject({ url: `${URL_}/${locale}`, locale: ogLocale, title: text.title, description: text.description, siteName: "Athletic's Gym" });
     expect(m.twitter).toMatchObject({ card: "summary_large_image", title: text.title });
     expect(String(m.metadataBase)).toBe(`${URL_}/`);
@@ -187,10 +193,10 @@ describe("юридические страницы: метаданные и sitem
   });
 
   it.each(["ru", "kk"] as const)("/%s: у каждого документа свои title и description, canonical — на себя", (locale) => {
-    const heads = LEGAL_PAGES.map((page) => ({ page, head: legalHead(page, locale), meta: buildMetadata(locale, legalHead(page, locale), prod, ICON, `/${page}`) }));
+    const heads = LEGAL_PAGES.map((page) => ({ page, head: legalHead(page, locale, "Iron Club"), meta: buildMetadata(locale, legalHead(page, locale, "Iron Club"), prod, ICON, `/${page}`) }));
     for (const { page, head, meta } of heads) {
       expect(meta.title).toBe(head.title);
-      expect(String(meta.title)).toContain("Athletic's Gym");
+      expect(String(meta.title)).toContain("Iron Club");
       expect(String(meta.description).length).toBeGreaterThan(50);
       expect(meta.alternates?.canonical).toBe(`${URL_}/${locale}/${page}`);
       expect(meta.alternates?.languages).toEqual({ ru: `${URL_}/ru/${page}`, kk: `${URL_}/kk/${page}`, "x-default": `${URL_}/ru/${page}` });
@@ -202,7 +208,7 @@ describe("юридические страницы: метаданные и sitem
   });
 
   it("на превью документы тоже закрыты от индексации", () => {
-    expect(buildMetadata("ru", legalHead("privacy", "ru"), preview, ICON, "/privacy").robots).toEqual({ index: false, follow: false });
+    expect(buildMetadata("ru", legalHead("privacy", "ru", "Iron Club"), preview, ICON, "/privacy").robots).toEqual({ index: false, follow: false });
   });
 });
 

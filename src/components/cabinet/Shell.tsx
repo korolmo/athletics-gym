@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { logo } from "@/lib/brand";
-import { site } from "@/lib/site";
 import type { Locale } from "@/lib/i18n";
 import type { CabinetDictionary } from "@/dictionaries/cabinet/ru";
 import { CalendarMonthSym, PersonSym } from "./icons";
@@ -29,7 +28,7 @@ export function CabinetShell({ locale, t, tab, children }: { locale: Locale; t: 
           <Link href={`/${locale}`} className="flex min-w-0 items-center gap-3">
             <Image src={logo} alt="" width={36} height={36} className="h-9 w-9 shrink-0 object-contain" priority />
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="text-label-uppercase uppercase tracking-widest text-primary-container">{site.name}</span>
+              <span className="text-label-uppercase uppercase tracking-widest text-primary-container">{t.brand.name}</span>
               <span className="truncate text-[19px] font-extrabold uppercase text-text-primary">{t.header[tab]}</span>
             </span>
           </Link>

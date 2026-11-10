@@ -2,8 +2,9 @@ import type { CabinetDictionary } from "./ru";
 
 // Перевод черновой — перед запуском показать носителю языка
 export const cabinetKk: CabinetDictionary = {
-  meta: { title: "Жеке кабинет — Athletic's Gym" },
-  badge: "Athletic Club ID",
+  meta: { title: "Жеке кабинет — {club}" },
+  brand: { name: "{club}" },
+  badge: "{club} ID",
   badgeFirst: "Алғашқы кіру",
   step: "Қадам {n} / 02",
   login: {

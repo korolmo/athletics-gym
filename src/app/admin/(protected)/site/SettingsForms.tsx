@@ -215,7 +215,7 @@ export function ContactsForm({ s }: { s: SiteSettingsData }) {
   return (
     <Form action={saveContacts}>
       <RuKk name="address" label="Адрес" ru={s.addressRu} kk={s.addressKk} max={LIMITS.address} />
-      <p className={hint}>Без города: «Кызылорда» сайт подставляет сам. Точка на карте от адреса не зависит.</p>
+      <p className={hint}>Без города: город Клуба сайт подставляет сам. Точка на карте от адреса не зависит.</p>
       <RuKk name="hours" label="Часы работы" ru={s.hoursRu} kk={s.hoursKk} max={LIMITS.hours} />
       <p className={hint}>
         Часы есть ещё в четвёртой карточке «О зале» и в названиях тарифов «Дневной» и «Весь день» — при смене режима

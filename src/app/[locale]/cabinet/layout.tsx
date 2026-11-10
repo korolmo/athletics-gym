@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCabinetDictionary, isLocale } from "@/lib/i18n";
+import { isLocale } from "@/lib/i18n";
+import { getCabinetTexts } from "@/app/brand";
 import { resolveCodeChannel } from "@/modules/clients";
 import { kickOutbox } from "@/app/outbox-kick";
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  const t = await getCabinetDictionary(locale);
+  const t = await getCabinetTexts(locale);
   return { title: t.meta.title, robots: { index: false, follow: false } };
 }
 

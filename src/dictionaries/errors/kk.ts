@@ -5,7 +5,7 @@ export const errorsKk: ErrorTexts = {
   home: "Басты бетке",
   contacts2gis: "Залдың байланыстары 2ГИС-те",
   notFound: {
-    title: "Бет табылмады — Athletic's Gym",
+    title: "Бет табылмады — {club}",
     chip: "404 қатесі",
     heading: "Мұндай бет жоқ",
     text: "Сілтеме ескірген немесе мекенжайда қате болуы мүмкін. Есесіне зал орнында.",

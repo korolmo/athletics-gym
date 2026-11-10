@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getCabinetDictionary, getDictionary, isLocale } from "@/lib/i18n";
+import { getDictionary, isLocale } from "@/lib/i18n";
+import { getCabinetTexts } from "@/app/brand";
 import { whatsappUrl } from "@/lib/site";
 import { requireClient } from "@/modules/clients";
 import { CLIENT_CANCEL_DEADLINE_MS, MAX_FUTURE_BOOKINGS, listMyBookings } from "@/modules/bookings";
@@ -15,7 +16,7 @@ export default async function CabinetBookPage({ params }: { params: Promise<{ lo
   if (!isLocale(locale)) notFound();
   await requireClient(`/${locale}/cabinet/login`);
   const [t, trainers, bookings, { settings }] = await Promise.all([
-    getCabinetDictionary(locale),
+    getCabinetTexts(locale),
     listVisibleTrainersWithTariffs(),
     listMyBookings(),
     getSiteSettings(),

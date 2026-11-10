@@ -5,7 +5,7 @@ import { NotFoundLanguage } from "@/components/site/errors/NotFoundLanguage";
 import { NotFoundView } from "@/components/site/errors/NotFoundView";
 import { siteIcons } from "@/lib/brand";
 import { siteFontVars } from "@/lib/fonts";
-import { getDictionary } from "@/lib/i18n";
+import { getStaticSiteDictionary } from "@/app/brand-static";
 import { isLab } from "@/lib/lab";
 
 // Страница 404 для любого адреса без своего маршрута — на сайте и в Лаборатории одинаково (ADR 0013).
@@ -14,8 +14,8 @@ import { isLab } from "@/lib/lab";
 // оболочку, а текст рисует браузер (так в Next 15.5 и 16.4 даже с одним корневым layout).
 // Страница собирается при сборке, одна на все адреса: обе языковые версии в HTML, нужную выбирает браузер.
 
-const ru = getDictionary("ru");
-const kk = getDictionary("kk");
+const ru = getStaticSiteDictionary("ru");
+const kk = getStaticSiteDictionary("kk");
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },

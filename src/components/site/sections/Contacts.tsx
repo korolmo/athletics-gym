@@ -58,6 +58,7 @@ export function Contacts({ t, s }: SectionProps) {
           {/* Карта грузится только по нажатию «Показать карту»: до него сайт к сервису карты не обращается */}
           <MapPanel
             labels={{ show: t.contacts.showMap, open2gis: t.contacts.open2gis, note: t.contacts.mapNote, route: t.contacts.route, mapTitle: t.contacts.mapTitle }}
+            brand={t.brand}
             address={c.address}
             city={t.contacts.city}
             rating={s.rating.value}

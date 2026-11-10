@@ -456,6 +456,9 @@ model Club {
   name             String
   cityRu           String
   cityKk           String?
+  /// «В каком городе» для заголовков: «в Кызылорде», «Қызылордадағы» — склонение не вычисляем
+  cityInRu         String   @default("")
+  cityInKk         String?
   /// Описание для поисковиков и превью ссылок
   seoDescriptionRu String   @db.Text
   seoDescriptionKk String?  @db.Text

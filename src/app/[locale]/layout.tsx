@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { siteFontVars } from "@/lib/fonts";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { getClubOnce, getSiteDictionary } from "@/app/brand";
 import { buildMetadata, readSeoEnv } from "@/lib/seo";
 import { siteIcons } from "@/lib/brand";
 import { COOKIES_ANCHOR, legalPath } from "@/modules/legal/client";
@@ -23,9 +24,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  const t = getDictionary(locale);
+  const [t, club] = await Promise.all([getSiteDictionary(locale), getClubOnce()]);
   // title и description — на языке страницы; canonical, hreflang, Open Graph и robots — по адресу и окружению деплоя
-  return buildMetadata(locale, t.seo, readSeoEnv(), siteIcons);
+  return buildMetadata(locale, t.seo, readSeoEnv(), siteIcons, "", club.name);
 }
 
 export default async function LocaleLayout({
