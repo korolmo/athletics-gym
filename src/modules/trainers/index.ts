@@ -14,4 +14,4 @@ export {
   trainerHall,
 } from "./service/trainers";
 export { trainerPosterSlot } from "./service/poster";
-export { listVisibleTrainersWithTariffs } from "./service/public";
+export { getBookableTrainer, getTrainerNames, listVisibleTrainersWithTariffs } from "./service/public";

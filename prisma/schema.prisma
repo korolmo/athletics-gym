@@ -102,6 +102,11 @@ model Trainer {
   sortOrder     Int      @default(0)
   isVisible     Boolean  @default(true)
   tariffs       Tariff[]
+  /// Часы работы, исключения и длительность тренировки — модуль schedule (этап 1)
+  schedule      TrainerSchedule?
+  workHours     TrainerWorkHours[]
+  timeOff       TrainerTimeOff[]
+  bookings      Booking[]
 
   @@index([hallId])
 }
@@ -299,4 +304,115 @@ model Direction {
   createdAt     DateTime @default(now())
 
   @@index([sortOrder])
+}
+
+/// Клиент — человек со своим входом в личный кабинет (этап 1, ADR 0016). Храним минимум: телефон (он же логин),
+/// имя и Согласие на обработку данных. Удаление аккаунта удаляет запись целиком.
+model Client {
+  id                String   @id @default(cuid())
+  /// Телефон в виде +77XXXXXXXXX — логин Клиента
+  phone             String   @unique
+  name              String
+  /// Версия сессии: «Выйти на всех устройствах» увеличивает её — старые куки перестают подходить
+  sessionVersion    Int      @default(1)
+  /// Согласие на обработку данных: когда дано и с какой редакцией Политики («2026-11-07»)
+  consentAt         DateTime
+  consentPolicyDate String
+  /// Последний вход: аккаунт без входа дольше срока из правил удаляется
+  lastLoginAt       DateTime
+  bookings          Booking[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([lastLoginAt])
+}
+
+/// Одноразовый код входа Клиента. Хранится только хэш кода; запись удаляется при входе
+/// и чистится через сутки. IP — только хэш, для лимита запросов кода.
+model ClientLoginCode {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  ipHash    String
+  /// Неверные вводы этого кода
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+  @@index([ipHash, createdAt])
+}
+
+/// Настройки записи к Тренеру (этап 1, ADR 0017): длительность одной тренировки. Окна не хранятся —
+/// их вычисляет модуль schedule из часов работы и исключений.
+model TrainerSchedule {
+  trainerId      String   @id
+  trainer        Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  /// Длительность тренировки в минутах: 30–180, шаг 15
+  sessionMinutes Int      @default(60)
+  updatedAt      DateTime @updatedAt
+}
+
+/// Интервал работы Тренера в один из дней недели, в поясе Клуба: минуты от полуночи, конец не включается
+model TrainerWorkHours {
+  id        String  @id @default(cuid())
+  trainer   Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId String
+  /// 1 — понедельник … 7 — воскресенье
+  weekday   Int
+  startMin  Int
+  endMin    Int
+
+  @@index([trainerId])
+}
+
+/// Исключение: дни (включительно, в поясе Клуба), когда Тренер не принимает записи — выходной, отпуск
+model TrainerTimeOff {
+  id        String   @id @default(cuid())
+  trainer   Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainerId String
+  /// «2026-11-15»
+  fromDay   String
+  toDay     String
+  /// Подпись для Владельца: «отпуск», «выходной»
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([trainerId, toDay])
+}
+
+/// Статус Записи: прошедшая действующая Запись остаётся ACTIVE — «прошла» считается по времени
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+/// Запись — персональная тренировка Клиента у Тренера на время (этап 1, ADR 0017).
+/// Двойную Запись на одно Окно запрещает уникальный индекс (activeTrainerId, startAt): у действующей Записи
+/// activeTrainerId = trainerId, у отменённой — NULL (частичных индексов в MariaDB 10.4 нет, а NULL не мешает уникальности).
+model Booking {
+  id              String        @id @default(cuid())
+  /// Клиент; удалил аккаунт — Запись остаётся без его данных
+  client          Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId        String?
+  /// Тренер; удалён — Запись остаётся в истории без него
+  trainer         Trainer?      @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  trainerId       String?
+  /// Копия Зала Тренера на момент Записи
+  hallId          String
+  startAt         DateTime
+  endAt           DateTime
+  status          BookingStatus @default(ACTIVE)
+  activeTrainerId String?
+  /// Ключ повтора из формы: повторная отправка возвращает ту же Запись
+  idempotencyKey  String?       @unique
+  cancelledAt     DateTime?
+  /// Кто отменил: client | owner
+  cancelledBy     String?
+  createdAt       DateTime      @default(now())
+
+  @@unique([activeTrainerId, startAt])
+  @@index([clientId, status, startAt])
+  @@index([trainerId, startAt])
+  @@index([startAt])
 }

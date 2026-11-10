@@ -6,8 +6,8 @@ import { EyeIcon } from "@/components/icons";
 import { changePassword, logoutEverywhere, type PasswordFormState } from "./actions";
 
 const field =
-  "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
-const labelCls = "mb-1.5 block text-sm text-muted";
+  "w-full rounded-xl border border-line bg-bg px-4 py-3 text-base outline-none transition placeholder:text-muted/70 focus:border-accent";
+const labelCls = "mb-2 block text-sm font-semibold text-muted";
 const hint = "mt-1 block text-xs text-muted";
 
 export function PasswordForm() {
@@ -16,7 +16,7 @@ export function PasswordForm() {
   const type = show ? "text" : "password";
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className="space-y-5 rounded-2xl border border-line bg-card p-5 lg:p-6">
       <label className="block">
         <span className={labelCls}>Текущий пароль</span>
         <input name="oldPassword" type={type} autoComplete="current-password" required className={field} />
@@ -84,7 +84,7 @@ export function LogoutEverywhereButton() {
     >
       <button
         type="submit"
-        className="w-full rounded-xl border border-line py-3.5 font-semibold text-fg transition hover:border-danger hover:text-danger"
+        className="w-full rounded-xl bg-danger/10 py-3.5 font-bold uppercase tracking-wide text-danger transition hover:bg-danger/20"
       >
         Выйти на всех устройствах
       </button>

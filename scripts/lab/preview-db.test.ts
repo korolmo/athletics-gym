@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PREVIEW_DB_LIMIT, databasesToDrop, isPreviewDbName, previewDbName, withDatabase } from "./preview-db-core.mjs";
+import { LAB_PRODUCTION_DB, labProductionUrl } from "./preview-db-core.mjs";
 
 const URL_ = "mysql://user.root:secret@gateway01.eu-central-1.prod.aws.tidbcloud.com:4000/athletics?sslaccept=strict";
 
@@ -51,5 +52,14 @@ describe("лимит баз превью", () => {
   it("недосозданная база без даты — первая на удаление; production и чужие базы — никогда", () => {
     const list = [...many(PREVIEW_DB_LIMIT), { name: "pr_50", createdAt: null }, { name: "athletics", createdAt: at(1) }];
     expect(databasesToDrop(list, "pr_999")).toEqual(["pr_50", "pr_100"]);
+  });
+});
+
+describe("база основной Лаборатории", () => {
+  it("всегда athletics, параметры TLS сохраняются, а withDatabase её не принимает", () => {
+    const base = "mysql://u:p@gateway.tidbcloud.com:4000/pr_7?sslaccept=strict";
+    expect(labProductionUrl(base)).toBe("mysql://u:p@gateway.tidbcloud.com:4000/athletics?sslaccept=strict");
+    expect(LAB_PRODUCTION_DB).toBe("athletics");
+    expect(() => withDatabase(base, LAB_PRODUCTION_DB)).toThrow();
   });
 });

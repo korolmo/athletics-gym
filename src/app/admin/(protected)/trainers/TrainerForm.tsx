@@ -6,6 +6,10 @@ import { deleteTrainer, saveTrainer, type TrainerFormState } from "./actions";
 import { HALLS, type HallId } from "@/modules/tariffs/client";
 import { HALL_LABEL_RU } from "@/modules/tariffs/client";
 import { LIMITS } from "@/lib/admin/limits";
+import { CardTitle, Notice, btnDark, btnPrimary, card, field, hint, label, textarea, toggle } from "../../ui";
+
+// Карточка «Основная информация» Тренера — по макету А5 (design/stitch/admin/a5-trener-forma-mobile.png).
+// Поля и их имена — прежние; «Специализации» из макета нет — у Тренера только описание.
 
 export type TrainerInput = {
   /** Пусто — новый Тренер */
@@ -18,67 +22,56 @@ export type TrainerInput = {
   isVisible: boolean;
 };
 
-const field =
-  "w-full rounded-xl border border-line bg-card px-4 py-3 text-base outline-none transition placeholder:text-muted focus:border-accent";
-const labelCls = "mb-1.5 block text-sm text-muted";
-const hint = "mt-1 block text-xs text-muted";
-
 export function TrainerForm({ initial }: { initial: TrainerInput }) {
   const [state, action, pending] = useActionState<TrainerFormState, FormData>(saveTrainer, undefined);
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className={`${card} space-y-5`}>
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
+      <CardTitle title="Основная информация" />
 
       <label className="block">
-        <span className={labelCls}>Имя *</span>
-        <input
-          name="name"
-          required
-          maxLength={LIMITS.name}
-          defaultValue={initial.name}
-          placeholder="Например, Нұрмахан"
-          className={field}
-        />
+        <span className={`${label} flex justify-between`}>
+          Имя <span className="text-xs text-danger">* обязательно</span>
+        </span>
+        <input name="name" required maxLength={LIMITS.name} defaultValue={initial.name} placeholder="Например, Нұрмахан" className={field} />
       </label>
 
-      <label className="block">
-        <span className={labelCls}>Зал</span>
-        <select name="hallId" defaultValue={initial.hallId} className={field}>
+      <div>
+        <span className={label}>Зал</span>
+        <div className="grid grid-cols-2 gap-2">
           {HALLS.map((h) => (
-            <option key={h} value={h}>
-              {HALL_LABEL_RU[h]}
-            </option>
+            <label key={h} className="cursor-pointer">
+              <input type="radio" name="hallId" value={h} defaultChecked={h === initial.hallId} className="peer sr-only" />
+              <span className="flex h-12 items-center justify-center rounded-xl border border-line bg-bg font-semibold text-muted transition peer-checked:border-accent peer-checked:bg-accent peer-checked:text-accent-ink peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
+                {HALL_LABEL_RU[h]}
+              </span>
+            </label>
           ))}
-        </select>
+        </div>
         {initial.id && <span className={hint}>Тарифы тренера переедут в выбранный зал вместе с ним.</span>}
+      </div>
+
+      <label className="block">
+        <span className={`${label} flex justify-between`}>
+          Описание <span className="text-xs text-accent">RU</span>
+        </span>
+        <textarea name="descriptionRu" rows={4} maxLength={LIMITS.description} defaultValue={initial.descriptionRu} className={textarea} />
       </label>
 
       <label className="block">
-        <span className={labelCls}>Описание (RU)</span>
-        <textarea
-          name="descriptionRu"
-          rows={4}
-          maxLength={LIMITS.description}
-          defaultValue={initial.descriptionRu}
-          className={field}
-        />
-      </label>
-
-      <label className="block">
-        <span className={labelCls}>Сипаттама (KZ)</span>
-        <textarea
-          name="descriptionKk"
-          rows={4}
-          maxLength={LIMITS.description}
-          defaultValue={initial.descriptionKk}
-          className={field}
-        />
+        <span className={`${label} flex justify-between`}>
+          Сипаттама <span className="text-xs text-accent">KZ</span>
+        </span>
+        <textarea name="descriptionKk" rows={4} maxLength={LIMITS.description} defaultValue={initial.descriptionKk} className={textarea} />
         <span className={hint}>Если пусто — на казахской версии покажем русский.</span>
       </label>
 
-      <label className="block">
-        <span className={labelCls}>Порядок на сайте</span>
+      <label className="flex items-center justify-between gap-4 rounded-xl bg-bg px-4 py-3">
+        <span>
+          <span className="block font-semibold">Порядок в списке</span>
+          <span className="text-xs text-muted">Меньше число — выше в списке зала{initial.id ? "; пусто — не менять" : ""}</span>
+        </span>
         <input
           name="sortOrder"
           type="number"
@@ -86,37 +79,26 @@ export function TrainerForm({ initial }: { initial: TrainerInput }) {
           max={LIMITS.sortOrder}
           inputMode="numeric"
           defaultValue={initial.sortOrder}
-          placeholder={initial.id ? "не менять" : "в конец списка"}
-          className={field}
+          placeholder={initial.id ? "—" : "в конец"}
+          className="h-12 w-24 rounded-xl border border-line bg-card px-3 text-center text-lg font-bold outline-none focus:border-accent"
         />
-        <span className={hint}>
-          Меньше число — выше в списке своего зала.{initial.id ? " Пустое поле — порядок не меняется." : ""}
+      </label>
+
+      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-bg px-4 py-3">
+        <span>
+          <span className="block font-semibold">Показывать на сайте</span>
+          <span className="text-xs text-muted">Карточка видна посетителям в блоке тренеров</span>
         </span>
+        <input name="isVisible" type="checkbox" defaultChecked={initial.isVisible} className={toggle} />
       </label>
 
-      <label className="flex items-center justify-between gap-4 rounded-xl bg-card px-4 py-3.5">
-        <span>Показывать на сайте</span>
-        <input name="isVisible" type="checkbox" defaultChecked={initial.isVisible} className="h-6 w-6 accent-[#f5e642]" />
-      </label>
-
-      {state?.error && (
-        <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">
-          {state.error}
-        </p>
-      )}
+      {state?.error && <Notice tone="error">{state.error}</Notice>}
 
       <div className="flex gap-3">
-        <Link
-          href={`/admin/trainers?hall=${initial.hallId}`}
-          className="rounded-xl border border-line px-5 py-3.5 font-semibold text-muted"
-        >
+        <Link href={`/admin/trainers?hall=${initial.hallId}`} className={btnDark}>
           {initial.id ? "К списку" : "Отмена"}
         </Link>
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex-1 rounded-xl bg-accent py-3.5 font-semibold text-accent-ink transition hover:brightness-95 disabled:opacity-60"
-        >
+        <button type="submit" disabled={pending} className={`${btnPrimary} flex-1`}>
           {pending ? "Сохраняем…" : initial.id ? "Сохранить" : "Добавить тренера"}
         </button>
       </div>

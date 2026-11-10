@@ -115,6 +115,33 @@ module.exports = {
       },
     },
     {
+      name: "clients-knows-no-one",
+      severity: "error",
+      comment:
+        "Клиенты — базовый модуль (этап 1, ADR 0016): вход, сессия и Согласие Клиента не зависят ни от одного модуля. " +
+        "Записи и Окна берут requireClient у него, а не наоборот; дата редакции Политики приходит из слоя приложения.",
+      from: { path: "^src/modules/clients/" },
+      to: { path: "^src/modules/(?!clients/)" },
+    },
+    {
+      name: "schedule-knows-only-owner",
+      severity: "error",
+      comment:
+        "Окна Тренера (этап 1, ADR 0017) знают только Аккаунт Владельца (requireOwner в админке). С Тренером связь — " +
+        "внешний ключ в базе, занятое время Записей передаёт слой приложения: Записи зависят от Окон, не наоборот.",
+      from: { path: "^src/modules/schedule/" },
+      to: { path: "^src/modules/(?!schedule/|owner/)" },
+    },
+    {
+      name: "bookings-on-top-of-entities",
+      severity: "error",
+      comment:
+        "Записи (этап 1, ADR 0017) стоят над Клиентами, Тренерами и Окнами: их не импортирует ни один модуль, кроме " +
+        "модулей поверх всех. Что нужно Окнам от Записей (занятое время), передаёт слой приложения.",
+      from: { path: "^src/modules/([^/]+)/", pathNot: "^src/modules/(bookings|home|legal)/" },
+      to: { path: "^src/modules/bookings/" },
+    },
+    {
       name: "top-modules",
       severity: "error",
       comment:

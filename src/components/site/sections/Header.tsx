@@ -6,6 +6,7 @@ import { NavLink } from "@/components/ui/NavLink";
 import { container, label } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
 import { logo } from "@/lib/brand";
+import { PersonSym } from "@/components/symbols";
 
 // Шапка
 export function Header({
@@ -15,6 +16,7 @@ export function Header({
   hasDirections = true,
   home = "",
   path = "",
+  cabinet = false,
 }: SectionProps & {
   /** Есть ли на странице блок Направлений */
   hasDirections?: boolean;
@@ -22,6 +24,12 @@ export function Header({
   home?: string;
   /** Страница внутри языка: переключатель языка ведёт на неё же («/privacy»), а не на главную */
   path?: string;
+  /**
+   * Есть ли кабинет Клиента (этап 1): кнопка «Кабинет» только там, где вход работает — в Лаборатории.
+   * На боевом сайте канала доставки кода нет, кнопки нет. Ссылка ведёт на /cabinet: вошедший попадает в «Мои записи»,
+   * остальных middleware отправит на вход. Страница статическая, поэтому сайт не знает, вошёл ли Посетитель.
+   */
+  cabinet?: boolean;
 }) {
   // Ссылки только на те Блоки, которые Владелец оставил на сайте
   const links = (["about", "directions", "prices", "trainers", "contacts"] as const)
@@ -66,6 +74,17 @@ export function Header({
               </span>
             ))}
           </div>
+          {cabinet && (
+            <Link
+              href={`/${locale}/cabinet`}
+              prefetch={false}
+              aria-label={t.nav.cabinet}
+              className={`${label} flex h-10 w-10 items-center justify-center gap-2 rounded-full border border-surface-border text-text-primary transition-colors hover:border-primary-container hover:text-primary-container md:h-auto md:w-auto md:rounded-sm md:px-4 md:py-2`}
+            >
+              <PersonSym className="h-5 w-5" />
+              <span className="hidden md:inline">{t.nav.cabinet}</span>
+            </Link>
+          )}
           <a
             href={whatsappUrl(s.contacts.whatsapp, t.wa.trial)}
             target="_blank"

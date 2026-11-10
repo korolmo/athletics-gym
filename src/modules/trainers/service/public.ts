@@ -13,3 +13,15 @@ export async function listVisibleTrainersWithTariffs() {
     include: { tariffs: { where: { isVisible: true }, orderBy: tariffsByOrder } },
   });
 }
+
+/** Тренер, к которому можно записаться: только видимый на сайте. Без сессии — для модуля Записи (этап 1). */
+export async function getBookableTrainer(id: string): Promise<{ id: string; name: string; hallId: string } | null> {
+  return db.trainer.findFirst({ where: { id, isVisible: true }, select: { id: true, name: true, hallId: true } });
+}
+
+/** Имена Тренеров по id — для «Моих Записей» (и скрытых: запись к ним уже сделана). Без сессии. */
+export async function getTrainerNames(ids: string[]): Promise<Record<string, string>> {
+  if (ids.length === 0) return {};
+  const rows = await db.trainer.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, name: true } });
+  return Object.fromEntries(rows.map((r) => [r.id, r.name]));
+}

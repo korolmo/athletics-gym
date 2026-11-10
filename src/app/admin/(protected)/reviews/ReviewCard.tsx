@@ -43,7 +43,7 @@ export function ReviewMeta({ r }: { r: AdminReview }) {
     r.fromVisitor ? "оставлен на сайте" : "добавлен вручную",
     r.consentAt ? `согласие на обработку данных: ${formatConsentRu(r.consentAt)}` : null,
   ].filter(Boolean);
-  return <div className="mt-0.5 text-xs text-muted">{parts.join(" · ")}</div>;
+  return <div className="mt-3 text-xs text-muted">{parts.join(" · ")}</div>;
 }
 
 export function StatusChip({ status }: { status: ReviewStatus }) {
@@ -64,8 +64,8 @@ export function StatusButtons({ r }: { r: AdminReview }) {
         type="submit"
         className={
           primary
-            ? "min-h-11 w-full rounded-xl bg-accent px-3 py-2.5 text-sm font-semibold text-accent-ink hover:brightness-95"
-            : "min-h-11 w-full rounded-xl border border-line px-3 py-2.5 text-sm font-semibold text-muted hover:text-fg"
+            ? "min-h-11 w-full rounded-xl bg-accent px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-accent-ink hover:brightness-95"
+            : "min-h-11 w-full rounded-xl bg-card-2 px-3 py-2.5 text-sm font-semibold text-fg hover:bg-line"
         }
       >
         {label}

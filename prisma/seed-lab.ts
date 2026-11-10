@@ -101,6 +101,11 @@ function contactClicks(now: Date) {
   return clicks;
 }
 
+const LAB_WORK_HOURS = [1, 2, 3, 4, 5, 6].flatMap((weekday) => [
+  { weekday, startMin: 9 * 60, endMin: 13 * 60 },
+  { weekday, startMin: 15 * 60, endMin: 21 * 60 },
+]);
+
 async function main() {
   if (process.env.APP_ENV !== "lab") {
     console.error("Отказ: seed Лаборатории работает только при APP_ENV=lab (npm run seed:lab берёт его из .env.lab).");
@@ -135,6 +140,7 @@ async function seed(login: string, password: string) {
   await db.contactClick.deleteMany();
   await db.review.deleteMany();
   await db.reviewSubmission.deleteMany();
+  await db.booking.deleteMany();
   await db.tariff.deleteMany();
   await db.trainer.deleteMany();
 
@@ -150,6 +156,9 @@ async function seed(login: string, password: string) {
         descriptionRu: tr.descriptionRu,
         sortOrder: i,
         tariffs: { create: tr.tariffs.map((t, j) => ({ ...t, hallId: tr.hall, sortOrder: j })) },
+        // Окна для записи в кабинете (этап 1): пн–сб 09:00–13:00 и 15:00–21:00, тренировка — час; вс — выходной
+        schedule: { create: { sessionMinutes: 60 } },
+        workHours: { create: LAB_WORK_HOURS },
       },
     });
   }

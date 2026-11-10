@@ -6,14 +6,14 @@
   --font-site: var(--font-onest), system-ui, sans-serif;
 }
 
-/* Админка */
+/* Админка — с 8 ноября 2026 в токенах сайта (docs/stages/admin-v2.md, решение 23) */
 @theme {
-  --color-bg: #141416;
+  --color-bg: #131315;
   --color-card: #1f1f23;
-  --color-card-2: #27272c;
-  --color-line: #313137;
+  --color-card-2: #2a2a2c;
+  --color-line: #2e2e33;
   --color-accent: #f5e642;
-  --color-accent-ink: #141416;
+  --color-accent-ink: #363100;
   --color-fg: #f4f4f5;
   --color-muted: #a1a1aa;
   --color-wa: #25d366;
@@ -109,7 +109,8 @@ html[data-lab] body {
   padding-top: var(--lab-bar);
 }
 html[data-lab] [data-site-header],
-html[data-lab] [data-admin-header] {
+html[data-lab] [data-admin-header],
+html[data-lab] [data-cabinet-header] {
   top: var(--lab-bar);
 }
 html[data-lab] section[id] {
@@ -430,4 +431,11 @@ main ~ footer {
   #gallery .group:hover img {
     scale: 1.04;
   }
+}
+
+/* Новая админка (docs/stages/admin-v2.md, решение 23): весь текст — Onest, как на сайте. Страницы админки по-прежнему
+   пишут font-display и font-sans — здесь обе переменные указывают на Onest, без правки каждой страницы. */
+html[data-admin] {
+  --font-inter: var(--font-onest);
+  --font-oswald: var(--font-onest);
 }
