@@ -385,11 +385,11 @@ main ~ footer {
   pointer-events: none;
   background: radial-gradient(
     closest-side,
-    rgb(245 230 66 / 0.17) 0%,
-    rgb(245 230 66 / 0.15) 25%,
-    rgb(245 230 66 / 0.09) 50%,
-    rgb(245 230 66 / 0.03) 75%,
-    rgb(245 230 66 / 0) 100%
+    color-mix(in srgb, var(--color-primary-container) 17%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary-container) 15%, transparent) 25%,
+    color-mix(in srgb, var(--color-primary-container) 9%, transparent) 50%,
+    color-mix(in srgb, var(--color-primary-container) 3%, transparent) 75%,
+    transparent 100%
   );
 }
 
@@ -419,7 +419,7 @@ main ~ footer {
     translate: 0 -4px;
     box-shadow:
       0 0 0 1px var(--color-primary-container),
-      0 14px 34px -14px rgb(245 230 66 / 0.4);
+      0 14px 34px -14px color-mix(in srgb, var(--color-primary-container) 40%, transparent);
   }
   [data-slot="frame"] img,
   #gallery figure img,

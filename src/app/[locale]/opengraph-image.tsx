@@ -60,7 +60,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
         {/* eslint-disable-next-line @next/next/no-img-element -- next/og рисует картинку сам, компонент Image здесь не работает */}
         <img src={logoSrc} alt="" width={300} height={300} />
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: 4, color: "#f5e642", textTransform: "uppercase" }}>{t.seo.kicker}</div>
+          <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: 4, color: club.accentColor, textTransform: "uppercase" }}>{t.seo.kicker}</div>
           <div style={{ display: "flex", fontSize: 84, fontWeight: 800, lineHeight: 1.05, marginTop: 14, textTransform: "uppercase" }}>{club.name}</div>
           <div style={{ display: "flex", fontSize: 44, fontWeight: 800, marginTop: 18 }}>{t.seo.tagline}</div>
           <div style={{ display: "flex", fontSize: 30, fontWeight: 500, marginTop: 30, color: "#a1a1aa", maxWidth: 640 }}>
