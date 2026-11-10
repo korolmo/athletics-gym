@@ -5,7 +5,7 @@ import { siteIcons } from "@/lib/brand";
 import { getDictionary } from "@/lib/i18n";
 import { isLab } from "@/lib/lab";
 import { LabBanner } from "@/components/LabBanner";
-import { getClubOnce } from "@/app/brand";
+import { accentStyle, getClubOnce } from "@/app/brand";
 import { DEFAULT_CLUB } from "@/modules/club/client";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,9 +14,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `Админка — ${club.name}`, robots: { index: false, follow: false }, icons: { icon: siteIcons.small } };
 }
 
-export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminRootLayout({ children }: { children: React.ReactNode }) {
+  // Админка в цвете Клуба — тот же акцент, что на сайте (этап П1)
+  const accent = await accentStyle();
   return (
-    <html lang="ru" className={fontVars} data-admin="" data-lab={isLab() ? "" : undefined}>
+    <html lang="ru" className={fontVars} data-admin="" data-lab={isLab() ? "" : undefined} style={accent}>
       <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
         {isLab() && <LabBanner texts={getDictionary("ru").lab} path="/ru" />}
         {children}

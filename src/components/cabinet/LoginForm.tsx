@@ -171,7 +171,7 @@ function CodeStep({
     return () => clearInterval(id);
   }, []);
 
-  const boxTone = hasError && !first ? "border-[#ef4444]" : first ? "border-primary-container/70 shadow-[0_0_12px_rgba(245,230,66,0.18)]" : "border-surface-border";
+  const boxTone = hasError && !first ? "border-[#ef4444]" : first ? "border-primary-container/70 shadow-[0_0_12px_color-mix(in_srgb,var(--color-primary-container)_18%,transparent)]" : "border-surface-border";
 
   return (
     <>
