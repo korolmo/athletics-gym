@@ -447,3 +447,30 @@ model OutboxEvent {
 
   @@index([status, nextAttemptAt])
 }
+
+/// Клуб (этап П1, ADR 0018): название, город, бренд и пояс — данные, а не код. Пока одна строка (id «club»);
+/// на П2 строк станет больше, а остальные сущности получат ссылку на Клуб. Начальные значения — Athletic's Gym,
+/// их вносит миграция один в один с прежними константами кода.
+model Club {
+  id               String   @id @default("club")
+  name             String
+  cityRu           String
+  cityKk           String?
+  /// Описание для поисковиков и превью ссылок
+  seoDescriptionRu String   @db.Text
+  seoDescriptionKk String?  @db.Text
+  /// Год открытия — для подписи «С 2022 года»; пусто — подпись без года
+  foundedYear      Int?
+  /// Цвет акцента, #rrggbb; цвет текста на нём выбирает правило домена
+  accentColor      String
+  /// Логотип: путь к Фото в хранилище; пусто — монограмма или логотип из public/
+  logoPhoto        String?
+  twoGisUrl        String?
+  twoGisReviewsUrl String?
+  twoGisRouteUrl   String?  @db.Text
+  latitude         Float?
+  longitude        Float?
+  /// IANA-пояс; в админке не меняется — смена пояса сдвигает Записи (П2)
+  timeZone         String
+  updatedAt        DateTime @updatedAt
+}

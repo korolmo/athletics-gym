@@ -115,6 +115,15 @@ module.exports = {
       },
     },
     {
+      name: "club-knows-no-one",
+      severity: "error",
+      comment:
+        "Клуб — базовый модуль (этап П1, ADR 0018): название, город, бренд и пояс нужны всем, поэтому сам он не " +
+        "импортирует ни один модуль, кроме Аккаунта Владельца (requireOwner для формы «Клуб»).",
+      from: { path: "^src/modules/club/" },
+      to: { path: "^src/modules/(?!club/|owner/)" },
+    },
+    {
       name: "clients-knows-no-one",
       severity: "error",
       comment:
