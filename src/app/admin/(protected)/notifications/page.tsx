@@ -1,5 +1,5 @@
 import { requireOwner } from "@/modules/owner";
-import { countPending, listProblemEvents, resolveSender } from "@/modules/notifications";
+import { countPending, deliveryStats, listProblemEvents, resolveSender } from "@/modules/notifications";
 import { EVENT_LABEL_RU, MAX_ATTEMPTS, whenLabel } from "@/modules/notifications/client";
 import { Chip, Empty, Notice, PageHead, btnDark, btnPrimary, card } from "../../ui";
 import { resolveEventAction, retryEventAction } from "./actions";
@@ -13,7 +13,7 @@ const fmt = (d: Date) =>
 
 export default async function NotificationsPage() {
   await requireOwner();
-  const [events, pending] = await Promise.all([listProblemEvents(requireOwner), countPending(requireOwner)]);
+  const [events, pending, stats] = await Promise.all([listProblemEvents(requireOwner), countPending(requireOwner), deliveryStats(requireOwner)]);
   const connected = resolveSender() !== null;
   const dead = events.filter((e) => e.status === "DEAD").length;
 
@@ -74,10 +74,40 @@ export default async function NotificationsPage() {
         </ul>
       )}
 
+      <section className={`${card} mt-6`} aria-labelledby="stats-title">
+        <h2 id="stats-title" className="text-xs font-bold uppercase tracking-wider text-muted">
+          За 7 дней
+        </h2>
+        <dl className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Stat label="Событий" value={String(stats.total)} />
+          <Stat label="Дошли за 5 минут" value={stats.onTimeShare === null ? "—" : `${Math.round(stats.onTimeShare * 100)}%`} />
+          <Stat label="Не доставлено" value={String(stats.dead)} />
+          <Stat label="Дольше всего" value={stats.slowestMs === null ? "—" : lagLabel(stats.slowestMs)} />
+        </dl>
+      </section>
+
       <p className={`${card} mt-6 text-sm text-muted`}>
-        Уведомления повторяются сами: каждые 5 минут, с растущей паузой между попытками. После {MAX_ATTEMPTS} неудачных попыток уведомление
+        Уведомления повторяются сами, с растущей паузой между попытками (от минуты до часа). После {MAX_ATTEMPTS} неудачных попыток уведомление
         попадает сюда.
       </p>
     </div>
   );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="mt-1 text-2xl font-bold">{value}</dd>
+    </div>
+  );
+}
+
+/** «12 с», «4 мин», «2 ч 5 мин». */
+function lagLabel(ms: number): string {
+  const sec = Math.round(ms / 1000);
+  if (sec < 60) return `${sec} с`;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min} мин`;
+  return `${Math.floor(min / 60)} ч ${min % 60} мин`;
 }

@@ -60,3 +60,45 @@ export const EVENT_LABEL_RU: Record<OutboxEventType, string> = {
   "booking.created": "Новая запись",
   "booking.cancelled": "Отмена записи",
 };
+
+// ——— Сводка доставки (решение 20 этапа 1: доля доставленных за 5 минут и недоставленные за неделю) ———
+
+/** Окно сводки — неделя, как неделя этапа в Лаборатории. */
+export const STATS_WINDOW_MS = 7 * 24 * 60 * 60_000;
+/** «Вовремя» — не позже 5 минут от события до отправки. */
+export const ON_TIME_MS = 5 * 60_000;
+
+export type DeliveryRow = { status: string; createdAt: Date; sentAt: Date | null };
+export type DeliveryStats = {
+  total: number;
+  sent: number;
+  /** Отправлено не позже ON_TIME_MS после события. */
+  onTime: number;
+  pending: number;
+  dead: number;
+  resolved: number;
+  /** Доля вовремя среди событий окна, кроме ждущих моложе ON_TIME_MS: у них срок ещё не вышел. Нет событий — null. */
+  onTimeShare: number | null;
+  /** Самая долгая доставка за окно, мс. */
+  slowestMs: number | null;
+};
+
+export function summarizeDelivery(rows: DeliveryRow[], now: Date): DeliveryStats {
+  const s: DeliveryStats = { total: rows.length, sent: 0, onTime: 0, pending: 0, dead: 0, resolved: 0, onTimeShare: null, slowestMs: null };
+  let counted = 0;
+  for (const r of rows) {
+    if (r.status === "SENT") s.sent++;
+    else if (r.status === "DEAD") s.dead++;
+    else if (r.status === "RESOLVED") s.resolved++;
+    else s.pending++;
+    if (r.status === "PENDING" && now.getTime() - r.createdAt.getTime() < ON_TIME_MS) continue;
+    counted++;
+    if (r.status === "SENT" && r.sentAt) {
+      const lag = r.sentAt.getTime() - r.createdAt.getTime();
+      if (lag <= ON_TIME_MS) s.onTime++;
+      s.slowestMs = Math.max(s.slowestMs ?? 0, lag);
+    }
+  }
+  s.onTimeShare = counted > 0 ? s.onTime / counted : null;
+  return s;
+}
