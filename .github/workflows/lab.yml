@@ -94,12 +94,17 @@ jobs:
       - name: Deploy
         id: deploy
         if: steps.token.outputs.skip != 'true'
+        env:
+          # Секрет отправщика уведомлений (outbox.yml → /api/cron/outbox): один источник — секреты GitHub,
+          # в Vercel он передаётся при выкатке; руками в переменные проекта его не кладём
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           # Проект — только из VERCEL_PROJECT_ID: старый athletics-gym сюда не попадёт ни при каких настройках
           test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
           # production — база athletics из переменных проекта; превью — только своя база pr_<номер>
           PROD=""; DB=()
           if [ "${{ github.event_name }}" = "push" ]; then PROD="--prod"; else DB=(--env "DATABASE_URL=$PREVIEW_DATABASE_URL"); fi
+          if [ -n "$CRON_SECRET" ]; then DB+=(--env "CRON_SECRET=$CRON_SECRET"); fi
           URL=$(npx --yes vercel@50.4.9 deploy $PROD --yes --token "$VERCEL_TOKEN" "${DB[@]}" \
             --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
