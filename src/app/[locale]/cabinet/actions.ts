@@ -1,6 +1,5 @@
 "use server";
 
-import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { currentIpHash } from "@/lib/ip-hash";
 import { getCabinetDictionary, isLocale, type Locale } from "@/lib/i18n";
@@ -24,11 +23,11 @@ import { cancelMyBooking, cancelMyFutureBookings, createBooking, parseBookingFor
 import { getBookableTrainer } from "@/modules/trainers";
 import { listWindows, sessionMinutesOf } from "@/modules/schedule";
 import { fill } from "@/components/cabinet/format";
-import { deliverPending, resolveSender } from "@/modules/notifications";
+import { kickOutbox } from "@/app/outbox-kick";
 
-/** Уведомление Владельцу — сразу после ответа Клиенту, не задерживая его; не ушло — заберёт отправщик по расписанию. */
+/** Уведомление Владельцу — сразу после ответа Клиенту, не задерживая его; не ушло — заберёт попутная отправка. */
 function notifyOwnerSoon(): void {
-  after(() => deliverPending(resolveSender()).catch((e) => logError("Очередь уведомлений: отправка после ответа не удалась.", e)));
+  kickOutbox({ force: true });
 }
 
 // Действия кабинета Клиента (этап 1). Тонкие: разбор формы и правила — в модулях Клиенты, Записи, Окна.
