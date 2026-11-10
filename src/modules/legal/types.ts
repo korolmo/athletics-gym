@@ -29,6 +29,11 @@ export type LegalContext = {
   legal: SiteContent["legal"];
   /** Адрес и телефон зала */
   contacts: Pick<SiteContent["contacts"], "address" | "phoneTel" | "phoneDisplay">;
+  /**
+   * Работает ли на этом сайте личный кабинет Клиента (этап 1). Документы описывают только то, что сайт делает:
+   * в Лаборатории кабинет есть — есть и его разделы; на боевом сайте его нет, пока Владелец не решит выкатить.
+   */
+  cabinet?: boolean;
 };
 
 export const p = (...parts: Inline[]): LegalBlock => ({ p: parts });

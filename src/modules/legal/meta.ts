@@ -11,8 +11,8 @@ export type LegalPageId = (typeof LEGAL_PAGES)[number];
  * Отсюда её берут страница, sitemap и Отзыв: с ним сохраняется дата редакции Политики, с которой согласился Посетитель.
  */
 export const LEGAL_UPDATED: Record<LegalPageId, string> = {
-  privacy: "2026-10-15",
-  terms: "2026-10-12",
+  privacy: "2026-11-10",
+  terms: "2026-11-10",
 };
 
 /** Раздел Политики конфиденциальности про cookie: на него ведёт «Подробнее» в плашке. */

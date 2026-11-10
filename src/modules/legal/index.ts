@@ -14,8 +14,13 @@ import type { Inline, LegalContext, LegalDoc } from "./types";
 export * from "./meta";
 export type { Inline, LegalBlock, LegalContext, LegalDoc, LegalSection } from "./types";
 
-export function legalContext(locale: Locale, t: Pick<Dictionary, "contacts">, s: Pick<SiteContent, "legal" | "contacts">): LegalContext {
-  return { locale, siteName: site.name, city: t.contacts.city, legal: s.legal, contacts: s.contacts };
+export function legalContext(
+  locale: Locale,
+  t: Pick<Dictionary, "contacts">,
+  s: Pick<SiteContent, "legal" | "contacts">,
+  cabinet = false,
+): LegalContext {
+  return { locale, siteName: site.name, city: t.contacts.city, legal: s.legal, contacts: s.contacts, cabinet };
 }
 
 export function legalDoc(page: LegalPageId, c: LegalContext): LegalDoc {
