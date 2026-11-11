@@ -1,4 +1,4 @@
-import { isAuthed } from "@/modules/owner";
+import { currentRole } from "@/modules/owner";
 import { MAX_FILE_BYTES, basePhotoPath, checkQuota, formatMegabytes, sniffImageType, typeOfPath } from "@/modules/photos";
 import { MediaFileExists, StorageNotConfigured, disk, storageDriver } from "@/modules/photos";
 import { logError } from "@/lib/observability/log";
@@ -50,7 +50,10 @@ function sameOrigin(request: Request): boolean {
 export async function PUT(request: Request, { params }: { params: Promise<{ path: string[] }> }): Promise<Response> {
   if (storageDriver() !== "local") return fail(404, "Загрузка на диск выключена.");
   if (!sameOrigin(request)) return fail(403, "Запрос не со страницы админки.");
-  if (!(await isAuthed())) return fail(401, "Сессия закончилась. Войдите в админку заново.");
+  const role = await currentRole();
+  if (role === null) return fail(401, "Сессия закончилась. Войдите в админку заново.");
+  // Гость демо-админки (этап П1) Фото не загружает: загруженное сразу видно на публичном сайте
+  if (role !== "owner") return fail(403, "В демо недоступно.");
 
   const rel = (await params).path.join("/");
   const expected = typeOfPath(rel);

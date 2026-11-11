@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { login, type LoginState } from "../actions";
+import { login, loginAsGuest, type LoginState } from "../actions";
 import { AlertIcon, ArrowRightIcon, EyeIcon, UserIcon } from "@/components/icons";
 import { ClubLogo } from "@/components/ui/ClubLogo";
 import type { LogoView } from "@/modules/club/client";
@@ -27,8 +27,9 @@ function ShieldIcon({ className }: { className?: string }) {
   );
 }
 
-export function LoginForm({ clubName, city, logo }: { clubName: string; city: string; logo: LogoView }) {
+export function LoginForm({ clubName, city, logo, guest = false }: { clubName: string; city: string; logo: LogoView; guest?: boolean }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);
+  const [guestState, guestAction, guestPending] = useActionState<LoginState>(loginAsGuest, undefined);
   const [show, setShow] = useState(false);
 
   return (
@@ -81,6 +82,21 @@ export function LoginForm({ clubName, city, logo }: { clubName: string; city: st
             </p>
           )}
         </form>
+
+        {/* Гость демо-админки (этап П1, ADR 0019): только в Лаборатории — меняет бренд и тексты, правки сбрасываются в 04:00 */}
+        {guest && (
+          <form action={guestAction} className="mt-4">
+            <button type="submit" disabled={guestPending} className="w-full rounded-xl border border-line bg-card-2 py-3.5 font-bold text-fg transition hover:bg-line disabled:opacity-60">
+              {guestPending ? "Входим…" : "Войти как гость"}
+            </button>
+            <p className="mt-2 text-center text-xs text-muted">Демо: без пароля, на 2 часа. Правки видят все, в 04:00 всё вернётся как было.</p>
+            {guestState?.error && (
+              <p role="alert" className="mt-2 rounded-xl border border-danger/50 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
+                {guestState.error}
+              </p>
+            )}
+          </form>
+        )}
 
         <p className="mt-8 flex items-center justify-center gap-2 border-t border-line pt-6 text-sm text-muted">
           <ShieldIcon className="h-4 w-4" />

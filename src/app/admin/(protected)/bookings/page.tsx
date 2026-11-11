@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireOwner } from "@/modules/owner";
+import { isGuest, requireOwner } from "@/modules/owner";
 import { listBookingsForOwner } from "@/modules/bookings";
 import { getClientContacts, formatPhone } from "@/modules/clients";
 import { getTrainerNames, listTrainers } from "@/modules/trainers";
@@ -37,6 +37,8 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 
   const bookings = await listBookingsForOwner(zonedToUtc(day, 0), zonedToUtc(addDays(day, 1), 0), hall);
+  // Гость демо-админки (этап П1) номеров Клиентов не получает даже для кнопки WhatsApp
+  const guest = await isGuest();
   const [contacts, names, trainers] = await Promise.all([
     getClientContacts(bookings.flatMap((b) => (b.clientId ? [b.clientId] : [])), requireOwner),
     getTrainerNames(bookings.flatMap((b) => (b.trainerId ? [b.trainerId] : []))),
@@ -64,7 +66,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
             b.status === "CANCELLED" ? (b.cancelledBy === "owner" ? "cancelledByOwner" : "cancelledByClient") : b.endAt <= now ? "past" : "active",
           clientName: c?.name ?? "Клиент удалил аккаунт",
           phoneMasked: c ? maskPhone(c.phone) : null,
-          whatsapp: c ? c.phone.replace(/\D/g, "") : null,
+          whatsapp: c && !guest ? c.phone.replace(/\D/g, "") : null,
           trainerName: col.name,
           hallName: HALL_NAME[b.hallId] ?? b.hallId,
           dayLabel: `${WD[weekdayOf(day) - 1].charAt(0)}${WD[weekdayOf(day) - 1].slice(1).toLowerCase()}, ${dayLabel(day)}`,

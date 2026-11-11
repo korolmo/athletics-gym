@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/modules/owner";
+import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { parseTrainerForm } from "@/modules/trainers";
@@ -24,7 +24,7 @@ export async function saveTrainer(_prev: TrainerFormState, fd: FormData): Promis
 }
 
 export async function deleteTrainer(fd: FormData): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   const place = await trainers.deleteTrainer(text(fd, "id"));
   revalidateSite();
   redirect(`/admin/trainers?hall=${place?.hallId ?? "general"}&deleted=1`);

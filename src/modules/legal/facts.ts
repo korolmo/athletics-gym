@@ -2,7 +2,7 @@
 // поменяли срок или лимит в коде — текст документа изменится сам, а не разойдётся с сайтом.
 
 import { ATTEMPT_KEEP_MS } from "@/modules/owner/client";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/modules/owner/client";
+import { GUEST_SESSION_MAX_AGE_SEC, SESSION_COOKIE, SESSION_MAX_AGE_SEC } from "@/modules/owner/client";
 import { MAX_SUBMISSIONS, REVIEW_LIMITS, SUBMISSION_KEEP_MS } from "@/modules/reviews/client";
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 import {
@@ -32,6 +32,8 @@ export const LEGAL_FACTS = {
   localeCookieYears: LOCALE_COOKIE_MAX_AGE_SEC / (365 * DAY_SEC),
   sessionCookie: SESSION_COOKIE,
   sessionCookieDays: SESSION_MAX_AGE_SEC / DAY_SEC,
+  /** Гость демо-админки (этап П1): та же cookie сессии, на столько часов */
+  guestSessionHours: GUEST_SESSION_MAX_AGE_SEC / 3600,
   // Личный кабинет Клиента (этап 1)
   clientCookie: CLIENT_SESSION_COOKIE,
   clientCookieDays: CLIENT_SESSION_MAX_AGE_SEC / DAY_SEC,

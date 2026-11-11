@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/modules/owner";
+import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { parseTariffForm } from "@/modules/tariffs";
@@ -31,7 +31,7 @@ export async function saveTariff(_prev: TariffFormState, fd: FormData): Promise<
 }
 
 export async function deleteTariff(fd: FormData): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   const place = await tariffs.deleteTariff(text(fd, "id"));
   revalidateSite();
   redirect(backTo(place, "deleted"));

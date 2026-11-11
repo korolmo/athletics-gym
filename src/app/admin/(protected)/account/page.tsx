@@ -1,4 +1,4 @@
-import { getAccountLogin } from "@/modules/owner";
+import { GUEST_LOCKED, getAccountLogin, isGuest } from "@/modules/owner";
 import { UserIcon } from "@/components/icons";
 import { CardTitle, Notice, PageHead, card } from "../../ui";
 import { LogoutEverywhereButton, PasswordForm } from "./AccountForms";
@@ -9,11 +9,16 @@ export const dynamic = "force-dynamic";
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ changed?: string }> }) {
   const { changed } = await searchParams;
-  const login = await getAccountLogin();
+  const [login, guest] = await Promise.all([getAccountLogin(), isGuest()]);
 
   return (
     <div className="mx-auto max-w-2xl">
       <PageHead title="Аккаунт" subtitle="Вход Владельца в админку" />
+      {guest && (
+        <div className="mb-6">
+          <Notice tone="error">{GUEST_LOCKED}: пароль и выход на всех устройствах меняет только Владелец.</Notice>
+        </div>
+      )}
 
       {changed && (
         <div className="mb-6">

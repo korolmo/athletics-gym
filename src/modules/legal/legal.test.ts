@@ -295,9 +295,9 @@ describe("политика говорит то же, что делает код"
     );
   });
 
-  it("дата редакции обоих документов — 10 ноября 2026 (личный кабинет); дата Политики записывается в Отзыв", () => {
-    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-11-10", terms: "2026-11-10" });
-    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^10 ноября 2026/);
+  it("дата редакции: Политика — 11 ноября 2026 (гостевой вход), Соглашение — 10 ноября; дата Политики записывается в Отзыв", () => {
+    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-11-11", terms: "2026-11-10" });
+    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^11 ноября 2026/);
     expect(build("privacy", "kk").updated).toBe(LEGAL_UPDATED.privacy);
     // Дату для Согласия Отзывы получают от действия сайта, а оно — из той же константы; своей копии нет нигде
     const action = fs.readFileSync("src/app/[locale]/actions.ts", "utf8");
@@ -380,5 +380,18 @@ describe("личный кабинет в документах (этап 1)", () 
     const kk = text(build("privacy", "kk", DEFAULT_SETTINGS, true));
     expect(kk).toContain(LEGAL_FACTS.clientCookie);
     expect(kk).toContain(`${LEGAL_FACTS.inactiveMonths} ай`);
+  });
+});
+
+describe("гостевой вход в демо-админку (этап П1, ADR 0019)", () => {
+  const withGuest = (locale: Locale, guestDemo: boolean) =>
+    text(legalDoc("privacy", legalContext(locale, dictionaries[locale], toSiteContent(locale, DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS), false, guestDemo)));
+
+  it("абзац — только где гостевой вход работает; срок — из кода", () => {
+    expect(withGuest("ru", false)).not.toContain("Войти как гость");
+    expect(withGuest("ru", true)).toContain("Войти как гость");
+    expect(withGuest("ru", true)).toContain(`на ${LEGAL_FACTS.guestSessionHours} часа`);
+    expect(withGuest("kk", false)).not.toContain("Қонақ ретінде кіру");
+    expect(withGuest("kk", true)).toContain("Қонақ ретінде кіру");
   });
 });

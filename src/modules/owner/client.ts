@@ -3,3 +3,4 @@
 export * from "./domain/session";
 export * from "./domain/password-policy";
 export * from "./domain/login-limit.rules";
+export * from "./domain/guest";
