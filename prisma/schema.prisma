@@ -479,3 +479,15 @@ model Club {
   timeZone         String
   updatedAt        DateTime @updatedAt
 }
+
+/// Суточный сброс демо-админки Лаборатории (этап П1, ADR 0019). Одна строка («lab»): снимок исходного состояния
+/// того, что может менять Гость (JSON по модулям), последний сброс и блокировка от двух сбросов одновременно.
+model DemoState {
+  id          String    @id @default("lab")
+  snapshot    String?   @db.LongText
+  snapshotAt  DateTime?
+  lastResetAt DateTime?
+  /// Сколько шёл последний сброс, мс — измерение этапа П1
+  lastResetMs Int?
+  lockedUntil DateTime?
+}

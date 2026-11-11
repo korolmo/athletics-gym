@@ -16,6 +16,7 @@ const LOCKED: Record<string, string[]> = {
   "(protected)/tariffs/actions.ts": ["deleteTariff"],
   "(protected)/trainers/actions.ts": ["deleteTrainer"],
   "(protected)/trainers/schedule-actions.ts": ["saveWorkWeekAction", "addTimeOffAction", "deleteTimeOffAction"],
+  "(protected)/site/actions.ts": ["takeDemoSnapshotAction"],
 };
 
 const dir = path.dirname(fileURLToPath(import.meta.url));

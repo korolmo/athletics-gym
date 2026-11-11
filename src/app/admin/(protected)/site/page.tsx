@@ -12,7 +12,9 @@ import { LEGAL_PAGES, legalPath } from "@/modules/legal/client";
 import { BLOCK_LABEL_RU, SETTINGS_FORM_LABEL_RU } from "@/modules/site/client";
 import { plural } from "@/lib/plural";
 import { PencilIcon } from "@/components/icons";
-import { toggleBlock } from "./actions";
+import { takeDemoSnapshotAction, toggleBlock } from "./actions";
+import { getDemoStatus } from "@/modules/demo";
+import { guestLoginEnabled, isGuest, requireOwner } from "@/modules/owner";
 import { Notice, PageHead, card } from "../../ui";
 
 export const dynamic = "force-dynamic";
@@ -33,9 +35,17 @@ const BLOCK_NOTE: Record<BlockId, string> = {
 const pencil =
   "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg text-accent hover:brightness-110";
 
-export default async function SitePage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
-  const { saved } = await searchParams;
-  const [{ settings }, club] = await Promise.all([getSettingsForEdit(), getClubForEdit()]);
+export default async function SitePage({ searchParams }: { searchParams: Promise<{ saved?: string; snapshot?: string }> }) {
+  const { saved, snapshot } = await searchParams;
+  const demo = guestLoginEnabled();
+  const [{ settings }, club, demoStatus, guest] = await Promise.all([
+    getSettingsForEdit(),
+    getClubForEdit(),
+    demo ? getDemoStatus(requireOwner) : null,
+    isGuest(),
+  ]);
+  const fmt = (d: Date | null) =>
+    d ? new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: club.timeZone }).format(d) : "ещё не было";
 
   return (
     <>
@@ -170,6 +180,35 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
           . Их текст меняется только вместе с сайтом.
         </p>
       </section>
+
+      {/* Суточный сброс демо-админки (этап П1, ADR 0019) — только где работает гостевой вход */}
+      {demoStatus && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-xl font-bold">Демо Лаборатории</h2>
+          {snapshot && (
+            <div className="mb-3">
+              <Notice tone="ok">Текущее состояние стало исходным: в 04:00 сайт вернётся к нему.</Notice>
+            </div>
+          )}
+          <div className={`${card} space-y-3`}>
+            <p className="text-sm text-muted">
+              Каждый день в 04:00 по времени Клуба Клуб, Настройки сайта, Тарифы, Тренеры, Направления, статусы Отзывов и Галерея
+              возвращаются к исходному снимку. Записи, Клиенты, уведомления и Обращения не трогаются.
+            </p>
+            <p className="text-sm">
+              Снимок: {fmt(demoStatus.snapshotAt)} · последний сброс: {fmt(demoStatus.lastResetAt)}
+              {demoStatus.lastResetMs !== null ? ` (${demoStatus.lastResetMs} мс)` : ""}
+            </p>
+            {!guest && (
+              <form action={takeDemoSnapshotAction}>
+                <button type="submit" className="rounded-xl bg-card-2 px-4 py-2 font-bold text-accent hover:bg-line">
+                  Сделать текущее состояние исходным
+                </button>
+              </form>
+            )}
+          </div>
+        </section>
+      )}
     </>
   );
 }

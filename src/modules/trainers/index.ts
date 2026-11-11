@@ -15,3 +15,4 @@ export {
 } from "./service/trainers";
 export { trainerPosterSlot } from "./service/poster";
 export { getBookableTrainer, getTrainerNames, listVisibleTrainersWithTariffs } from "./service/public";
+export { demoRestore as restoreTrainersDemo, demoSnapshot as snapshotTrainersDemo } from "./service/demo";

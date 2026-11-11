@@ -38,3 +38,4 @@ export {
   type StorageDriver,
 } from "./storage/client";
 export { mediaStatus, photoStorageHealth } from "./storage/status";
+export { demoRestore as restorePhotosDemo, demoSnapshot as snapshotPhotosDemo } from "./service/demo";

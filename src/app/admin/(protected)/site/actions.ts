@@ -17,6 +17,7 @@ import {
 import type { Parsed } from "@/lib/validation/shared";
 import * as settings from "@/modules/site";
 import { parseClubForm, saveClub as storeClub } from "@/modules/club";
+import { takeDemoSnapshot } from "@/modules/demo";
 
 // Действия — тонкие: права → валидация → сервис → обновить страницы и вернуть Владельца в список
 
@@ -79,4 +80,11 @@ export async function toggleBlock(fd: FormData): Promise<void> {
   const block = text(fd, "block");
   if (isBlock(block)) await settings.toggleBlock(block);
   revalidateSite();
+}
+
+/** «Сделать текущее состояние исходным» для суточного сброса демо Лаборатории (этап П1) — только Владелец. */
+export async function takeDemoSnapshotAction(): Promise<void> {
+  await requireRealOwner();
+  await takeDemoSnapshot(requireRealOwner);
+  redirect("/admin/site?snapshot=1");
 }
