@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, type ReactNode } from "react";
-import { logo } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
+import type { LogoView } from "@/modules/club/client";
 import { logout } from "../actions";
 import {
   AdsClickSym,
@@ -62,10 +62,19 @@ function Badge({ n, on }: { n: number; on?: boolean }) {
 }
 
 export function AdminShell({
+  clubName,
+  logo,
+  guest = false,
   newReviews,
   undelivered = 0,
   children,
 }: {
+  /** Название Клуба — подпись над меню (этап П1) */
+  clubName: string;
+  /** Логотип Клуба: картинка или монограмма */
+  logo: LogoView;
+  /** Вошёл Гость демо-админки (этап П1): плашка «Демо-режим» */
+  guest?: boolean;
   /** Сколько Отзывов ждут решения */
   newReviews: number;
   /** Сколько уведомлений о Записях не доставлено (плашка «Не доставлено: N», макет 19) */
@@ -85,9 +94,9 @@ export function AdminShell({
       <header data-admin-header className="sticky top-0 z-40 border-b border-line bg-bg/95 md:backdrop-blur">
         <div className="flex h-16 items-center justify-between gap-3 px-4 lg:h-[72px] lg:px-6">
           <Link href="/admin" className="flex min-w-0 items-center gap-3">
-            <Image src={logo} alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full" />
+            <ClubLogo logo={logo} size={36} className="h-9 w-9 shrink-0 rounded-full" />
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-accent">Athletic&apos;s · Admin</span>
+              <span className="truncate text-xs font-extrabold uppercase tracking-widest text-accent">{clubName} · Admin</span>
               <span className="truncate text-lg font-bold lg:hidden">{current?.label ?? "Админка"}</span>
               <span className="hidden text-lg font-bold lg:block">Админка</span>
             </span>
@@ -145,7 +154,20 @@ export function AdminShell({
         </aside>
 
         {/* Широкая область, как в макетах: узкие формы ограничивают ширину сами */}
-        <main className="mx-auto w-full min-w-0 max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12 lg:pt-8">{children}</main>
+        <main className="mx-auto w-full min-w-0 max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12 lg:pt-8">
+          {guest && (
+            <div role="status" className="mb-6 flex flex-col gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 sm:flex-row sm:items-center">
+              <p className="flex-1 text-sm">
+                <span className="font-bold">Демо-режим.</span> Ваши изменения видят все посетители Лаборатории; в 04:00 по времени Клуба всё вернётся как
+                было. Загрузка фото, аккаунт, удаление и Записи Клиентов — только у Владельца.
+              </p>
+              <a href="/ru" target="_blank" rel="noopener" className="shrink-0 rounded-xl bg-accent px-4 py-2 text-center font-bold text-accent-ink">
+                Открыть сайт ↗
+              </a>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
 
       <nav aria-label="Разделы" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg lg:hidden">

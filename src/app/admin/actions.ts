@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createSession, destroySession } from "@/modules/owner";
 import { checkLoginLimit, clearFailedLogins, recordFailedLogin } from "@/modules/owner";
 import { currentIpHash } from "@/lib/ip-hash";
-import { loginOwner } from "@/modules/owner";
+import { getOwnerSessionVersion, guestLoginEnabled, loginOwner } from "@/modules/owner";
 import { logError } from "@/lib/observability/log";
 
 export type LoginState = { error?: string } | undefined;
@@ -47,6 +47,25 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   if (!attempt.ok) return { error: attempt.error };
 
   await createSession(attempt.sessionVersion);
+  redirect("/admin");
+}
+
+/**
+ * «Войти как гость» (этап П1, ADR 0019): только в Лаборатории с GUEST_DEMO=1, без пароля, на 2 часа. Лимит попыток
+ * по адресу тот же, что у входа Владельца: заблокированный адрес и гостем не войдёт.
+ */
+export async function loginAsGuest(): Promise<LoginState> {
+  if (!guestLoginEnabled()) return { error: "Гостевой вход здесь не работает." };
+  try {
+    const limit = await checkLoginLimit(await currentIpHash());
+    if (limit.blocked) return { error: `Слишком много попыток входа. Попробуйте через ${limit.retryAfterMin} мин.` };
+    const version = await getOwnerSessionVersion();
+    if (version === null) return { error: UNAVAILABLE };
+    await createSession(version, "guest");
+  } catch (e) {
+    logError("Гостевой вход: база недоступна, вход отклонён.", e);
+    return { error: UNAVAILABLE };
+  }
   redirect("/admin");
 }
 

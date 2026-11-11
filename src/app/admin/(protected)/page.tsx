@@ -2,7 +2,8 @@ import { getContactStats } from "@/modules/contacts";
 import { CONTACT_CHANNEL_LABEL_RU, contactSourceLabelRu, formatDayRu } from "@/modules/contacts/client";
 import { CallSym, ChatSym, PhotoCameraSym, ScheduleSym } from "@/components/symbols";
 import { InfoSym } from "@/components/cabinet/icons";
-import { CardTitle, Empty, PageHead, card } from "../ui";
+import { CardTitle, Empty, Notice, PageHead, card } from "../ui";
+import { GUEST_LOCKED } from "@/modules/owner/client";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,8 @@ function pct(part: number, total: number): string {
   return total > 0 ? `${Math.round((part / total) * 100)}%` : "0%";
 }
 
-export default async function AdminHome() {
+export default async function AdminHome({ searchParams }: { searchParams: Promise<{ locked?: string }> }) {
+  const { locked } = await searchParams;
   const stats = await getContactStats();
   const peak = Math.max(1, ...stats.days.map((d) => d.count));
   const yesterday = stats.days.at(-2)?.count ?? 0;
@@ -46,6 +48,12 @@ export default async function AdminHome() {
   return (
     <>
       <PageHead title="Обращения" subtitle="Нажатия на кнопки связи на сайте · без персональных данных" />
+      {/* Гость демо-админки попал сюда из закрытого ему действия (requireRealOwner) */}
+      {locked && (
+        <div className="mb-6">
+          <Notice tone="error">{GUEST_LOCKED}: это может только Владелец.</Notice>
+        </div>
+      )}
 
       <section aria-label="Обращения по периодам" className="grid grid-cols-3 gap-3 lg:gap-5">
         {tiles.map((t, i) => (

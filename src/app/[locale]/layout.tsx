@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { siteFontVars } from "@/lib/fonts";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { accentStyle, getClubOnce, getLogos, getSiteDictionary } from "@/app/brand";
 import { buildMetadata, readSeoEnv } from "@/lib/seo";
-import { siteIcons } from "@/lib/brand";
 import { COOKIES_ANCHOR, legalPath } from "@/modules/legal/client";
 import { CookieNotice } from "@/components/site/CookieNotice";
 import { LabBanner } from "@/components/LabBanner";
@@ -23,9 +23,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  const t = getDictionary(locale);
+  const [t, club, logos] = await Promise.all([getSiteDictionary(locale), getClubOnce(), getLogos()]);
   // title и description — на языке страницы; canonical, hreflang, Open Graph и robots — по адресу и окружению деплоя
-  return buildMetadata(locale, t.seo, readSeoEnv(), siteIcons);
+  return buildMetadata(locale, t.seo, readSeoEnv(), logos.icons, "", club.name);
 }
 
 export default async function LocaleLayout({
@@ -38,9 +38,11 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const { cookie, lab } = getDictionary(locale);
+  // Цвет акцента Клуба (этап П1): переменные темы на <html>; начальный жёлтый — без них
+  const accent = await accentStyle();
   const demo = isLab();
   return (
-    <html lang={locale} className={siteFontVars} data-lab={demo ? "" : undefined}>
+    <html lang={locale} className={siteFontVars} data-lab={demo ? "" : undefined} style={accent}>
       <body className="bg-background font-site text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">
         {/* Лаборатория: плашка «демо-версия» на всех страницах; на боевом сайте её нет */}
         {demo && <LabBanner texts={lab} path={`/${locale}`} />}

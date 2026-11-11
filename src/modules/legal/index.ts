@@ -5,7 +5,6 @@
 import type { Dictionary } from "@/dictionaries/ru";
 import type { Locale } from "@/lib/i18n";
 import type { SiteContent } from "@/modules/site/client";
-import { site } from "@/lib/site";
 import type { LegalPageId } from "./meta";
 import { privacyDoc } from "./privacy";
 import { termsDoc } from "./terms";
@@ -16,27 +15,28 @@ export type { Inline, LegalBlock, LegalContext, LegalDoc, LegalSection } from ".
 
 export function legalContext(
   locale: Locale,
-  t: Pick<Dictionary, "contacts">,
+  t: Pick<Dictionary, "contacts" | "brand">,
   s: Pick<SiteContent, "legal" | "contacts">,
   cabinet = false,
+  guestDemo = false,
 ): LegalContext {
-  return { locale, siteName: site.name, city: t.contacts.city, legal: s.legal, contacts: s.contacts, cabinet };
+  return { locale, siteName: t.brand.name, city: t.contacts.city, legal: s.legal, contacts: s.contacts, cabinet, guestDemo };
 }
 
 export function legalDoc(page: LegalPageId, c: LegalContext): LegalDoc {
   return page === "privacy" ? privacyDoc(c) : termsDoc(c);
 }
 
-/** Заголовок и описание страницы для поисковиков: от Настроек сайта они не зависят. */
-export function legalHead(page: LegalPageId, locale: Locale): { title: string; description: string } {
+/** Заголовок и описание страницы для поисковиков: от Настроек сайта они не зависят; название — Клуба. */
+export function legalHead(page: LegalPageId, locale: Locale, siteName: string): { title: string; description: string } {
   const doc = legalDoc(page, {
     locale,
-    siteName: site.name,
+    siteName,
     city: "",
     legal: { name: "", bin: "", address: "", email: "", dataLocation: "" },
     contacts: { address: "", phoneTel: "", phoneDisplay: "" },
   });
-  return { title: `${doc.title} — ${site.name}`, description: doc.description };
+  return { title: `${doc.title} — ${siteName}`, description: doc.description };
 }
 
 /** Дата редакции на языке страницы: «11 октября 2026 г.» */

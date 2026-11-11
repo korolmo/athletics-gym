@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createSession, destroySession } from "@/modules/owner";
 import { checkLoginLimit, recordFailedLogin } from "@/modules/owner";
 import { currentIpHash } from "@/lib/ip-hash";
-import { requireOwner } from "@/modules/owner";
+import { requireRealOwner } from "@/modules/owner";
 import { parsePasswordChangeForm } from "@/modules/owner";
 import * as account from "@/modules/owner";
 
@@ -15,7 +15,7 @@ export type PasswordFormState = { error?: string } | undefined;
  * чтобы с чужой открытой сессии нельзя было подбирать пароль без ограничений.
  */
 export async function changePassword(_prev: PasswordFormState, fd: FormData): Promise<PasswordFormState> {
-  await requireOwner();
+  await requireRealOwner();
   const parsed = parsePasswordChangeForm(fd);
   if (!parsed.ok) return { error: parsed.error };
 
@@ -36,7 +36,7 @@ export async function changePassword(_prev: PasswordFormState, fd: FormData): Pr
 
 /** «Выйти на всех устройствах»: гасит все сессии, включая эту. */
 export async function logoutEverywhere(): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   await account.revokeAllSessions();
   await destroySession();
   redirect("/admin/login");

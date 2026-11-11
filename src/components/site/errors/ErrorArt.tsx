@@ -1,6 +1,10 @@
 // Рисунок страницы 404 — линии жёлтым по макету Stitch: блин штанги вместо нуля. Только украшение: код ошибки назван текстом в плашке над рисунком.
 
+import { DEFAULT_CLUB } from "@/modules/club/client";
+
 const Y = "#F5E642";
+/** Надпись на блине — первое слово названия Клуба; страница без базы, поэтому Клуб начальный (решение 20 этапа П1). */
+const PLATE = DEFAULT_CLUB.name.split(" ")[0].toUpperCase();
 
 /** `id` — своё у каждого рисунка на странице: у 404 их два (ru и kk), и ссылка на градиент скрытой версии не рисуется. */
 export function Art404({ id }: { id: string }) {
@@ -33,7 +37,7 @@ export function Art404({ id }: { id: string }) {
         <circle r="12" fill={Y} />
         <path d="M-80 0h24M56 0h24M0 -80v24M0 56v24" stroke={Y} strokeWidth="1.5" opacity="0.6" />
         <text y="-30" textAnchor="middle" className="font-site" fontSize="10" fontWeight="800" letterSpacing="1.5" fill={Y}>
-          ATHLETIC&apos;S
+          {PLATE}
         </text>
         <text y="40" textAnchor="middle" className="font-site" fontSize="12" fontWeight="800" letterSpacing="1.5" fill="#E5E1E4">
           25 KG

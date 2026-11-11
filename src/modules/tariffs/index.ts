@@ -15,4 +15,5 @@ export {
   type TrainerHallLookup,
 } from "./service/tariffs";
 export { listPricePosters, pricePosterSlot } from "./service/price-poster";
-export { listPricePosterUrls, listVisibleHallTariffs } from "./service/public";
+export { listHallLogos, listPricePosterUrls, listVisibleHallTariffs } from "./service/public";
+export { demoRestore as restoreTariffsDemo, demoSnapshot as snapshotTariffsDemo } from "./service/demo";

@@ -5,6 +5,7 @@ import { LOCALE_COOKIE as COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale
 import { REQUEST_ID_HEADER, REQUEST_START_HEADER, requestIdFrom } from "@/lib/observability/log";
 import { MAINTENANCE_RETRY_AFTER_SEC, isMaintenance } from "@/lib/maintenance";
 import { offlinePage } from "@/lib/errors/offline-page";
+import { OFFLINE_BRAND } from "@/app/offline-brand";
 
 const LOCALES = ["ru", "kk"];
 
@@ -30,7 +31,7 @@ function next(req: NextRequest, id: string): NextResponse {
  * Не переписывание адреса с кодом: такой ответ Vercel подменяет своей страницей платформы (ADR 0013).
  */
 function maintenance(): NextResponse {
-  return new NextResponse(offlinePage("maintenance"), {
+  return new NextResponse(offlinePage(OFFLINE_BRAND, "maintenance"), {
     status: 503,
     headers: { "Content-Type": "text/html; charset=utf-8", "Retry-After": String(MAINTENANCE_RETRY_AFTER_SEC), "Cache-Control": "no-store" },
   });

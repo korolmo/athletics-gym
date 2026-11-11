@@ -1,15 +1,15 @@
 import Image, { getImageProps } from "next/image";
-import { site, whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/site";
 import { mottoWords } from "@/modules/site/client";
 import { CountNumber, CountText } from "@/components/site/Count";
 import { ratingCountText } from "@/modules/site/client";
 import { AirSym, CallSym, FitnessCenterSym, LocationOnSym, ScheduleSym } from "@/components/symbols";
 import { container, label } from "@/components/ui/styles";
 import type { SectionProps } from "@/components/site/sections/types";
-import { logoWomen } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
 
 // Полоса с адресом и первый экран
-export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруженный Владельцем; пусто — картинка по умолчанию */ photo: string | null }) {
+export function Hero({ t, s, logos, photo }: SectionProps & { /** Фон, загруженный Владельцем; пусто — картинка по умолчанию */ photo: string | null }) {
   const motto = mottoWords(s.hero.title);
   // Карточки «О зале» 3 и 4 (кондиционеры и режим) повторяются на первом экране
   const stats = [
@@ -43,7 +43,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
               {s.contacts.phoneDisplay}
             </a>
             <a
-              href={site.twoGisReviews}
+              href={t.brand.twoGisReviews}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-sm bg-surface-card px-2.5 py-0.5 text-[12px] text-on-surface"
@@ -58,7 +58,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
         <div className={`${container} grid grid-cols-1 items-center gap-8 lg:grid-cols-12`}>
           <div className="z-10 flex flex-col items-start gap-4 lg:col-span-7">
             <a
-              href={site.twoGisReviews}
+              href={t.brand.twoGisReviews}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-surface-card px-3.5 py-1.5 shadow-xs"
@@ -138,13 +138,7 @@ export function Hero({ t, s, photo }: SectionProps & { /** Фон, загруж�
               <div className="absolute inset-0 bg-linear-to-t from-background via-surface-dim/40 to-transparent" />
               {s.show.women && (
                 <div className="absolute right-4 top-4 flex items-center gap-3 rounded-xl bg-surface-card/95 px-3.5 py-2 shadow-lg md:bg-surface-card/90 md:backdrop-blur-md">
-                  <Image
-                    src={logoWomen}
-                    alt=""
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 rounded-full bg-background object-contain p-1"
-                  />
+                  <ClubLogo logo={logos.women} size={40} className="h-10 w-10 rounded-full bg-background object-contain p-1" />
                   <div className="flex flex-col">
                     <span className={`${label} text-primary-container`}>{t.women.title}</span>
                     <span className="text-body-sm font-bold text-text-primary">{s.about[1].title}</span>

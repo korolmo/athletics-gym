@@ -49,6 +49,8 @@ model Hall {
   nameRu      String
   nameKk      String?
   sortOrder   Int       @default(0)
+  /// Логотип Зала (этап П1): «/…» — файл из public/, «gallery/…» — Фото; пусто — логотип Клуба
+  logo        String?
   /// Плакат прайса: путь к Фото в хранилище; пусто — плаката на сайте нет
   pricePoster String?
   tariffs     Tariff[]
@@ -446,4 +448,46 @@ model OutboxEvent {
   sentAt        DateTime?
 
   @@index([status, nextAttemptAt])
+}
+
+/// Клуб (этап П1, ADR 0018): название, город, бренд и пояс — данные, а не код. Пока одна строка (id «club»);
+/// на П2 строк станет больше, а остальные сущности получат ссылку на Клуб. Начальные значения — Athletic's Gym,
+/// их вносит миграция один в один с прежними константами кода.
+model Club {
+  id               String   @id @default("club")
+  name             String
+  cityRu           String
+  cityKk           String?
+  /// «В каком городе» для заголовков: «в Кызылорде», «Қызылордадағы» — склонение не вычисляем
+  cityInRu         String   @default("")
+  cityInKk         String?
+  /// Описание для поисковиков и превью ссылок
+  seoDescriptionRu String   @db.Text
+  seoDescriptionKk String?  @db.Text
+  /// Год открытия — для подписи «С 2022 года»; пусто — подпись без года
+  foundedYear      Int?
+  /// Цвет акцента, #rrggbb; цвет текста на нём выбирает правило домена
+  accentColor      String
+  /// Логотип: «/…» — файл из public/, «gallery/…» — загруженное Фото, пусто — монограмма из названия
+  logo             String?
+  twoGisUrl        String?
+  twoGisReviewsUrl String?
+  twoGisRouteUrl   String?  @db.Text
+  latitude         Float?
+  longitude        Float?
+  /// IANA-пояс; в админке не меняется — смена пояса сдвигает Записи (П2)
+  timeZone         String
+  updatedAt        DateTime @updatedAt
+}
+
+/// Суточный сброс демо-админки Лаборатории (этап П1, ADR 0019). Одна строка («lab»): снимок исходного состояния
+/// того, что может менять Гость (JSON по модулям), последний сброс и блокировка от двух сбросов одновременно.
+model DemoState {
+  id          String    @id @default("lab")
+  snapshot    String?   @db.LongText
+  snapshotAt  DateTime?
+  lastResetAt DateTime?
+  /// Сколько шёл последний сброс, мс — измерение этапа П1
+  lastResetMs Int?
+  lockedUntil DateTime?
 }

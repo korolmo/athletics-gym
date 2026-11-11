@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { BATCH, LEASE_MS, MAX_ATTEMPTS, backoffMs, messageText, parseEvent, type BookingEvent, type OutboxEventType } from "../domain/outbox";
+import { BATCH, LEASE_MS, MAX_ATTEMPTS, STATS_WINDOW_MS, backoffMs, messageText, parseEvent, summarizeDelivery } from "../domain/outbox";
+import type { BookingEvent, DeliveryStats, OutboxEventType } from "../domain/outbox";
 import type { Sender } from "./telegram";
 import { log } from "@/lib/observability/log";
 
@@ -112,4 +113,14 @@ export async function retryEvent(id: string, ensureOwner: () => Promise<void>, n
 export async function resolveEvent(id: string, ensureOwner: () => Promise<void>): Promise<void> {
   await ensureOwner();
   await db.outboxEvent.updateMany({ where: { id, status: { in: ["DEAD", "PENDING"] } }, data: { status: "RESOLVED" } });
+}
+
+/** Сводка доставки за неделю — для раздела «Уведомления» и итогов этапа (доля вовремя, недоставленные). */
+export async function deliveryStats(ensureOwner: () => Promise<void>, now: Date = new Date()): Promise<DeliveryStats> {
+  await ensureOwner();
+  const rows = await db.outboxEvent.findMany({
+    where: { createdAt: { gte: new Date(now.getTime() - STATS_WINDOW_MS) } },
+    select: { status: true, createdAt: true, sentAt: true },
+  });
+  return summarizeDelivery(rows, now);
 }

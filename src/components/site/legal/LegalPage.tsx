@@ -4,7 +4,6 @@ import { Footer, Header } from "@/components/site/sections";
 import type { SectionProps } from "@/components/site/sections/types";
 import { container, eyebrow, h2, label } from "@/components/ui/styles";
 import { LEGAL_PAGES, formatLegalDate, legalPath, type Inline, type LegalDoc, type LegalPageId } from "@/modules/legal";
-import { site } from "@/lib/site";
 
 const link = "text-primary-container underline underline-offset-2 transition-colors hover:text-text-primary";
 
@@ -29,17 +28,17 @@ function Text({ parts }: { parts: Inline[] }) {
  * Шапка и подвал — те же, что на главной (их ссылки ведут на главную); текст — колонкой читаемой ширины,
  * вверху дата редакции и оглавление. Движения и нижней панели на телефоне здесь нет.
  */
-export function LegalPage({ locale, t, s, doc, page, cabinet = false }: SectionProps & { doc: LegalDoc; page: LegalPageId; cabinet?: boolean }) {
+export function LegalPage({ locale, t, s, logos, doc, page, cabinet = false }: SectionProps & { doc: LegalDoc; page: LegalPageId; cabinet?: boolean }) {
   const home = `/${locale}`;
   const other = LEGAL_PAGES.filter((p) => p !== page);
   return (
     <>
       <ContactTracker locale={locale} />
-      <Header locale={locale} t={t} s={s} home={home} path={`/${page}`} hasDirections={false} cabinet={cabinet} />
+      <Header locale={locale} t={t} s={s} logos={logos} home={home} path={`/${page}`} hasDirections={false} cabinet={cabinet} />
       <main className="w-full bg-background pt-16 md:pt-20">
         <article className={`${container} py-10`}>
           <div className="mx-auto max-w-[70ch]">
-            <div className={eyebrow}>{site.name}</div>
+            <div className={eyebrow}>{t.brand.name}</div>
             <h1 className={h2}>{doc.title}</h1>
             <p className="mt-2 text-body-sm text-text-muted">{t.legal.updated.replace("{date}", formatLegalDate(locale, doc.updated))}</p>
             <p className="mt-6 text-body-lg text-on-surface-variant">
@@ -98,7 +97,7 @@ export function LegalPage({ locale, t, s, doc, page, cabinet = false }: SectionP
           </div>
         </article>
       </main>
-      <Footer locale={locale} t={t} s={s} home={home} bar={false} cabinet={cabinet} />
+      <Footer locale={locale} t={t} s={s} logos={logos} home={home} bar={false} cabinet={cabinet} />
     </>
   );
 }

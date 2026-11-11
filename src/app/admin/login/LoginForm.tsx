@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useActionState, useState } from "react";
-import { login, type LoginState } from "../actions";
+import { login, loginAsGuest, type LoginState } from "../actions";
 import { AlertIcon, ArrowRightIcon, EyeIcon, UserIcon } from "@/components/icons";
-import { logo } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
+import type { LogoView } from "@/modules/club/client";
 import { btnPrimary, field, label } from "../ui";
 
 // Вход в админку — по макету Stitch А1 (design/stitch/admin/a1-vhod-desktop.png). «Запомнить вход» из макета нет:
@@ -27,15 +27,16 @@ function ShieldIcon({ className }: { className?: string }) {
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ clubName, city, logo, guest = false }: { clubName: string; city: string; logo: LogoView; guest?: boolean }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);
+  const [guestState, guestAction, guestPending] = useActionState<LoginState>(loginAsGuest, undefined);
   const [show, setShow] = useState(false);
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-line bg-card px-6 py-8 shadow-2xl sm:px-10 sm:py-10">
         <div aria-hidden="true" className="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-accent/70 to-transparent" />
-        <Image src={logo} alt="Athletic's Gym" width={80} height={80} className="mx-auto rounded-full ring-4 ring-bg" priority />
+        <ClubLogo logo={logo} alt={clubName} size={80} className="mx-auto rounded-full ring-4 ring-bg" priority />
         <h1 className="mt-5 text-center text-2xl font-extrabold">Вход в админку</h1>
         <p className="mt-1 text-center text-sm text-muted">Панель управления клубом</p>
 
@@ -82,12 +83,29 @@ export function LoginForm() {
           )}
         </form>
 
+        {/* Гость демо-админки (этап П1, ADR 0019): только в Лаборатории — меняет бренд и тексты, правки сбрасываются в 04:00 */}
+        {guest && (
+          <form action={guestAction} className="mt-4">
+            <button type="submit" disabled={guestPending} className="w-full rounded-xl border border-line bg-card-2 py-3.5 font-bold text-fg transition hover:bg-line disabled:opacity-60">
+              {guestPending ? "Входим…" : "Войти как гость"}
+            </button>
+            <p className="mt-2 text-center text-xs text-muted">Демо: без пароля, на 2 часа. Правки видят все, в 04:00 всё вернётся как было.</p>
+            {guestState?.error && (
+              <p role="alert" className="mt-2 rounded-xl border border-danger/50 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
+                {guestState.error}
+              </p>
+            )}
+          </form>
+        )}
+
         <p className="mt-8 flex items-center justify-center gap-2 border-t border-line pt-6 text-sm text-muted">
           <ShieldIcon className="h-4 w-4" />
-          Только для владельца Athletic&apos;s Gym
+          Только для владельца {clubName}
         </p>
       </div>
-      <p className="mt-6 text-sm text-muted">Athletic&apos;s Gym · Кызылорда</p>
+      <p className="mt-6 text-sm text-muted">
+        {clubName} · {city}
+      </p>
     </main>
   );
 }

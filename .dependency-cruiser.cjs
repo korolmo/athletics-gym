@@ -115,6 +115,15 @@ module.exports = {
       },
     },
     {
+      name: "club-knows-no-one",
+      severity: "error",
+      comment:
+        "Клуб — базовый модуль (этап П1, ADR 0018): название, город, бренд и пояс нужны всем, поэтому сам он не " +
+        "импортирует ни один модуль, кроме Аккаунта Владельца (requireOwner для формы «Клуб»).",
+      from: { path: "^src/modules/club/" },
+      to: { path: "^src/modules/(?!club/|owner/)" },
+    },
+    {
       name: "clients-knows-no-one",
       severity: "error",
       comment:
@@ -147,18 +156,18 @@ module.exports = {
       comment:
         "Записи (этап 1, ADR 0017) стоят над Клиентами, Тренерами и Окнами: их не импортирует ни один модуль, кроме " +
         "модулей поверх всех. Что нужно Окнам от Записей (занятое время), передаёт слой приложения.",
-      from: { path: "^src/modules/([^/]+)/", pathNot: "^src/modules/(bookings|home|legal)/" },
+      from: { path: "^src/modules/([^/]+)/", pathNot: "^src/modules/(bookings|home|legal|demo)/" },
       to: { path: "^src/modules/bookings/" },
     },
     {
       name: "top-modules",
       severity: "error",
       comment:
-        "Модули поверх остальных: Главная (собирает все модули) и Юридические документы (числа в текстах — из правил " +
+        "Модули поверх остальных: Главная (собирает все модули), Демо (суточный сброс Лаборатории, этап П1) и Юридические документы (числа в текстах — из правил " +
         "модулей). Их не импортирует ни один другой модуль: что им нужно от остальных, они берут сами, а что нужно " +
         "остальным от них (дата редакции Политики для Согласия) — передаёт слой приложения.",
-      from: { path: "^src/modules/([^/]+)/", pathNot: "^src/modules/(home|legal)/" },
-      to: { path: "^src/modules/(home|legal)/" },
+      from: { path: "^src/modules/([^/]+)/", pathNot: "^src/modules/(home|legal|demo)/" },
+      to: { path: "^src/modules/(home|legal|demo)/" },
     },
   ],
 

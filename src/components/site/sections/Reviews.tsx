@@ -1,4 +1,3 @@
-import { site } from "@/lib/site";
 import { ratingCountText } from "@/modules/site/client";
 import { OpenInNewSym } from "@/components/symbols";
 import { container, label, sectionY } from "@/components/ui/styles";
@@ -13,7 +12,7 @@ export function Reviews({ locale, t, s, reviews }: SectionProps & { reviews: Rev
   const empty = reviews.length === 0;
   const rating = (
     <a
-      href={site.twoGisReviews}
+      href={t.brand.twoGisReviews}
       target="_blank"
       rel="noopener noreferrer"
       // В заголовке Блока рейтинг — отдельная плашка. Без Отзывов он лежит внутри карточки с кнопкой:

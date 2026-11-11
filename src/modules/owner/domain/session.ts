@@ -3,6 +3,11 @@
 
 export const SESSION_COOKIE = "ag_admin";
 export const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7;
+/** Сессия Гостя демо-админки (этап П1, ADR 0019) — 2 часа. */
+export const GUEST_SESSION_MAX_AGE_SEC = 60 * 60 * 2;
+
+/** Кто вошёл: Владелец или Гость демо-админки (только Лаборатория). */
+export type SessionRole = "owner" | "guest";
 
 /** Что лежит в действующем токене. */
 export type Session = {
@@ -12,6 +17,8 @@ export type Session = {
    */
   version: number;
   expiresAt: number;
+  /** Нет в токене — Владелец: токены, выданные до П1, остаются действующими */
+  role: SessionRole;
 };
 
 const encoder = new TextEncoder();
@@ -36,9 +43,9 @@ function fromHex(hex: string): Uint8Array<ArrayBuffer> | null {
   return out;
 }
 
-/** Токен вида `admin.<срок в мс>.v<версия>.<подпись>`: версия входит в подпись. */
-export async function signSession(secret: string | undefined, session: Session): Promise<string> {
-  const payload = `admin.${session.expiresAt}.v${session.version}`;
+/** Токен вида `admin.<срок в мс>.v<версия>[.guest].<подпись>`: версия и роль входят в подпись. */
+export async function signSession(secret: string | undefined, session: Omit<Session, "role"> & { role?: SessionRole }): Promise<string> {
+  const payload = `admin.${session.expiresAt}.v${session.version}${session.role === "guest" ? ".guest" : ""}`;
   const signature = await crypto.subtle.sign("HMAC", await hmacKey(assertSecret(secret), "sign"), encoder.encode(payload));
   return `${payload}.${toHex(signature)}`;
 }
@@ -60,7 +67,7 @@ export async function readSession(
   const signature = fromHex(token.slice(dot + 1));
   if (!signature) return null;
 
-  const match = /^admin\.(\d+)\.v(\d+)$/.exec(payload);
+  const match = /^admin\.(\d+)\.v(\d+)(\.guest)?$/.exec(payload);
   if (!match) return null;
 
   const ok = await crypto.subtle.verify("HMAC", await hmacKey(assertSecret(secret), "verify"), signature, encoder.encode(payload));
@@ -69,5 +76,5 @@ export async function readSession(
   const expiresAt = Number(match[1]);
   const version = Number(match[2]);
   if (!Number.isSafeInteger(expiresAt) || !Number.isSafeInteger(version) || expiresAt <= now) return null;
-  return { version, expiresAt };
+  return { version, expiresAt, role: match[3] ? "guest" : "owner" };
 }

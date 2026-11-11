@@ -5,7 +5,7 @@ import { MapPanel } from "@/components/site/contacts/MapPanel";
 import type { SectionProps } from "@/components/site/sections/types";
 
 // Контакты
-export function Contacts({ t, s }: SectionProps) {
+export function Contacts({ t, s, logos }: SectionProps) {
   const c = s.contacts;
   // Подпись «WhatsApp» под телефоном — только если это один и тот же номер
   const phoneNote = c.phoneTel === `+${c.whatsapp}` ? t.cta.whatsapp : "";
@@ -58,6 +58,8 @@ export function Contacts({ t, s }: SectionProps) {
           {/* Карта грузится только по нажатию «Показать карту»: до него сайт к сервису карты не обращается */}
           <MapPanel
             labels={{ show: t.contacts.showMap, open2gis: t.contacts.open2gis, note: t.contacts.mapNote, route: t.contacts.route, mapTitle: t.contacts.mapTitle }}
+            brand={t.brand}
+            logo={logos.club}
             address={c.address}
             city={t.contacts.city}
             rating={s.rating.value}

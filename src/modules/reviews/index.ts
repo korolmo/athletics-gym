@@ -27,3 +27,4 @@ export {
   setReviewStatus,
 } from "./service/reviews";
 export { issueFormToken, readFormToken } from "./service/form-token";
+export { demoRestore as restoreReviewsDemo, demoSnapshot as snapshotReviewsDemo } from "./service/demo";

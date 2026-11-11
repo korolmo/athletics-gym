@@ -1,14 +1,13 @@
 import Image from "next/image";
-import { site } from "@/lib/site";
 import { container, label, sectionY } from "@/components/ui/styles";
 import { DemoBadge } from "@/components/ui/DemoBadge";
 import { SectionHead } from "@/components/ui/SectionHead";
 import type { SectionProps } from "@/components/site/sections/types";
-import { logo } from "@/lib/brand";
+import { ClubLogo } from "@/components/ui/ClubLogo";
 import { GalleryGrid, type GalleryView } from "@/components/site/halls/GalleryGrid";
 
 // Галерея: фото, которые загрузил Владелец. Пока их нет — две картинки из макета (сгенерированы, поэтому с пометкой «ДЕМО»)
-export function Gallery({ t, s, photos }: SectionProps & { photos: GalleryView[] }) {
+export function Gallery({ t, s, logos, photos }: SectionProps & { photos: GalleryView[] }) {
   const own = photos.length > 0;
   const tiles = [
     { src: "/stitch/gallery-cardio.jpg", span: "md:col-span-8", sizes: "(min-width: 1280px) 820px, (min-width: 768px) 66vw, 100vw", item: s.about[2] },
@@ -23,9 +22,9 @@ export function Gallery({ t, s, photos }: SectionProps & { photos: GalleryView[]
           badge={own ? undefined : <DemoBadge label={t.gallery.demo} />}
           aside={
             <div className="flex items-center gap-3">
-              <Image src={logo} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
+              <ClubLogo logo={logos.club} size={40} className="h-10 w-10 object-contain" />
               <div className="flex flex-col">
-                <span className={`${label} text-text-primary`}>{site.name}</span>
+                <span className={`${label} text-text-primary`}>{t.brand.name}</span>
                 <span className="text-body-sm text-text-muted">{t.contacts.city}</span>
               </div>
             </div>

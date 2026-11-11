@@ -6,14 +6,14 @@ import { listVisibleDirections } from "@/modules/directions";
 import { toDirectionViews } from "@/modules/directions/client";
 import { isSafeSourceUrl } from "@/modules/reviews/client";
 import { buildGymJsonLd, jsonLdScript, readSeoEnv } from "@/lib/seo";
-import { site } from "@/lib/site";
-import { logoIconUrl } from "@/lib/brand";
+import { getClubOnce, getSiteDictionary, logosFor } from "@/app/brand";
+import { listHallLogos } from "@/modules/tariffs";
 import { ContactTracker } from "@/components/site/ContactTracker";
 import { Motion } from "@/components/site/Motion";
 import { mediaUrl } from "@/modules/photos";
 import { resolveCodeChannel } from "@/modules/clients";
 import { toSiteContent } from "@/modules/site/client";
-import { getDictionary, isLocale, pick, type Locale } from "@/lib/i18n";
+import { isLocale, pick, type Locale } from "@/lib/i18n";
 import {
   About,
   Contacts,
@@ -69,7 +69,7 @@ function toTariffView(locale: Locale, x: TariffRow): TariffView {
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  const t = getDictionary(locale);
+  const [t, club] = await Promise.all([getSiteDictionary(locale), getClubOnce()]);
 
   const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos, publishedReviews, directionRows] = await Promise.all([
     getPriceListAndTrainers(),
@@ -92,7 +92,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     tariffs: tr.tariffs.map((x) => toTariffView(locale, x)),
   }));
 
-  const props = { locale, t, s };
+  const logos = logosFor(club, await listHallLogos());
+  const props = { locale, t, s, logos };
   // Кнопка «Кабинет» — только где вход работает (Лаборатория); на боевом сайте канала доставки кода нет
   const cabinet = resolveCodeChannel() !== null;
   const directions = toDirectionViews(locale, directionRows, mediaUrl);
@@ -100,12 +101,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const jsonLd = buildGymJsonLd({
     siteUrl: readSeoEnv().siteUrl,
     locale,
-    name: site.name,
+    name: club.name,
     description: t.seo.description,
     city: t.contacts.city,
-    coords: site.coords,
-    logoPath: logoIconUrl.split("?")[0],
-    extraLinks: [site.twoGis],
+    coords: club.latitude !== null && club.longitude !== null ? { lat: club.latitude, lng: club.longitude } : null,
+    logoPath: logos.jsonLdPath,
+    extraLinks: club.twoGisUrl ? [club.twoGisUrl] : [],
     content: s,
   });
   // Отзывы: текст — как написан, на обоих языках; дата — на языке страницы

@@ -11,6 +11,7 @@ vi.mock("@/lib/services/health", () => ({ getReadiness: readiness, getHealth: he
 vi.mock("@/modules/photos", () => ({ photoStorageHealth: {} }));
 vi.mock("@/modules/owner", () => ({ isAuthed: authed, requireOwner: vi.fn(async () => {}) }));
 vi.mock("@/app/outbox-kick", () => ({ kickOutbox: vi.fn(() => false) }));
+vi.mock("@/app/demo-reset-kick", () => ({ kickDemoReset: vi.fn(() => false) }));
 
 import { GET as detailed } from "./route";
 import { GET as live } from "./live/route";

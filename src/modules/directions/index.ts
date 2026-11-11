@@ -15,3 +15,4 @@ export {
   toggleDirection,
 } from "./service/directions";
 export { directionPhotoSlot } from "./service/photo-slot";
+export { demoRestore as restoreDirectionsDemo, demoSnapshot as snapshotDirectionsDemo } from "./service/demo";

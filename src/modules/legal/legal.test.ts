@@ -12,7 +12,12 @@ import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE_SEC } from "@/lib/locale-cookie";
 import { LEGAL_FACTS, ruPlural } from "./facts";
 import { COOKIES_ANCHOR, LEGAL_PAGES, LEGAL_UPDATED, formatLegalDate, legalContext, legalDoc, legalDocText, legalHead, legalPath, type LegalDoc } from "./index";
 
-const dictionaries = { ru, kk };
+import { fillBrand } from "@/lib/brand-text";
+import { DEFAULT_CLUB, clubTextVars } from "@/modules/club/client";
+
+// Вымышленный Клуб: тексты документов берут название и город из Клуба, а не из кода (этап П1)
+const CLUB = { ...DEFAULT_CLUB, name: "Iron Club", cityRu: "Алматы", cityKk: "Алматы", cityInRu: "в Алматы", cityInKk: "Алматыдағы" };
+const dictionaries = { ru: fillBrand(ru, clubTextVars(CLUB, "ru", ru.brand.since)), kk: fillBrand(kk, clubTextVars(CLUB, "kk", kk.brand.since)) };
 const requisites = {
   legalName: "ИП Иванов Иван Иванович",
   legalBin: "880101300123",
@@ -70,8 +75,8 @@ describe("страницы privacy и terms на обоих языках", () =>
   });
 
   it("заголовок страницы для поисковиков — название документа и зала, от Настроек сайта не зависит", () => {
-    expect(legalHead("privacy", "ru")).toEqual({ title: "Политика конфиденциальности — Athletic's Gym", description: build("privacy", "ru").description });
-    expect(legalHead("terms", "kk").title).toBe(`${build("terms", "kk").title} — Athletic's Gym`);
+    expect(legalHead("privacy", "ru", CLUB.name)).toEqual({ title: "Политика конфиденциальности — Iron Club", description: build("privacy", "ru").description });
+    expect(legalHead("terms", "kk", CLUB.name).title).toBe(`${build("terms", "kk").title} — Iron Club`);
   });
 });
 
@@ -123,7 +128,8 @@ describe("реквизиты и контакты — из Настроек са�
     expect(text(doc)).not.toMatch(/ИИН\/БИН|ЖСН\/БСН|mailto|@/);
     expect(hrefs(doc).some((h) => h.startsWith("mailto:"))).toBe(false);
     // Кто отвечает за сайт и как связаться, сказано и без реквизитов
-    expect(text(doc)).toContain("Athletic's Gym");
+    expect(text(doc)).toContain("Iron Club");
+    expect(text(doc)).not.toContain("Athletic");
     expect(hrefs(doc)).toContain(`tel:${DEFAULT_SETTINGS.phone}`);
   });
 
@@ -289,9 +295,9 @@ describe("политика говорит то же, что делает код"
     );
   });
 
-  it("дата редакции обоих документов — 10 ноября 2026 (личный кабинет); дата Политики записывается в Отзыв", () => {
-    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-11-10", terms: "2026-11-10" });
-    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^10 ноября 2026/);
+  it("дата редакции: Политика — 11 ноября 2026 (гостевой вход), Соглашение — 10 ноября; дата Политики записывается в Отзыв", () => {
+    expect(LEGAL_UPDATED).toEqual({ privacy: "2026-11-11", terms: "2026-11-10" });
+    expect(formatLegalDate("ru", LEGAL_UPDATED.privacy)).toMatch(/^11 ноября 2026/);
     expect(build("privacy", "kk").updated).toBe(LEGAL_UPDATED.privacy);
     // Дату для Согласия Отзывы получают от действия сайта, а оно — из той же константы; своей копии нет нигде
     const action = fs.readFileSync("src/app/[locale]/actions.ts", "utf8");
@@ -374,5 +380,18 @@ describe("личный кабинет в документах (этап 1)", () 
     const kk = text(build("privacy", "kk", DEFAULT_SETTINGS, true));
     expect(kk).toContain(LEGAL_FACTS.clientCookie);
     expect(kk).toContain(`${LEGAL_FACTS.inactiveMonths} ай`);
+  });
+});
+
+describe("гостевой вход в демо-админку (этап П1, ADR 0019)", () => {
+  const withGuest = (locale: Locale, guestDemo: boolean) =>
+    text(legalDoc("privacy", legalContext(locale, dictionaries[locale], toSiteContent(locale, DEFAULT_SETTINGS, DEFAULT_ABOUT_CARDS), false, guestDemo)));
+
+  it("абзац — только где гостевой вход работает; срок — из кода", () => {
+    expect(withGuest("ru", false)).not.toContain("Войти как гость");
+    expect(withGuest("ru", true)).toContain("Войти как гость");
+    expect(withGuest("ru", true)).toContain(`на ${LEGAL_FACTS.guestSessionHours} часа`);
+    expect(withGuest("kk", false)).not.toContain("Қонақ ретінде кіру");
+    expect(withGuest("kk", true)).toContain("Қонақ ретінде кіру");
   });
 });

@@ -3,14 +3,18 @@ import { join } from "node:path";
 import { notFound } from "next/navigation";
 import { ImageResponse } from "next/og";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { fillBrand } from "@/lib/brand-text";
+import { brandVarsFor, getClubOnce, logosFor } from "@/app/brand";
+import { readSeoEnv } from "@/lib/seo";
+import { DEFAULT_CLUB } from "@/modules/club/client";
 import { getSiteSettings } from "@/modules/site";
 import { toSiteContent } from "@/modules/site/client";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "@/modules/site/client";
 
 // Картинка-превью для ссылок (Open Graph, Twitter, WhatsApp, Telegram): 1200×630, своя для /ru и /kk.
-// Логотип, название, город и адрес; адрес — из Настроек сайта.
+// Логотип, название, город и адрес; название и город — Клуба, адрес — из Настроек сайта. Подписи (alt) нет:
+// она была бы статической строкой, а название теперь меняется.
 
-export const alt = "Athletic's Gym";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 // Адрес меняет Владелец — картинку собираем по запросу, а не при сборке
@@ -26,17 +30,24 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
   // без языка (/api/opengraph-image, /_img/twitter-image)
   if (!isLocale(raw)) notFound();
   const locale: Locale = raw;
-  const t = getDictionary(locale);
-  // База недоступна — рисуем с начальным адресом: превью ссылки не должно ломаться
+  // База недоступна — рисуем с начальными Клубом и адресом: превью ссылки не должно ломаться
+  const club = await getClubOnce().catch(() => DEFAULT_CLUB);
+  const t = fillBrand(getDictionary(locale), brandVarsFor(club, locale));
   const { settings, cards } = await getSiteSettings().catch(() => ({ settings: DEFAULT_SETTINGS, cards: DEFAULT_ABOUT_CARDS }));
   const s = toSiteContent(locale, settings, cards);
 
-  const [logo, bold, medium] = await Promise.all([
-    asset("public/logo.png"),
-    asset("src/assets/fonts/Onest-ExtraBold.ttf"),
-    asset("src/assets/fonts/Onest-Medium.ttf"),
-  ]);
-  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
+  const [bold, medium] = await Promise.all([asset("src/assets/fonts/Onest-ExtraBold.ttf"), asset("src/assets/fonts/Onest-Medium.ttf")]);
+  // Логотип Клуба (этап П1): прежний файл — с диска (он в outputFileTracingIncludes), Фото — по адресу сайта,
+  // монограмма — рисуется здесь же
+  const view = logosFor(club).club;
+  const logoSrc =
+    view.kind !== "image"
+      ? null
+      : view.src.startsWith("/media/")
+        ? new URL(view.src, readSeoEnv().siteUrl).toString()
+        : view.src.split("?")[0] === "/logo.png"
+          ? `data:image/png;base64,${(await asset("public/logo.png")).toString("base64")}`
+          : new URL(view.src, readSeoEnv().siteUrl).toString();
 
   return new ImageResponse(
     (
@@ -53,11 +64,17 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
           fontFamily: "Onest",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- next/og рисует картинку сам, компонент Image здесь не работает */}
-        <img src={logoSrc} alt="" width={300} height={300} />
+        {logoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element -- next/og рисует картинку сам, компонент Image здесь не работает
+          <img src={logoSrc} alt="" width={300} height={300} />
+        ) : view.kind === "monogram" ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 300, height: 300, borderRadius: 150, background: view.bg, color: view.fg, fontSize: view.text.length > 1 ? 120 : 156, fontWeight: 800 }}>
+            {view.text}
+          </div>
+        ) : null}
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: 4, color: "#f5e642" }}>{t.seo.kicker}</div>
-          <div style={{ display: "flex", fontSize: 84, fontWeight: 800, lineHeight: 1.05, marginTop: 14 }}>ATHLETIC&apos;S GYM</div>
+          <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: 4, color: club.accentColor, textTransform: "uppercase" }}>{t.seo.kicker}</div>
+          <div style={{ display: "flex", fontSize: 84, fontWeight: 800, lineHeight: 1.05, marginTop: 14, textTransform: "uppercase" }}>{club.name}</div>
           <div style={{ display: "flex", fontSize: 44, fontWeight: 800, marginTop: 18 }}>{t.seo.tagline}</div>
           <div style={{ display: "flex", fontSize: 30, fontWeight: 500, marginTop: 30, color: "#a1a1aa", maxWidth: 640 }}>
             {t.contacts.city} · {s.contacts.address}

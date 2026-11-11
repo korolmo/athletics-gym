@@ -1,3 +1,4 @@
+import { isGuest } from "@/modules/owner";
 import Image from "next/image";
 import Link from "next/link";
 import { isStorageConfigured, listGallery, mediaStatus, mediaUrl } from "@/modules/photos";
@@ -40,7 +41,8 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
     listTrainers("general"),
     listTrainers("women"),
   ]);
-  const off = !isStorageConfigured();
+  // Хранилище не настроено или вошёл Гость демо-админки (этап П1): загрузка закрыта
+  const off = !isStorageConfigured() || (await isGuest());
   const visible = gallery.filter((p) => p.isVisible).length;
   const used = typeof status.usedMb === "number" ? status.usedMb : null;
   const quota = typeof status.quotaMb === "number" ? status.quotaMb : null;

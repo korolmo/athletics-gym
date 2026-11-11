@@ -69,7 +69,7 @@ const OG_LOCALE: Record<Locale, string> = { ru: "ru_KZ", kk: "kk_KZ" };
 
 /**
  * Метаданные страницы на одном языке: title, description, canonical, hreflang, Open Graph, Twitter, robots.
- * `path` — страница внутри языка: «» — главная, «/privacy», «/terms».
+ * `path` — страница внутри языка: «» — главная, «/privacy», «/terms». `siteName` — название Клуба (Open Graph).
  */
 export function buildMetadata(
   locale: Locale,
@@ -77,6 +77,7 @@ export function buildMetadata(
   env: SeoEnv,
   icons: { readonly small: string; readonly large: string; readonly apple: string },
   path = "",
+  siteName = "",
 ): Metadata {
   const url = `${env.siteUrl}/${locale}${path}`;
   const indexable = isIndexable(env.deployEnv);
@@ -89,7 +90,7 @@ export function buildMetadata(
     openGraph: {
       type: "website",
       url,
-      siteName: "Athletic's Gym",
+      siteName,
       title: text.title,
       description: text.description,
       locale: OG_LOCALE[locale],
@@ -165,8 +166,10 @@ export function buildGymJsonLd(input: {
   name: string;
   description: string;
   city: string;
-  coords: { lat: number; lng: number };
-  logoPath: string;
+  /** Точка на карте; нет — без geo */
+  coords: { lat: number; lng: number } | null;
+  /** Логотип (путь от корня сайта); монограмма — без логотипа */
+  logoPath: string | null;
   extraLinks: string[];
   content: SeoSiteContent;
 }): Record<string, unknown> {
@@ -180,7 +183,7 @@ export function buildGymJsonLd(input: {
     description: input.description,
     url: `${siteUrl}/${locale}`,
     inLanguage: locale,
-    logo: `${siteUrl}${input.logoPath}`,
+    ...(input.logoPath ? { logo: `${siteUrl}${input.logoPath}` } : {}),
     image: `${siteUrl}/${locale}/opengraph-image`,
     telephone: content.contacts.phoneTel,
     address: {
@@ -189,7 +192,7 @@ export function buildGymJsonLd(input: {
       addressLocality: input.city,
       addressCountry: "KZ",
     },
-    geo: { "@type": "GeoCoordinates", latitude: input.coords.lat, longitude: input.coords.lng },
+    ...(input.coords ? { geo: { "@type": "GeoCoordinates", latitude: input.coords.lat, longitude: input.coords.lng } } : {}),
     ...(hours
       ? { openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ALL_DAYS, opens: hours.opens, closes: hours.closes }] }
       : {}),

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/modules/owner";
+import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { parseGalleryCaptionForm } from "@/modules/photos";
@@ -15,13 +15,13 @@ export type PhotoResult = { ok: true } | { ok: false; error: string };
 
 /** Шаг 1: адреса загрузки Фото и его уменьшенных копий. Браузер загружает по ним файлы (PUT). */
 export async function requestUpload(target: string, type: string, sizes: number[]): Promise<UploadTicket> {
-  await requireOwner();
+  await requireRealOwner();
   return photos.requestUpload(String(target), String(type), Array.isArray(sizes) ? sizes.map(Number) : [], photoSlots);
 }
 
 /** Шаг 2: файл загружен — привязать его к месту на сайте. */
 export async function attachPhoto(target: string, path: string): Promise<PhotoResult> {
-  await requireOwner();
+  await requireRealOwner();
   const result = await photos.attachPhoto(String(target), String(path), photoSlots);
   if (!result.ok) return result;
   revalidateSite();
@@ -30,12 +30,12 @@ export async function attachPhoto(target: string, path: string): Promise<PhotoRe
 
 /** Загрузка сорвалась: убрать файл, если он успел появиться в хранилище. */
 export async function discardUpload(path: string): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   await photos.discardUpload(String(path), photoSlots);
 }
 
 export async function removePhoto(fd: FormData): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   await photos.removePhoto(text(fd, "target"), photoSlots);
   revalidateSite();
 }
@@ -54,7 +54,7 @@ export async function moveGalleryPhoto(fd: FormData): Promise<void> {
 }
 
 export async function deleteGalleryPhoto(fd: FormData): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   await photos.deleteGalleryPhoto(text(fd, "id"));
   revalidateSite();
   redirect("/admin/photos?deleted=1#gallery");

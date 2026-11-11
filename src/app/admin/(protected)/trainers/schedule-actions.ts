@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireOwner } from "@/modules/owner";
+import { requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { addTimeOff, deleteTimeOff, parseTimeOff, parseWorkWeek, saveWorkWeek } from "@/modules/schedule";
 
@@ -11,7 +11,7 @@ import { addTimeOff, deleteTimeOff, parseTimeOff, parseWorkWeek, saveWorkWeek } 
 export type ScheduleFormState = { ok?: boolean; error?: string } | undefined;
 
 export async function saveWorkWeekAction(_prev: ScheduleFormState, fd: FormData): Promise<ScheduleFormState> {
-  await requireOwner();
+  await requireRealOwner();
   const trainerId = text(fd, "trainerId");
   const parsed = parseWorkWeek(fd);
   if (!parsed.ok) return { error: parsed.error };
@@ -22,7 +22,7 @@ export async function saveWorkWeekAction(_prev: ScheduleFormState, fd: FormData)
 }
 
 export async function addTimeOffAction(_prev: ScheduleFormState, fd: FormData): Promise<ScheduleFormState> {
-  await requireOwner();
+  await requireRealOwner();
   const trainerId = text(fd, "trainerId");
   const parsed = parseTimeOff(fd);
   if (!parsed.ok) return { error: parsed.error };
@@ -33,7 +33,7 @@ export async function addTimeOffAction(_prev: ScheduleFormState, fd: FormData): 
 }
 
 export async function deleteTimeOffAction(fd: FormData): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   await deleteTimeOff(text(fd, "id"));
   revalidatePath(`/admin/trainers/${text(fd, "trainerId")}`);
 }
