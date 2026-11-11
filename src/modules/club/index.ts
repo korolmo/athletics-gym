@@ -6,3 +6,4 @@ export * from "./client";
 export { clubSchema, parseClubForm, type ClubInput } from "./validation/club";
 export { getClub } from "./service/club";
 export { clearLogoPhoto, getClubForEdit, readLogoPhoto, saveClub, setLogoPhoto } from "./service/edit";
+export { demoRestore as restoreClubDemo, demoSnapshot as snapshotClubDemo } from "./service/demo";
