@@ -100,8 +100,8 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
             </p>
           </div>
           <p className="mt-4 text-body-md text-text-muted">
-            {/* Тренировка ближе срока отмены — срок уже прошёл: отменить можно только через зал */}
-            {s.getTime() - deadlineHours * 3_600_000 > Date.now()
+            {/* Тренировка ближе срока отмены — срок уже прошёл: отменить можно только через зал. Решает сервер (React 19: без Date.now() в отрисовке) */}
+            {result.cancelable
               ? fill(t.result.okNote, { deadline: deadlineText(new Date(s.getTime() - deadlineHours * 3_600_000), t), h: deadlineHours })
               : fill(t.bookings.lateNote, { h: deadlineHours })}
           </p>

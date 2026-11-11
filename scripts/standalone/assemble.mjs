@@ -35,7 +35,20 @@ function remove(target) {
   }
 }
 
+// Turbopack (Next 16) ставит внешние пакеты под хэшированным именем: .next/node_modules/@prisma/client-<хэш> —
+// ссылка на node_modules/@prisma/client с абсолютным путём машины сборки. Копия по ссылке удвоила бы пакет (58 МБ
+// при диске 1 ГБ), а сама ссылка на сервере никуда не ведёт. Вместо неё — пакет-переходник на настоящий пакет.
+function externalShim(from, to) {
+  const target = path.relative(path.join(STANDALONE, "node_modules"), fs.realpathSync(from));
+  if (target.startsWith("..") || path.isAbsolute(target)) throw new Error(`Ссылка ведёт за пределы node_modules: ${from}`);
+  const pkg = target.split(path.sep).join("/");
+  fs.mkdirSync(to, { recursive: true });
+  fs.writeFileSync(path.join(to, "package.json"), JSON.stringify({ name: path.basename(to), private: true, main: "index.js" }) + "\n");
+  fs.writeFileSync(path.join(to, "index.js"), `// Переходник сборки (scripts/standalone/assemble.mjs)\nmodule.exports = require(${JSON.stringify(pkg)});\n`);
+}
+
 function copy(from, to) {
+  if (fs.lstatSync(from).isSymbolicLink() && from.includes(`${path.sep}.next${path.sep}node_modules${path.sep}`)) return externalShim(from, to);
   const st = fs.statSync(from);
   if (st.isDirectory()) {
     fs.mkdirSync(to, { recursive: true });
@@ -126,10 +139,19 @@ const leaks = [];
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) scan(full);
     else if (/^\.env/.test(entry.name)) leaks.push(path.relative(OUT, full));
+    else if (/\.tsx?$/.test(entry.name) && !full.includes(`${path.sep}node_modules${path.sep}`)) leaks.push(path.relative(OUT, full));
   }
 })(OUT);
 if (leaks.length) {
-  console.error("В сборке остались файлы окружения:", leaks);
+  console.error("В сборке остались файлы окружения или исходники:", leaks);
+  process.exit(1);
+}
+
+// Проверка: файлы, которые сервер читает с диска (картинка-превью), попали в сборку — их кладёт outputFileTracingIncludes
+const required = ["src/assets/fonts/Onest-ExtraBold.ttf", "src/assets/fonts/Onest-Medium.ttf", "public/logo.png"];
+const missing = required.filter((rel) => !fs.existsSync(path.join(OUT, ...rel.split("/"))));
+if (missing.length) {
+  console.error("В сборке нет файлов, которые читает сервер (outputFileTracingIncludes в next.config.mjs):", missing);
   process.exit(1);
 }
 
@@ -141,4 +163,12 @@ function size(dir) {
   }
   return total;
 }
-console.log(`Готово: ${path.relative(ROOT, OUT)} — ${(size(OUT) / 1024 / 1024).toFixed(1)} МБ.`);
+const totalMb = size(OUT) / 1024 / 1024;
+console.log(`Готово: ${path.relative(ROOT, OUT)} — ${totalMb.toFixed(1)} МБ.`);
+// Бюджет пакета: на hoster.kz диск 1 ГБ на сайт, Фото, почту и две сборки при выкатке. До Next 16 — 115 МБ;
+// 222 МБ на первой сборке Next 16 (весь runtime Prisma и его копия по ссылке Turbopack) поймал только замер в CI
+const BUDGET_MB = 150;
+if (totalMb > BUDGET_MB) {
+  console.error(`Пакет больше бюджета ${BUDGET_MB} МБ — смотреть, что нового попало в трассы (outputFileTracingExcludes в next.config.mjs).`);
+  process.exit(1);
+}

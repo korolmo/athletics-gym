@@ -19,7 +19,7 @@ import {
   updateClientName,
   verifyLoginCode,
 } from "@/modules/clients";
-import { cancelMyBooking, cancelMyFutureBookings, createBooking, parseBookingForm, trainerBusy } from "@/modules/bookings";
+import { canClientCancel, cancelMyBooking, cancelMyFutureBookings, createBooking, parseBookingForm, trainerBusy } from "@/modules/bookings";
 import { getBookableTrainer } from "@/modules/trainers";
 import { listWindows, sessionMinutesOf } from "@/modules/schedule";
 import { fill } from "@/components/cabinet/format";
@@ -140,7 +140,7 @@ export async function windowsAction(locale: Locale, trainerId: string): Promise<
 
 export type BookState =
   | { status: "idle" }
-  | { status: "ok"; start: string; end: string; trainerId: string }
+  | { status: "ok"; start: string; end: string; trainerId: string; /** Клиент ещё может отменить сам (время — сервера, не браузера) */ cancelable: boolean }
   | { status: "taken" | "limit"; start?: string; trainerId?: string }
   | { status: "error"; message: string };
 
@@ -152,7 +152,15 @@ export async function bookAction(_prev: BookState, fd: FormData): Promise<BookSt
   if (!parsed.ok) return { status: "error", message: t.result.badRequest };
   const r = await createBooking(parsed.data);
   if (r.ok && !r.repeated) notifyOwnerSoon();
-  if (r.ok) return { status: "ok", start: r.booking.startAt.toISOString(), end: r.booking.endAt.toISOString(), trainerId: parsed.data.trainerId };
+  if (r.ok) {
+    return {
+      status: "ok",
+      start: r.booking.startAt.toISOString(),
+      end: r.booking.endAt.toISOString(),
+      trainerId: parsed.data.trainerId,
+      cancelable: canClientCancel({ status: "ACTIVE", startAt: r.booking.startAt }, new Date()),
+    };
+  }
   if (r.error === "taken" || r.error === "limit") return { status: r.error, start: parsed.data.startAt.toISOString(), trainerId: parsed.data.trainerId };
   return { status: "error", message: r.error === "noTrainer" ? t.result.noTrainer : t.result.badRequest };
 }
