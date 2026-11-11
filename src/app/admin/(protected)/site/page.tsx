@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSettingsForEdit } from "@/modules/site";
+import { getClubForEdit } from "@/modules/club";
 import {
   BLOCKS,
   SHOW_COLUMN,
@@ -34,11 +35,11 @@ const pencil =
 
 export default async function SitePage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   const { saved } = await searchParams;
-  const { settings } = await getSettingsForEdit();
+  const [{ settings }, club] = await Promise.all([getSettingsForEdit(), getClubForEdit()]);
 
   return (
     <>
-      <PageHead title="Настройки сайта" subtitle="Блоки, тексты и контакты главной страницы. Изменения сразу появляются на сайте." />
+      <PageHead title="Настройки сайта" subtitle="Клуб, блоки, тексты и контакты главной страницы. Изменения сразу появляются на сайте." />
 
       {saved && (
         <div className="mb-6">
@@ -56,6 +57,22 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
           Сайт ↗
         </a>
       </div>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-xl font-bold">Клуб</h2>
+        <div className="flex items-center gap-3 rounded-2xl border border-line bg-card p-4">
+          <span aria-hidden="true" className="h-8 w-8 shrink-0 rounded-full border border-line" style={{ background: club.accentColor }} />
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold leading-snug">
+              {club.name} · {club.cityRu}
+            </div>
+            <div className="mt-0.5 text-sm text-muted">Название, город, цвет, логотип, 2ГИС — на всём сайте, в кабинете и в админке</div>
+          </div>
+          <Link href="/admin/site/club" aria-label="Редактировать: Клуб" className={pencil}>
+            <PencilIcon />
+          </Link>
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-3 text-xl font-bold">Блоки главной</h2>

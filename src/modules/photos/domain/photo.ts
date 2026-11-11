@@ -26,7 +26,7 @@ export const MAX_SOURCE_BYTES = 40 * 1024 * 1024;
 const EXTENSION: Record<AllowedType, string> = { "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png" };
 
 /** Куда Владелец загружает Фото. Папка в бакете совпадает с названием. */
-export const PHOTO_KINDS = ["hero", "women", "gallery", "trainer", "hall", "direction"] as const;
+export const PHOTO_KINDS = ["hero", "women", "gallery", "trainer", "hall", "direction", "logo"] as const;
 export type PhotoKind = (typeof PHOTO_KINDS)[number];
 
 /**
@@ -36,16 +36,17 @@ export type PhotoKind = (typeof PHOTO_KINDS)[number];
 export type PhotoTarget =
   | { kind: "hero" }
   | { kind: "women" }
+  | { kind: "logo" }
   | { kind: "gallery" }
   | { kind: "trainer"; id: string }
   | { kind: "direction"; id: string }
   | { kind: "hall"; id: string };
 
-/** Место из формы: «hero», «women», «gallery», «trainer:<id>», «direction:<id>», «hall:<id Зала>». */
+/** Место из формы: «hero», «women», «gallery», «logo» (логотип Клуба, этап П1), «trainer:<id>», «direction:<id>», «hall:<id Зала>». */
 export function parsePhotoTarget(raw: string): PhotoTarget | null {
   const [kind, id, ...rest] = raw.split(":");
   if (rest.length > 0) return null;
-  if (kind === "hero" || kind === "women" || kind === "gallery") return id === undefined ? { kind } : null;
+  if (kind === "hero" || kind === "women" || kind === "gallery" || kind === "logo") return id === undefined ? { kind } : null;
   if (kind === "trainer" || kind === "direction") return id && /^[a-z0-9_]{1,40}$/i.test(id) ? { kind, id } : null;
   // Есть ли такой Зал, проверяет модуль-владелец (Тарифы) через своё место для Фото — здесь только формат id
   if (kind === "hall") return id && /^[a-z0-9_-]{1,40}$/i.test(id) ? { kind, id } : null;

@@ -128,7 +128,7 @@ describe("куда загружается Фото", () => {
     expect(formatPhotoTarget(parsePhotoTarget(raw)!)).toBe(raw);
   });
 
-  it.each(["", "logo", "hero:1", "trainer", "trainer:", "trainer:../x", "trainer:a:b", "hall", "hall:../x", "gallery:1", "HERO"])(
+  it.each(["", "logo:1", "hero:1", "trainer", "trainer:", "trainer:../x", "trainer:a:b", "hall", "hall:../x", "gallery:1", "HERO"])(
     "«%s» — нет такого места",
     (raw) => {
       expect(parsePhotoTarget(raw)).toBeNull();
