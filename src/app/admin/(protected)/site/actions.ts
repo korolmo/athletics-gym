@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/modules/owner";
+import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { isBlock } from "@/modules/site/client";
@@ -27,8 +27,9 @@ async function save<T>(
   fd: FormData,
   parse: (fd: FormData) => Parsed<T>,
   store: (data: T) => Promise<void>,
+  guard: () => Promise<void> = requireOwner,
 ): Promise<SettingsFormState> {
-  await requireOwner();
+  await guard();
   const parsed = parse(fd);
   if (!parsed.ok) {
     const values = Object.fromEntries([...fd].filter((e): e is [string, string] => typeof e[1] === "string"));
@@ -64,7 +65,8 @@ export async function saveRating(_prev: SettingsFormState, fd: FormData): Promis
 }
 
 export async function saveLegal(_prev: SettingsFormState, fd: FormData): Promise<SettingsFormState> {
-  return save(fd, parseLegalForm, settings.saveLegal);
+  // Реквизиты — юридическое лицо на сайте: Гостю демо-админки закрыты (этап П1)
+  return save(fd, parseLegalForm, settings.saveLegal, requireRealOwner);
 }
 
 /** Клуб: название, город, описание для поиска, цвет, логотип, 2ГИС и точка на карте (этап П1). */

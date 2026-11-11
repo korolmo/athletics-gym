@@ -9,7 +9,7 @@ describe("подпись сессии", () => {
   it("подписанный токен читается обратно", async () => {
     const token = await signSession(SECRET, { version: 1, expiresAt: NOW + HOUR });
     expect(token).toMatch(/^admin\.\d+\.v1\.[0-9a-f]{64}$/);
-    expect(await readSession(token, SECRET, NOW)).toEqual({ version: 1, expiresAt: NOW + HOUR });
+    expect(await readSession(token, SECRET, NOW)).toEqual({ version: 1, expiresAt: NOW + HOUR, role: "owner" });
   });
 
   it("версия входит в подпись и возвращается при чтении", async () => {

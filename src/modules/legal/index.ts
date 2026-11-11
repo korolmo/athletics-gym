@@ -18,8 +18,9 @@ export function legalContext(
   t: Pick<Dictionary, "contacts" | "brand">,
   s: Pick<SiteContent, "legal" | "contacts">,
   cabinet = false,
+  guestDemo = false,
 ): LegalContext {
-  return { locale, siteName: t.brand.name, city: t.contacts.city, legal: s.legal, contacts: s.contacts, cabinet };
+  return { locale, siteName: t.brand.name, city: t.contacts.city, legal: s.legal, contacts: s.contacts, cabinet, guestDemo };
 }
 
 export function legalDoc(page: LegalPageId, c: LegalContext): LegalDoc {

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/modules/owner";
+import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { isOwnerStatus } from "@/modules/reviews/client";
@@ -14,7 +14,7 @@ import * as reviews from "@/modules/reviews";
 export type ReviewFormState = { error: string; values: Record<string, string> } | undefined;
 
 export async function saveReview(_prev: ReviewFormState, fd: FormData): Promise<ReviewFormState> {
-  await requireOwner();
+  await requireRealOwner();
   const values = Object.fromEntries([...fd].filter((e): e is [string, string] => typeof e[1] === "string"));
   const parsed = parseOwnerReviewForm(fd);
   if (!parsed.ok) return { error: parsed.error, values };
@@ -35,7 +35,7 @@ export async function setReviewStatus(fd: FormData): Promise<void> {
 }
 
 export async function deleteReview(fd: FormData): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   await reviews.deleteReview(text(fd, "id"));
   revalidateSite();
   redirect("/admin/reviews?deleted=1");

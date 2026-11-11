@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/modules/owner";
+import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { parseDirectionForm } from "@/modules/directions";
@@ -40,7 +40,7 @@ export async function moveDirection(fd: FormData): Promise<void> {
 }
 
 export async function deleteDirection(fd: FormData): Promise<void> {
-  await requireOwner();
+  await requireRealOwner();
   await directions.deleteDirection(text(fd, "id"));
   revalidateSite();
   redirect("/admin/directions?deleted=1");
