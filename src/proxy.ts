@@ -108,7 +108,7 @@ async function route(req: NextRequest, id: string): Promise<NextResponse> {
   return res;
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const id = requestIdFrom(req.headers.get(REQUEST_ID_HEADER));
   const res = await route(req, id);
   res.headers.set("X-Request-Id", id);

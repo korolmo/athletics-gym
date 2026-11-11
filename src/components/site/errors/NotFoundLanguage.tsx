@@ -1,21 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { Locale } from "@/lib/i18n";
 import { notFoundLocale } from "@/lib/errors/not-found-locale";
+
+/** Адрес и cookie на странице 404 не меняются — подписка не нужна. */
+const subscribeNever = () => () => {};
+const browserLocale = (): Locale => notFoundLocale(window.location.pathname, document.cookie);
 
 /**
  * Обе версии страницы 404 уже в HTML: сервер отдаёт одну статическую страницу на все адреса, и язык выбирает браузер
  * (по адресу или cookie). До выбора и без скриптов видна русская. Маркер data-error-page — для смоука после выкатки.
  */
 export function NotFoundLanguage({ ru, kk, titles }: { ru: React.ReactNode; kk: React.ReactNode; titles: Record<Locale, string> }) {
-  const [locale, setLocale] = useState<Locale>("ru");
+  // Сервер и первая отрисовка в браузере — русская (HTML совпадает), затем язык адреса или cookie
+  const locale = useSyncExternalStore(subscribeNever, browserLocale, () => "ru" as Locale);
 
   useEffect(() => {
-    const chosen = notFoundLocale(window.location.pathname, document.cookie);
-    setLocale(chosen);
-    document.documentElement.lang = chosen;
-  }, []);
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   return (
     <>

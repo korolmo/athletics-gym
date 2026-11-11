@@ -3,15 +3,15 @@ import path from "node:path";
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LOCALE_COOKIE } from "@/lib/locale-cookie";
-import { LOCALE_REDIRECTS, middleware } from "./middleware";
+import { LOCALE_REDIRECTS, proxy } from "./proxy";
 
 const call = (path: string, cookie?: string) =>
-  middleware(new NextRequest(`https://athleticsgym.kz${path}`, { headers: cookie ? { cookie } : {} }));
+  proxy(new NextRequest(`https://athleticsgym.kz${path}`, { headers: cookie ? { cookie } : {} }));
 
 // NextResponse.rewrite помечает ответ заголовком x-middleware-rewrite с адресом, который рисует Next
 const rewrite = (res: Response) => new URL(res.headers.get("x-middleware-rewrite") ?? "", "https://x").pathname;
 
-describe("middleware: язык и страницы ошибок", () => {
+describe("proxy: язык и страницы ошибок", () => {
   afterEach(() => vi.unstubAllEnvs());
 
   it("главная и страницы сайта без языка — переадресация на язык из cookie, с Vary: Cookie", async () => {

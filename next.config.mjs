@@ -65,10 +65,14 @@ const nextConfig = {
   cacheMaxMemorySize: 0,
   // Картинка-превью ссылок читает шрифты и логотип с диска. Сборка Vercel кладёт в серверную функцию только те файлы,
   // которые нашла сама; эти она не находит — без явного списка маршрут отвечает ошибкой 500.
+  // Ключ — шаблон picomatch: скобки сегмента экранируются, иначе «[locale]» — класс символов и файлы молча
+  // не попадают в сборку (Next 16, проверяет scripts/standalone/assemble.mjs).
   outputFileTracingIncludes: {
-    "/[locale]/opengraph-image": OG_IMAGE_FILES,
-    "/[locale]/twitter-image": OG_IMAGE_FILES,
+    "/\\[locale\\]/opengraph-image": OG_IMAGE_FILES,
+    "/\\[locale\\]/twitter-image": OG_IMAGE_FILES,
   },
+  // Turbopack (Next 16) по чтению папки Фото кладёт в серверные трассы исходники модуля Фото; сервер их не читает
+  outputFileTracingExcludes: { "/**": ["./src/**/*.{ts,tsx}"] },
   // Оптимизатора картинок на сервере нет (памяти мало, sharp на хостинг не ставим). Размеры готовят заранее:
   // для public/ — scripts/images/build-variants.mjs при сборке, для Фото — браузер Владельца при загрузке.
   // Загрузчик (src/lib/image-loader.ts) подставляет в srcset готовые файлы нужной ширины.

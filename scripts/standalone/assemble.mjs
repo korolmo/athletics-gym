@@ -126,10 +126,19 @@ const leaks = [];
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) scan(full);
     else if (/^\.env/.test(entry.name)) leaks.push(path.relative(OUT, full));
+    else if (/\.tsx?$/.test(entry.name) && !full.includes(`${path.sep}node_modules${path.sep}`)) leaks.push(path.relative(OUT, full));
   }
 })(OUT);
 if (leaks.length) {
-  console.error("В сборке остались файлы окружения:", leaks);
+  console.error("В сборке остались файлы окружения или исходники:", leaks);
+  process.exit(1);
+}
+
+// Проверка: файлы, которые сервер читает с диска (картинка-превью), попали в сборку — их кладёт outputFileTracingIncludes
+const required = ["src/assets/fonts/Onest-ExtraBold.ttf", "src/assets/fonts/Onest-Medium.ttf", "public/logo.png"];
+const missing = required.filter((rel) => !fs.existsSync(path.join(OUT, ...rel.split("/"))));
+if (missing.length) {
+  console.error("В сборке нет файлов, которые читает сервер (outputFileTracingIncludes в next.config.mjs):", missing);
   process.exit(1);
 }
 
