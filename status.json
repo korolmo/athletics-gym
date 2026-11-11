@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-10T12:34:42.013Z",
+  "generatedAt": "2026-11-11T11:50:22.804Z",
   "source": "UptimeRobot, каждые 5 минут (ADR 0014)",
   "slo": {
     "target": 0.995,
@@ -11,33 +11,33 @@
     ]
   },
   "overall": {
-    "total": 1660,
-    "good": 1644,
-    "availability": 0.9903614457831326,
+    "total": 2221,
+    "good": 2194,
+    "availability": 0.9878433138226025,
     "p50": 83,
-    "p95": 292
+    "p95": 310
   },
   "budget": {
-    "allowedErrors": 8.300000000000008,
-    "errors": 16,
-    "remaining": -0.9277108433734922
+    "allowedErrors": 11.10500000000001,
+    "errors": 27,
+    "remaining": -1.4313372354795115
   },
   "burn": {
     "1h": 0,
-    "6h": 0,
-    "24h": 0.35335689045936364,
-    "30d": 1.9277108433734924
+    "6h": 6.060606060606055,
+    "24h": 4.1666666666666625,
+    "30d": 2.4313372354795115
   },
   "alerts": {
     "fastBurn": {
       "threshold": 14.4,
-      "worst": 8.333333333333325,
-      "firing": false
+      "worst": 24.99999999999998,
+      "firing": true
     },
     "slowBurn": {
       "threshold": 6,
-      "worst": 1.4285714285714273,
-      "firing": false
+      "worst": 7.092198581560278,
+      "firing": true
     },
     "lowCoverage": {
       "min": 260,
@@ -46,68 +46,68 @@
     },
     "stale": {
       "maxAgeMin": 120,
-      "ageMin": 3,
+      "ageMin": 2,
       "firing": false
     }
   },
-  "alerting": false,
+  "alerting": true,
   "coldStart": {
     "latencyMs": 1500,
     "target": 0.9,
-    "measured": 21,
-    "cold": 21,
-    "notCold": 0,
-    "good": 21,
+    "measured": 35,
+    "cold": 34,
+    "notCold": 1,
+    "good": 34,
     "share": 1,
-    "p50": 869,
-    "max": 1007
+    "p50": 881,
+    "max": 1195
   },
   "byTarget": {
     "/ru": {
-      "total": 830,
-      "good": 823,
-      "availability": 0.9915662650602409,
-      "p50": 83,
+      "total": 1110,
+      "good": 1099,
+      "availability": 0.9900900900900901,
+      "p50": 84,
       "p95": 284,
       "slo": true,
-      "lastDay": 283,
+      "lastDay": 288,
       "last": {
-        "t": "2026-11-10T12:31:00.000Z",
+        "t": "2026-11-11T11:48:00.000Z",
         "target": "/ru",
         "status": 200,
-        "ms": 93,
+        "ms": 85,
         "source": "uptimerobot"
       }
     },
     "/kk": {
-      "total": 830,
-      "good": 821,
-      "availability": 0.9891566265060241,
-      "p50": 81,
-      "p95": 372,
+      "total": 1111,
+      "good": 1095,
+      "availability": 0.9855985598559855,
+      "p50": 82,
+      "p95": 414,
       "slo": true,
-      "lastDay": 283,
+      "lastDay": 288,
       "last": {
-        "t": "2026-11-10T12:32:00.000Z",
+        "t": "2026-11-11T11:48:00.000Z",
         "target": "/kk",
         "status": 200,
-        "ms": 67,
+        "ms": 49,
         "source": "uptimerobot"
       }
     },
     "/api/health/ready": {
-      "total": 826,
-      "good": 652,
-      "availability": 0.7893462469733656,
+      "total": 1112,
+      "good": 882,
+      "availability": 0.7931654676258992,
       "p50": 423,
-      "p95": 1749,
+      "p95": 1810,
       "slo": false,
-      "lastDay": 284,
+      "lastDay": 289,
       "last": {
-        "t": "2026-11-10T12:32:00.000Z",
+        "t": "2026-11-11T11:45:00.000Z",
         "target": "/api/health/ready",
         "status": 200,
-        "ms": 326,
+        "ms": 320,
         "source": "uptimerobot"
       }
     }
