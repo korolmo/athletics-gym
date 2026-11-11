@@ -348,8 +348,6 @@ export function RatingForm({ s }: { s: SiteSettingsData }) {
 /** Клуб (этап П1): бренд, город и ссылки — сразу на всём сайте, в кабинете и в админке. Пояс не меняется (П2). */
 export function ClubForm({ c }: { c: ClubData }) {
   const current = logoSource(c.logo).kind;
-  const mode = useValue("logoMode", current === "photo" ? "photo" : current === "file" ? "file" : "monogram");
-  const color = useValue("accentColor", c.accentColor);
   return (
     <Form action={saveClub}>
       <Input name="name" label="Название *" saved={c.name} max={CLUB_LIMITS.name} required note="На сайте, во вкладке браузера, в поиске и в кабинете." />
@@ -365,11 +363,31 @@ export function ClubForm({ c }: { c: ClubData }) {
         autoComplete="off"
         note="Подпись «с 2022 года» на первом экране. Пусто — без подписи."
       />
+      <ClubAccentAndLogo color={c.accentColor} current={current} />
+      <Input name="twoGisUrl" label="Карточка в 2ГИС" saved={c.twoGisUrl ?? ""} max={CLUB_LIMITS.url} inputMode="url" note="Ссылка «Открыть в 2ГИС» и рейтинг. Пусто — без ссылки." />
+      <Input name="twoGisReviewsUrl" label="Отзывы в 2ГИС" saved={c.twoGisReviewsUrl ?? ""} max={CLUB_LIMITS.url} inputMode="url" />
+      <Input name="twoGisRouteUrl" label="Маршрут в 2ГИС" saved={c.twoGisRouteUrl ?? ""} max={CLUB_LIMITS.url} inputMode="url" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="latitude" label="Широта" saved={c.latitude === null ? "" : String(c.latitude)} inputMode="decimal" autoComplete="off" note="Точка на карте в «Контактах»." />
+        <Input name="longitude" label="Долгота" saved={c.longitude === null ? "" : String(c.longitude)} inputMode="decimal" autoComplete="off" />
+      </div>
+    </Form>
+  );
+}
 
+/**
+ * Цвет и логотип формы «Клуб». Отдельный компонент внутри <Form>: после ошибки он берёт введённое из контекста
+ * формы (Typed), как поля Input, — иначе цвет и выбор логотипа возвращались бы к сохранённым.
+ */
+function ClubAccentAndLogo({ color, current }: { color: string; current: "file" | "photo" | "monogram" }) {
+  const typedColor = useValue("accentColor", color);
+  const mode = useValue("logoMode", current === "photo" ? "photo" : current === "file" ? "file" : "monogram");
+  return (
+    <>
       <fieldset className="space-y-3">
         <legend className={labelCls}>Цвет акцента *</legend>
         <label className="flex items-center gap-3">
-          <input type="color" name="accentColor" defaultValue={color} className="h-12 w-16 cursor-pointer rounded-xl border border-line bg-bg" />
+          <input type="color" name="accentColor" defaultValue={typedColor} className="h-12 w-16 cursor-pointer rounded-xl border border-line bg-bg" />
           <span className="text-sm text-muted">Кнопки, подписи и ссылки. Тёмный цвет форма не примет: на тёмном сайте он не читается.</span>
         </label>
       </fieldset>
@@ -384,7 +402,14 @@ export function ClubForm({ c }: { c: ClubData }) {
           ] as const
         ).map(([value, title, note]) => (
           <label key={value} className="flex items-start gap-3 rounded-xl border border-line bg-bg p-3">
-            <input type="radio" name="logoMode" value={value} defaultChecked={mode === value} disabled={value === "photo" && current !== "photo"} className="mt-1 accent-[var(--color-accent)]" />
+            <input
+              type="radio"
+              name="logoMode"
+              value={value}
+              defaultChecked={mode === value}
+              disabled={value === "photo" && current !== "photo"}
+              className="mt-1 accent-[var(--color-accent)]"
+            />
             <span>
               <span className="block font-semibold">{title}</span>
               <span className="block text-xs text-muted">{note}</span>
@@ -392,14 +417,6 @@ export function ClubForm({ c }: { c: ClubData }) {
           </label>
         ))}
       </fieldset>
-
-      <Input name="twoGisUrl" label="Карточка в 2ГИС" saved={c.twoGisUrl ?? ""} max={CLUB_LIMITS.url} inputMode="url" note="Ссылка «Открыть в 2ГИС» и рейтинг. Пусто — без ссылки." />
-      <Input name="twoGisReviewsUrl" label="Отзывы в 2ГИС" saved={c.twoGisReviewsUrl ?? ""} max={CLUB_LIMITS.url} inputMode="url" />
-      <Input name="twoGisRouteUrl" label="Маршрут в 2ГИС" saved={c.twoGisRouteUrl ?? ""} max={CLUB_LIMITS.url} inputMode="url" />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input name="latitude" label="Широта" saved={c.latitude === null ? "" : String(c.latitude)} inputMode="decimal" autoComplete="off" note="Точка на карте в «Контактах»." />
-        <Input name="longitude" label="Долгота" saved={c.longitude === null ? "" : String(c.longitude)} inputMode="decimal" autoComplete="off" />
-      </div>
-    </Form>
+    </>
   );
 }
