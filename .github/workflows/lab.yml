@@ -103,9 +103,10 @@ jobs:
         run: |
           # Проект — только из VERCEL_PROJECT_ID: старый athletics-gym сюда не попадёт ни при каких настройках
           test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
-          # production — база athletics из переменных проекта; превью — только своя база pr_<номер>
+          # production — база athletics из переменных проекта; превью — только своя база pr_<номер> и гостевой вход
+          # (П1, ADR 0019: у превью своя база, правки Гостей никому не мешают; в основной Лаборатории — после этапа 1)
           PROD=""; DB=()
-          if [ "${{ github.event_name }}" = "push" ]; then PROD="--prod"; else DB=(--env "DATABASE_URL=$PREVIEW_DATABASE_URL"); fi
+          if [ "${{ github.event_name }}" = "push" ]; then PROD="--prod"; else DB=(--env "DATABASE_URL=$PREVIEW_DATABASE_URL" --env "GUEST_DEMO=1"); fi
           if [ -n "$CRON_SECRET" ]; then DB+=(--env "CRON_SECRET=$CRON_SECRET"); fi
           if [ -n "$TELEGRAM_CHAT_ID" ]; then DB+=(--env "TELEGRAM_CHAT_ID=$TELEGRAM_CHAT_ID"); fi
           if [ -n "$TELEGRAM_BOT_TOKEN" ]; then DB+=(--env "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN"); fi
