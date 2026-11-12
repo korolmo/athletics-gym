@@ -31,17 +31,17 @@ const WD = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
 const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 
 /** «вт, 11 ноября, 19:00–20:00» — в поясе Клуба. */
-export function whenLabel(startIso: string, endIso: string): string {
-  const s = zonedParts(new Date(startIso));
-  const e = zonedParts(new Date(endIso));
+export function whenLabel(startIso: string, endIso: string, timeZone: string): string {
+  const s = zonedParts(new Date(startIso), timeZone);
+  const e = zonedParts(new Date(endIso), timeZone);
   const [, m, d] = s.day.split("-").map(Number);
   return `${WD[weekdayOf(s.day) - 1]}, ${d} ${MONTHS[m - 1]}, ${formatClock(s.minutes)}–${formatClock(e.minutes)}`;
 }
 
 /** Текст сообщения Владельцу. Номер события в конце — по нему повтор узнаётся как то же событие. */
-export function messageText(e: BookingEvent, eventId: string): string {
+export function messageText(e: BookingEvent, eventId: string, timeZone: string): string {
   const head = e.type === "booking.created" ? "🟢 Новая запись" : "🔴 Запись отменена клиентом";
-  return [head, `${e.clientName} → ${e.trainerName} (${e.hallName})`, whenLabel(e.startAt, e.endAt), `#${eventId.slice(-6)}`].join("\n");
+  return [head, `${e.clientName} → ${e.trainerName} (${e.hallName})`, whenLabel(e.startAt, e.endAt, timeZone), `#${eventId.slice(-6)}`].join("\n");
 }
 
 /** Разбор сохранённого события: испорченный JSON — null (событие уйдёт в недоставленные с понятной ошибкой). */

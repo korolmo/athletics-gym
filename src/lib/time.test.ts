@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { addDays, formatClock, isDay, parseClock, weekdayOf, zonedParts, zonedToUtc } from "./time";
 
+/** Пояс Клуба Athletic's Gym (Кызылорда, UTC+5 круглый год) */
+const TZ = "Asia/Qyzylorda";
+
 describe("время Клуба", () => {
   it("Кызылорда — UTC+5: 19:00 местного — 14:00 UTC", () => {
-    expect(zonedToUtc("2026-11-11", 19 * 60).toISOString()).toBe("2026-11-11T14:00:00.000Z");
-    expect(zonedToUtc("2026-11-11", 0).toISOString()).toBe("2026-11-10T19:00:00.000Z");
+    expect(zonedToUtc("2026-11-11", 19 * 60, TZ).toISOString()).toBe("2026-11-11T14:00:00.000Z");
+    expect(zonedToUtc("2026-11-11", 0, TZ).toISOString()).toBe("2026-11-10T19:00:00.000Z");
   });
 
   it("местный день наступает раньше UTC", () => {
-    expect(zonedParts(new Date("2026-11-10T19:30:00Z"))).toEqual({ day: "2026-11-11", weekday: 3, minutes: 30 });
-    expect(zonedParts(new Date("2026-11-10T18:59:00Z")).day).toBe("2026-11-10");
+    expect(zonedParts(new Date("2026-11-10T19:30:00Z"), TZ)).toEqual({ day: "2026-11-11", weekday: 3, minutes: 30 });
+    expect(zonedParts(new Date("2026-11-10T18:59:00Z"), TZ).day).toBe("2026-11-10");
   });
 
   it("пояс с переводом часов тоже считается верно (Берлин, конец летнего времени)", () => {

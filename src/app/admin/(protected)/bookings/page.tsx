@@ -6,6 +6,7 @@ import { getTrainerNames, listTrainers } from "@/modules/trainers";
 import { isHall } from "@/modules/tariffs/client";
 import { addDays, formatClock, isDay, weekdayOf, zonedParts, zonedToUtc } from "@/lib/time";
 import { UserIcon } from "@/components/icons";
+import { getClubOnce } from "@/app/brand";
 import { HallFilter } from "../AdminNav";
 import { Empty, PageHead, card } from "../../ui";
 import { BookingItem, type BookingItemView } from "./BookingItem";
@@ -30,13 +31,14 @@ const dayLabel = (d: string) => `${Number(d.slice(8))} ${MONTHS[Number(d.slice(5
 export default async function BookingsPage({ searchParams }: { searchParams: Promise<{ day?: string; hall?: string }> }) {
   await requireOwner();
   const sp = await searchParams;
-  const today = zonedParts(new Date()).day;
+  const { timeZone } = await getClubOnce();
+  const today = zonedParts(new Date(), timeZone).day;
   const day = sp.day && isDay(sp.day) ? sp.day : today;
   const hall = sp.hall && isHall(sp.hall) ? sp.hall : "general";
   const monday = addDays(day, 1 - weekdayOf(day));
   const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 
-  const bookings = await listBookingsForOwner(zonedToUtc(day, 0), zonedToUtc(addDays(day, 1), 0), hall);
+  const bookings = await listBookingsForOwner(zonedToUtc(day, 0, timeZone), zonedToUtc(addDays(day, 1), 0, timeZone), hall);
   // Гость демо-админки (этап П1) номеров Клиентов не получает даже для кнопки WhatsApp
   const guest = await isGuest();
   const [contacts, names, trainers] = await Promise.all([
@@ -61,7 +63,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
         const c = b.clientId ? byClient.get(b.clientId) : undefined;
         return {
           id: b.id,
-          time: `${formatClock(zonedParts(b.startAt).minutes)} — ${formatClock(zonedParts(b.endAt).minutes)}`,
+          time: `${formatClock(zonedParts(b.startAt, timeZone).minutes)} — ${formatClock(zonedParts(b.endAt, timeZone).minutes)}`,
           status:
             b.status === "CANCELLED" ? (b.cancelledBy === "owner" ? "cancelledByOwner" : "cancelledByClient") : b.endAt <= now ? "past" : "active",
           clientName: c?.name ?? "Клиент удалил аккаунт",

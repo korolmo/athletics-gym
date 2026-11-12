@@ -20,10 +20,12 @@ type Props = {
   waHref: string;
   max: number;
   deadlineHours: number;
+  /** Пояс Клуба: даты и часы Записей — по нему */
+  timeZone: string;
 };
 
 /** «Мои Записи»: по макетам 7 (есть Записи) и 8 (пусто). */
-export function BookingsView({ locale, t, halls, name, bookings, trainerNames, whatsapp, waHref, max, deadlineHours }: Props) {
+export function BookingsView({ locale, t, halls, name, bookings, trainerNames, whatsapp, waHref, max, deadlineHours, timeZone }: Props) {
   const upcoming = bookings.filter((b) => b.view === "upcoming");
   const past = bookings.filter((b) => b.view !== "upcoming").slice(0, 10);
   const trainer = (b: ClientBooking) => (b.trainerId && trainerNames[b.trainerId]) || t.bookings.trainerGone;
@@ -72,8 +74,8 @@ export function BookingsView({ locale, t, halls, name, bookings, trainerNames, w
 
           <ul className="mt-4 space-y-4">
             {upcoming.map((b) => {
-              const d = dateBlock(b.startAt, t);
-              const when = fullWhen(b.startAt, b.endAt, t);
+              const d = dateBlock(b.startAt, t, timeZone);
+              const when = fullWhen(b.startAt, b.endAt, t, timeZone);
               return (
                 <li key={b.id} className={card}>
                   <div className="flex gap-4">
@@ -84,7 +86,7 @@ export function BookingsView({ locale, t, halls, name, bookings, trainerNames, w
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[22px] font-bold text-text-primary">{timeRange(b.startAt, b.endAt)}</span>
+                        <span className="text-[22px] font-bold text-text-primary">{timeRange(b.startAt, b.endAt, timeZone)}</span>
                         <span className="rounded-md bg-surface-container-high px-3 py-1 text-body-md text-text-muted">{halls[b.hallId] ?? b.hallId}</span>
                       </div>
                       <p className="mt-3 flex items-center gap-3 text-body-lg text-text-primary">
@@ -134,7 +136,7 @@ export function BookingsView({ locale, t, halls, name, bookings, trainerNames, w
                       <CheckSym className="h-5 w-5" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-body-lg text-text-muted">{shortWhen(b.startAt, t)}</p>
+                      <p className="text-body-lg text-text-muted">{shortWhen(b.startAt, t, timeZone)}</p>
                       <p className="text-body-lg text-text-muted">{trainer(b)}</p>
                     </div>
                     <span className="shrink-0 rounded-md bg-surface-container-high px-3 py-1 text-body-md text-text-muted">

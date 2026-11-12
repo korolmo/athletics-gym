@@ -37,15 +37,15 @@ async function loadSchedule(trainerId: string, today: string): Promise<TrainerSc
 
 /**
  * Свободные Окна Тренера. Занятое время (`busy`) передаёт слой приложения из модуля Записи —
- * Окна не знают о Записях, Записи знают об Окнах.
+ * Окна не знают о Записях, Записи знают об Окнах. Пояс Клуба передаёт вызывающий: модуль Окон о Клубе не знает.
  */
-export async function listWindows(trainerId: string, busy: Busy[], now: Date = new Date()): Promise<Window[]> {
-  return computeWindows(await loadSchedule(trainerId, zonedParts(now).day), busy, now);
+export async function listWindows(trainerId: string, busy: Busy[], timeZone: string, now: Date = new Date()): Promise<Window[]> {
+  return computeWindows(await loadSchedule(trainerId, zonedParts(now, timeZone).day), busy, now, timeZone);
 }
 
 /** Свободно ли Окно с началом `start` — проверка модуля Записи перед созданием Записи. */
-export async function isWindowFree(trainerId: string, start: Date, busy: Busy[], now: Date = new Date()): Promise<boolean> {
-  return isFreeWindow(await loadSchedule(trainerId, zonedParts(now).day), busy, start, now);
+export async function isWindowFree(trainerId: string, start: Date, busy: Busy[], timeZone: string, now: Date = new Date()): Promise<boolean> {
+  return isFreeWindow(await loadSchedule(trainerId, zonedParts(now, timeZone).day), busy, start, now, timeZone);
 }
 
 /** Длительность тренировки Тренера — модулю Записи, чтобы задать конец Записи. */
@@ -62,9 +62,9 @@ export type ScheduleForAdmin = {
 };
 
 /** Часы работы и не закончившиеся исключения Тренера для раздела «Тренеры». */
-export async function getScheduleForAdmin(trainerId: string, now: Date = new Date()): Promise<ScheduleForAdmin> {
+export async function getScheduleForAdmin(trainerId: string, timeZone: string, now: Date = new Date()): Promise<ScheduleForAdmin> {
   await requireOwner();
-  const today = zonedParts(now).day;
+  const today = zonedParts(now, timeZone).day;
   const [settings, workHours, timeOff] = await Promise.all([
     db.trainerSchedule.findUnique({ where: { trainerId }, select: { sessionMinutes: true } }),
     db.trainerWorkHours.findMany({

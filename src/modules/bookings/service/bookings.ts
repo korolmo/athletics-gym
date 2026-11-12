@@ -62,6 +62,8 @@ async function findByKey(clientId: string, idempotencyKey: string): Promise<Crea
 export async function createBookingFor(
   clientId: string,
   input: BookingInput,
+  /** Пояс Клуба: по нему считаются Окна Тренера; передаёт слой приложения */
+  timeZone: string,
   now: Date = new Date(),
   /** Для уведомления Владельцу: имя Клиента из сессии */
   clientName = "Клиент",
@@ -73,7 +75,7 @@ export async function createBookingFor(
 
   const trainer = await getBookableTrainer(trainerId);
   if (!trainer) return { ok: false, error: "noTrainer" };
-  if (!(await isWindowFree(trainerId, startAt, await trainerBusy(trainerId, now), now))) return { ok: false, error: "taken" };
+  if (!(await isWindowFree(trainerId, startAt, await trainerBusy(trainerId, now), timeZone, now))) return { ok: false, error: "taken" };
   const endAt = new Date(startAt.getTime() + (await sessionMinutesOf(trainerId)) * 60_000);
 
   const insert = () =>
@@ -124,9 +126,9 @@ export async function createBookingFor(
 
 // ——— Кабинет ———
 
-export async function createBooking(input: BookingInput, now: Date = new Date()): Promise<CreateResult> {
+export async function createBooking(input: BookingInput, timeZone: string, now: Date = new Date()): Promise<CreateResult> {
   const client = await requireClient();
-  return createBookingFor(client.id, input, now, client.name);
+  return createBookingFor(client.id, input, timeZone, now, client.name);
 }
 
 export type ClientBooking = CreatedBooking & { status: BookingStatus; view: BookingView; canCancel: boolean };

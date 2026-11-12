@@ -20,8 +20,9 @@ export type DeliveryReport = { sent: number; failed: number; dead: number; skipp
 /**
  * Отправить ждущие события. Каждое сначала «занимается» (условный update по числу попыток): два отправщика
  * одновременно — cron и «сразу после ответа» — одно событие не отправят дважды. Без канала — ничего не трогаем.
+ * Время в сообщении — в поясе Клуба `timeZone`: его передаёт слой приложения (модуль о Клубе не знает).
  */
-export async function deliverPending(sender: Sender | null, now: Date = new Date()): Promise<DeliveryReport> {
+export async function deliverPending(sender: Sender | null, timeZone: string, now: Date = new Date()): Promise<DeliveryReport> {
   const report: DeliveryReport = { sent: 0, failed: 0, dead: 0, skipped: sender === null, errors: [] };
   if (!sender) return report;
   const due = await db.outboxEvent.findMany({
@@ -38,7 +39,7 @@ export async function deliverPending(sender: Sender | null, now: Date = new Date
     if (count === 0) continue;
 
     const parsed = parseEvent(ev.type, ev.payload);
-    const result = parsed ? await sender.send(messageText(parsed, ev.id)) : { ok: false as const, error: "Событие не разобрать" };
+    const result = parsed ? await sender.send(messageText(parsed, ev.id, timeZone)) : { ok: false as const, error: "Событие не разобрать" };
     const attempts = ev.attempts + 1;
     if (result.ok) {
       await db.outboxEvent.update({ where: { id: ev.id }, data: { status: "SENT", attempts, sentAt: now, lastError: null } });

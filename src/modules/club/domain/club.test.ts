@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { CLUB_TIME_ZONE } from "@/lib/time";
 import { fillBrand, hasBrandToken } from "@/lib/brand-text";
 import { ru } from "@/dictionaries/ru";
 import { kk } from "@/dictionaries/kk";
@@ -48,8 +47,8 @@ describe("начальный Клуб в шаблонах = тексты до П
     expect(t.brand.name).toBe("Athletic's Gym");
   });
 
-  it("пояс — CLUB_TIME_ZONE: функции времени переходят на пояс Клуба на П2", () => {
-    expect(DEFAULT_CLUB.timeZone).toBe(CLUB_TIME_ZONE);
+  it("пояс Athletic's Gym — Кызылорда; функции времени берут пояс Клуба аргументом (П2, решение 14)", () => {
+    expect(DEFAULT_CLUB.timeZone).toBe("Asia/Qyzylorda");
   });
 });
 

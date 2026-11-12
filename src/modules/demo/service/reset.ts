@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { log } from "@/lib/observability/log";
-import { restoreClubDemo, snapshotClubDemo } from "@/modules/club";
+import { getClub, restoreClubDemo, snapshotClubDemo } from "@/modules/club";
 import { restoreSiteDemo, snapshotSiteDemo } from "@/modules/site";
 import { restoreTrainersDemo, snapshotTrainersDemo } from "@/modules/trainers";
 import { restoreTariffsDemo, snapshotTariffsDemo } from "@/modules/tariffs";
@@ -48,7 +48,8 @@ export type ResetResult = { ran: false } | { ran: true; snapshotTaken: boolean; 
  */
 export async function runDailyDemoReset(now: Date = new Date()): Promise<ResetResult> {
   await db.demoState.upsert({ where: { id: STATE_ID }, update: {}, create: { id: STATE_ID } });
-  const boundary = lastResetBoundary(now);
+  // Граница — в поясе Клуба; модуль Демо поверх всех и читает Клуб сам
+  const boundary = lastResetBoundary(now, (await getClub()).timeZone);
   const { count } = await db.demoState.updateMany({
     where: {
       id: STATE_ID,
