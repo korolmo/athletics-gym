@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 // Суточный сброс демо-админки Лаборатории (этап П1, ADR 0019): снимок того, что может менять Гость, и возврат к нему.
 // Своё делает сам модуль — его таблицы никто, кроме него, не трогает; собирает всё модуль demo.
 
-import type { ReviewStatus } from "@prisma/client";
+import type { ReviewStatus } from "@/generated/prisma/enums";
 
 // Гость меняет только Статус Отзыва; новые Отзывы Посетителей после снимка — настоящие данные, их не трогаем
 type Row = { id: string; status: ReviewStatus };

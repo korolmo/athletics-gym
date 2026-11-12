@@ -15,7 +15,7 @@ import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../../src/lib/db-client";
 import { hashPassword } from "../../src/modules/owner/service/password";
 import { SESSION_COOKIE, signSession } from "../../src/modules/owner/domain/session";
 import { LOCALE_COOKIE } from "../../src/lib/locale-cookie";
@@ -110,7 +110,7 @@ async function prepareData(): Promise<string> {
     encoding: "utf8",
   });
   if (seed.status !== 0) throw new Error(`seed: ${seed.stderr}`);
-  const db = new PrismaClient({ datasourceUrl: DB_URL });
+  const db = createPrismaClient(DB_URL);
   try {
     const passwordHash = await hashPassword(crypto.randomBytes(18).toString("base64url"), 4);
     const owner = await db.owner.upsert({ where: { id: "owner" }, update: {}, create: { id: "owner", login: "twin", passwordHash } });
@@ -189,7 +189,7 @@ async function main() {
   // базе и убираем страницы из кэша. Процесс тот же, что после холодных стартов: без перезапуска и без нового прогрева.
   // 404 — заодно, уже с упавшей базой.
   const errorUrls = ["/ru", "/kk", "/ru/privacy", "/kk/terms"];
-  const db = new PrismaClient({ datasourceUrl: DB_URL });
+  const db = createPrismaClient(DB_URL);
   await db.$executeRawUnsafe("RENAME TABLE `SiteSettings` TO `SiteSettings_off`");
   await db.$disconnect();
   // Кэш страниц Next 15.5 на диске — .next/server/route-cache (в памяти его нет: cacheMaxMemorySize: 0). Удаляем изнутри

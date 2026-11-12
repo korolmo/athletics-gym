@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { BATCH, LEASE_MS, MAX_ATTEMPTS, STATS_WINDOW_MS, backoffMs, messageText, parseEvent, summarizeDelivery } from "../domain/outbox";
 import type { BookingEvent, DeliveryStats, OutboxEventType } from "../domain/outbox";

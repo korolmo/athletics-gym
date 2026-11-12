@@ -33,11 +33,9 @@
     "memory:check": "tsx scripts/standalone/memory-check.ts",
     "twin:measure": "tsx scripts/twin/measure.ts"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
-    "@prisma/client": "^6.19.3",
+    "@prisma/adapter-mariadb": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "@supabase/supabase-js": "^2.117.3",
     "bcryptjs": "^3.0.3",
     "next": "^16.4.6",
@@ -59,7 +57,7 @@
     "eslint-config-next": "^16.4.6",
     "fflate": "^0.8.3",
     "pg": "^8.23.1",
-    "prisma": "^6.19.3",
+    "prisma": "^7.10.1",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.19.0",

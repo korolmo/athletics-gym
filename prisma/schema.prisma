@@ -1,17 +1,19 @@
 // Термины — см. GLOSSARY.md
 
+// Prisma 7: клиент без движка на Rust — запросы идут через драйвер mariadb (адаптер в src/lib/db.ts), поэтому
+// вариантов движка под Linux хостинга больше нет. Клиент генерируется в src/generated/prisma (не в git): npm install
+// запускает prisma generate.
 generator client {
-  provider      = "prisma-client-js"
-  // Движок запросов под ОС хостинга: дистрибутив и OpenSSL на hoster.kz заранее неизвестны (SSH нет),
-  // поэтому в сборку идут все четыре варианта Linux; Prisma сама выбирает подходящий (ADR 0004)
-  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x", "rhel-openssl-3.0.x", "rhel-openssl-1.1.x"]
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 // MariaDB 10.4 на хостинге (localhost:3306), локально — docker-compose.yml.
 // Строки по умолчанию — VARCHAR(191); всё, что может быть длиннее, — @db.Text.
+// Строка подключения — в prisma.config.ts (CLI) и src/lib/db.ts (приложение)
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 /// Категория тарифа: заданы заранее, Владелец их не создаёт

@@ -1,6 +1,6 @@
 // Общие данные seed: Залы и прайс Athletic's Gym от Владельца (7 октября 2026, docs/owner/prices-2026-10.md).
 // Берут оба seed: обычный (prisma/seed.ts) и Лаборатории (prisma/seed-lab.ts, ADR 0007).
-import type { Access, Audience, TariffCategory } from "@prisma/client";
+import type { Access, Audience, TariffCategory } from "../src/generated/prisma/enums";
 
 export const HALLS = [
   { id: "general", nameRu: "Общий зал", nameKk: "Жалпы зал", sortOrder: 0 },

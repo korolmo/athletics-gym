@@ -26,3 +26,6 @@ docs/owner/**/*.jpg
 # перенос данных с Supabase: дамп и архив фото — только у себя, в git не попадают
 /transfer-out/
 /dist/
+
+# Prisma 7: сгенерированный клиент (npm install → prisma generate)
+/src/generated/

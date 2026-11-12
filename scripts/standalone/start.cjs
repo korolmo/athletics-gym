@@ -49,9 +49,10 @@ async function main() {
   setRelease();
   removeStaleBuildFiles();
   if (process.env.MIGRATE_ON_START !== "0") {
-    const { PrismaClient } = require("@prisma/client");
-    const { migrate, singleConnectionUrl } = require("./migrate.cjs");
-    const db = new PrismaClient({ datasourceUrl: singleConnectionUrl(process.env.DATABASE_URL) });
+    // Prisma 7: миграции — одним соединением драйвера mariadb (db-config.cjs), без клиента Prisma
+    const { migrate } = require("./migrate.cjs");
+    const { openSingleConnection } = require("./db-config.cjs");
+    const db = await openSingleConnection(process.env.DATABASE_URL);
     try {
       await migrate({ db, dir: path.join(__dirname, "prisma", "migrations") });
     } finally {
