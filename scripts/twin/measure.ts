@@ -166,6 +166,12 @@ async function main() {
   }
   stopWatch();
   const peakRss = Math.max(...samples);
+  // Из чего RSS после нагрузки: куча V8, память вне кучи (WASM, буферы драйвера) — /api/health процесса двойника
+  const memoryAfterLoad = await fetch(`${BASE}/api/health`, auth)
+    .then((r) => r.json() as Promise<{ memoryMb?: Record<string, number> }>)
+    .then((h) => h.memoryMb ?? null)
+    .catch(() => null);
+  if (memoryAfterLoad) console.log(`память после нагрузки, МБ: ${JSON.stringify(memoryAfterLoad)}`);
 
   // Холодный старт: процесс остановлен (как Passenger, усыпивший приложение) → запуск → первый ответ /ru
   const cold: { readyMs: number; firstPageMs: number }[] = [];
