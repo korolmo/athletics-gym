@@ -78,6 +78,7 @@ const nextConfig = {
     "/**": [
       "./src/**/*.{ts,tsx}",
       "./node_modules/@prisma/client/runtime/*.{postgresql,sqlite,sqlserver,cockroachdb}.*",
+      "./node_modules/@prisma/client/runtime/query_compiler_fast_bg.*",
       "./node_modules/@prisma/client/runtime/{edge,edge-esm,binary,library,react-native,wasm-*}.*",
       "./node_modules/@prisma/client/runtime/*.d.{ts,mts}",
     ],

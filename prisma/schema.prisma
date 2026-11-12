@@ -7,6 +7,8 @@ generator client {
   provider     = "prisma-client"
   output       = "../src/generated/prisma"
   moduleFormat = "cjs"
+  // Компилятор запросов (WASM): «small» вместо «fast» — меньше памяти; 256 МБ хостинга важнее скорости разбора
+  compilerBuild = "small"
 }
 
 // MariaDB 10.4 на хостинге (localhost:3306), локально — docker-compose.yml.
