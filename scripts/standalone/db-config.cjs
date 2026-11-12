@@ -6,8 +6,16 @@
 
 const os = require("node:os");
 
-/** Адреса, где TLS не ждём: база на той же машине (hoster.kz — 127.0.0.1, CI — сервис MariaDB, локально — Docker). */
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]", "mariadb", "host.docker.internal"]);
+/**
+ * Ждём ли TLS по умолчанию: да — для доменного имени (облачная база: TiDB Лаборатории); нет — для IP-адреса
+ * (hoster.kz — 127.0.0.1) и имени без точки (localhost, сервис Docker: mariadb, twin-db). Драйвер не умеет «TLS, если
+ * сервер может», как Prisma 6, поэтому решаем по адресу; явные sslaccept / sslmode главнее.
+ */
+function tlsByDefault(host) {
+  const h = host.replace(/^\[|\]$/g, "");
+  if (/^[\d.]+$/.test(h) || h.includes(":")) return false;
+  return h.includes(".") && !h.endsWith(".localhost") && !h.endsWith(".internal");
+}
 
 function seconds(value, fallbackMs) {
   const n = Number(value);
@@ -18,8 +26,8 @@ function seconds(value, fallbackMs) {
  * Настройки пула mariadb из строки подключения.
  * - connection_limit → connectionLimit; по умолчанию как у Prisma 6: ядра × 2 + 1.
  * - connect_timeout / pool_timeout (секунды) → connectTimeout / acquireTimeout; по умолчанию 5 и 10 с, как у Prisma 6.
- * - TLS: sslaccept=strict — с проверкой сертификата, accept_invalid_certs — без; sslmode=disable или база на этой же
- *   машине — без TLS; иначе (облачная база, TiDB в Лаборатории) — с проверкой: Prisma 6 включала TLS, если сервер умеет.
+ * - TLS: sslaccept=strict — с проверкой сертификата, accept_invalid_certs — без, sslmode=disable — без; иначе по адресу
+ *   (tlsByDefault): доменное имя — с проверкой сертификата, IP-адрес и имя без точки — без TLS.
  * @param {string | undefined} raw
  * @param {{ connectionLimit?: number }} [override]
  */
@@ -34,7 +42,7 @@ function mariadbConfig(raw, override = {}) {
   let ssl;
   if (sslaccept === "accept_invalid_certs") ssl = { rejectUnauthorized: false };
   else if (sslaccept === "strict" || sslmode === "require" || sslmode === "verify-full") ssl = { rejectUnauthorized: true };
-  else if (sslmode === "disable" || LOCAL_HOSTS.has(host)) ssl = undefined;
+  else if (sslmode === "disable" || !tlsByDefault(host)) ssl = undefined;
   else ssl = { rejectUnauthorized: true };
 
   const limit = Number(q.get("connection_limit"));
@@ -73,4 +81,4 @@ async function openSingleConnection(raw) {
   };
 }
 
-module.exports = { mariadbConfig, openSingleConnection, LOCAL_HOSTS };
+module.exports = { mariadbConfig, openSingleConnection, tlsByDefault };

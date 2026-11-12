@@ -24,10 +24,23 @@ import type { BookingInput } from "../validation/booking";
 //   одного Клиента идут по очереди.
 // Проверка «Окно свободно» в коде — только чтобы ответить сразу и понятно; гарантию даёт индекс.
 
+type UniqueError = {
+  code?: string;
+  message?: string;
+  meta?: { target?: unknown; driverAdapterError?: { cause?: { constraint?: { index?: string; fields?: string[] } } } };
+};
+
+/**
+ * Какой уникальный индекс нарушен (P2002): строка с именами полей или индекса. Prisma 6 клала поля в meta.target;
+ * Prisma 7 через драйвер mariadb — только имя индекса («Booking_idempotencyKey_key») в
+ * meta.driverAdapterError.cause.constraint и в тексте ошибки. Берём всё сразу — так верно в обеих.
+ */
 function uniqueTarget(e: unknown): string | null {
-  if (typeof e !== "object" || e === null || (e as { code?: string }).code !== "P2002") return null;
-  const target = (e as { meta?: { target?: unknown } }).meta?.target;
-  return Array.isArray(target) ? target.join(",") : String(target ?? "");
+  if (typeof e !== "object" || e === null || (e as UniqueError).code !== "P2002") return null;
+  const { meta, message } = e as UniqueError;
+  const target = meta?.target;
+  const constraint = meta?.driverAdapterError?.cause?.constraint;
+  return [Array.isArray(target) ? target.join(",") : String(target ?? ""), constraint?.index ?? "", ...(constraint?.fields ?? []), message ?? ""].join(" ");
 }
 
 export type CreatedBooking = { id: string; trainerId: string | null; hallId: string; startAt: Date; endAt: Date };

@@ -1,7 +1,7 @@
 // Типы для db-config.cjs (его берут TypeScript-файлы приложения и скриптов).
 import type { PoolConfig } from "mariadb";
 
-export const LOCAL_HOSTS: Set<string>;
+export function tlsByDefault(host: string): boolean;
 export function mariadbConfig(raw: string | undefined, override?: { connectionLimit?: number }): PoolConfig;
 export type RawDb = {
   $queryRawUnsafe<T = Record<string, unknown>>(sql: string, ...params: unknown[]): Promise<T[]>;

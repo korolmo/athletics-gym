@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 // Строка DATABASE_URL в формате Prisma → настройки драйвера mariadb (Prisma 7). Её же берут миграции на хостинге.
 const require = createRequire(import.meta.url);
-const { mariadbConfig } = require("../../scripts/standalone/db-config.cjs") as typeof import("../../scripts/standalone/db-config.cjs");
+const { mariadbConfig, tlsByDefault } = require("../../scripts/standalone/db-config.cjs") as typeof import("../../scripts/standalone/db-config.cjs");
 
 describe("mariadbConfig", () => {
   it("хостинг: 127.0.0.1, пароль с кодированием, без TLS", () => {
@@ -25,6 +25,14 @@ describe("mariadbConfig", () => {
   it("облачная база (TiDB Лаборатории) — TLS с проверкой сертификата, даже без параметров", () => {
     expect(mariadbConfig("mysql://u:p@gateway01.eu-central-1.prod.aws.tidbcloud.com:4000/athletics").ssl).toEqual({ rejectUnauthorized: true });
     expect(mariadbConfig("mysql://u:p@db.example.com/x?sslaccept=strict").ssl).toEqual({ rejectUnauthorized: true });
+  });
+
+  it("TLS по умолчанию — только для доменного имени: IP, localhost и сервисы Docker — без TLS", () => {
+    for (const host of ["127.0.0.1", "10.0.0.5", "::1", "[::1]", "localhost", "mariadb", "twin-db", "app.localhost", "host.docker.internal"]) {
+      expect(tlsByDefault(host), host).toBe(false);
+    }
+    expect(tlsByDefault("gateway01.eu-central-1.prod.aws.tidbcloud.com")).toBe(true);
+    expect(mariadbConfig("mysql://root:twin@twin-db:3306/athletics").ssl).toBeUndefined();
   });
 
   it("явные параметры TLS главнее адреса", () => {
