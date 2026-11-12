@@ -4,6 +4,9 @@ import { resolveSender, telegramSender, type Sender } from "./telegram";
 
 // Очередь уведомлений без базы: таблица OutboxEvent — в памяти.
 
+/** Пояс Клуба: Кызылорда, UTC+5 */
+const TZ = "Asia/Qyzylorda";
+
 type Row = { id: string; type: string; payload: string; status: string; attempts: number; nextAttemptAt: Date; lastError: string | null; createdAt: Date; sentAt: Date | null };
 
 const { state, db } = vi.hoisted(() => {
@@ -64,8 +67,8 @@ describe("правила очереди", () => {
   });
 
   it("сообщение — в поясе Клуба, с номером события", () => {
-    expect(whenLabel(event.startAt, event.endAt)).toBe("ср, 11 ноября, 19:00–20:00");
-    expect(messageText(event, "ckabc123xyz")).toBe("🟢 Новая запись\nДана → Арман (Общий зал)\nср, 11 ноября, 19:00–20:00\n#123xyz");
+    expect(whenLabel(event.startAt, event.endAt, TZ)).toBe("ср, 11 ноября, 19:00–20:00");
+    expect(messageText(event, "ckabc123xyz", TZ)).toBe("🟢 Новая запись\nДана → Арман (Общий зал)\nср, 11 ноября, 19:00–20:00\n#123xyz");
   });
 
   it("испорченное событие не разбирается", () => {
@@ -77,14 +80,14 @@ describe("правила очереди", () => {
 describe("отправщик", () => {
   it("без канала (нет токена бота) ничего не трогает", async () => {
     state.rows = [row("e1")];
-    expect(await deliverPending(null, now)).toEqual({ sent: 0, failed: 0, dead: 0, skipped: true, errors: [] });
+    expect(await deliverPending(null, TZ, now)).toEqual({ sent: 0, failed: 0, dead: 0, skipped: true, errors: [] });
     expect(state.rows[0]).toMatchObject({ status: "PENDING", attempts: 0 });
   });
 
   it("отправленное — SENT, ждущее в будущем — не берётся", async () => {
     state.rows = [row("e1"), row("e2", { nextAttemptAt: new Date(now.getTime() + 60_000) })];
     const s = okSender();
-    expect(await deliverPending(s, now)).toMatchObject({ sent: 1 });
+    expect(await deliverPending(s, TZ, now)).toMatchObject({ sent: 1 });
     expect(state.rows.map((r) => r.status)).toEqual(["SENT", "PENDING"]);
     expect(s.sent[0]).toContain("Дана → Арман");
   });
@@ -93,25 +96,25 @@ describe("отправщик", () => {
     state.rows = [row("e1")];
     let t = now;
     for (let i = 1; i < MAX_ATTEMPTS; i++) {
-      expect(await deliverPending(failSender, t)).toMatchObject({ failed: 1, errors: ["Telegram 502"] });
+      expect(await deliverPending(failSender, TZ, t)).toMatchObject({ failed: 1, errors: ["Telegram 502"] });
       expect(state.rows[0]).toMatchObject({ status: "PENDING", attempts: i, lastError: "Telegram 502" });
       expect(state.rows[0].nextAttemptAt.getTime() - t.getTime()).toBe(backoffMs(i));
       t = state.rows[0].nextAttemptAt;
     }
-    expect(await deliverPending(failSender, t)).toMatchObject({ dead: 1 });
+    expect(await deliverPending(failSender, TZ, t)).toMatchObject({ dead: 1 });
     expect(state.rows[0]).toMatchObject({ status: "DEAD", attempts: MAX_ATTEMPTS });
   });
 
   it("два отправщика одновременно не шлют одно событие дважды", async () => {
     state.rows = [row("e1")];
     const s = okSender();
-    await Promise.all([deliverPending(s, now), deliverPending(s, now)]);
+    await Promise.all([deliverPending(s, TZ, now), deliverPending(s, TZ, now)]);
     expect(s.sent).toHaveLength(1);
   });
 
   it("испорченное событие сразу недоставлено, с понятной ошибкой", async () => {
     state.rows = [row("e1", { payload: "{" })];
-    expect(await deliverPending(okSender(), now)).toMatchObject({ dead: 1 });
+    expect(await deliverPending(okSender(), TZ, now)).toMatchObject({ dead: 1 });
     expect(state.rows[0].lastError).toBe("Событие не разобрать");
   });
 

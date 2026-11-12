@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { listTrainers } from "@/modules/trainers";
 import { getScheduleForAdmin } from "@/modules/schedule";
+import { getClubOnce } from "@/app/brand";
 import { mediaUrl } from "@/modules/photos";
 import { isHall } from "@/modules/tariffs/client";
 import { formatPrice } from "@/modules/tariffs/client";
@@ -29,7 +30,8 @@ export default async function TrainersPage({ searchParams }: { searchParams: Pro
   const { hall: rawHall, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
   const trainers = await listTrainers(hall);
-  const schedules = await Promise.all(trainers.map((t) => getScheduleForAdmin(t.id)));
+  const { timeZone } = await getClubOnce();
+  const schedules = await Promise.all(trainers.map((t) => getScheduleForAdmin(t.id, timeZone)));
   const visible = trainers.filter((t) => t.isVisible).length;
 
   return (

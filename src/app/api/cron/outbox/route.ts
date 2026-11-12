@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { deliverPending, resolveSender } from "@/modules/notifications";
+import { getClub } from "@/modules/club";
 import { logError } from "@/lib/observability/log";
 
 // Отправщик очереди уведомлений по расписанию (ADR 0017): GitHub Actions вызывает его каждые 5 минут
@@ -19,7 +20,7 @@ function authorized(header: string | null): boolean {
 export async function POST(req: Request) {
   if (!authorized(req.headers.get("authorization"))) return new NextResponse("Not found", { status: 404 });
   try {
-    const report = await deliverPending(resolveSender());
+    const report = await deliverPending(resolveSender(), (await getClub()).timeZone);
     return NextResponse.json(report, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     logError("Очередь уведомлений: проход отправщика упал.", e);

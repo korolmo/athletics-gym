@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { MIN_LEAD_MS, checkWeek, computeWindows, isFreeWindow, isValidTimeOff, type TrainerSchedule } from "./schedule";
 
+/** Пояс Клуба: Кызылорда, UTC+5 */
+const TZ = "Asia/Qyzylorda";
 // Понедельник, 9 ноября 2026, 08:00 в Кызылорде (03:00 UTC)
 const NOW = new Date("2026-11-09T03:00:00Z");
 const at = (iso: string) => new Date(iso);
@@ -16,7 +18,7 @@ const base: TrainerSchedule = {
 };
 
 const starts = (s: TrainerSchedule, busy = [] as { start: Date; end: Date }[], now = NOW, days = 3) =>
-  computeWindows(s, busy, now, days).map((w) => w.start.toISOString());
+  computeWindows(s, busy, now, TZ, days).map((w) => w.start.toISOString());
 
 describe("Окна Тренера", () => {
   it("идут от начала интервала с шагом в длительность; раньше чем через 2 часа — не показываются", () => {
@@ -61,9 +63,24 @@ describe("Окна Тренера", () => {
   });
 
   it("isFreeWindow: только точное начало свободного Окна", () => {
-    expect(isFreeWindow(base, [], at("2026-11-11T04:00:00Z"), NOW)).toBe(true);
-    expect(isFreeWindow(base, [], at("2026-11-11T04:30:00Z"), NOW)).toBe(false);
-    expect(isFreeWindow(base, [], at("2026-11-09T04:00:00Z"), NOW)).toBe(false);
+    expect(isFreeWindow(base, [], at("2026-11-11T04:00:00Z"), NOW, TZ)).toBe(true);
+    expect(isFreeWindow(base, [], at("2026-11-11T04:30:00Z"), NOW, TZ)).toBe(false);
+    expect(isFreeWindow(base, [], at("2026-11-09T04:00:00Z"), NOW, TZ)).toBe(false);
+  });
+
+  it("другой пояс Клуба (П2, решение 14): те же часы работы — другие моменты UTC и другой «сегодня»", () => {
+    const wed = { ...base, workHours: [{ weekday: 3, startMin: 9 * 60, endMin: 11 * 60 }] };
+    // Москва, UTC+3: 09:00 среды — 06:00 UTC
+    expect(computeWindows(wed, [], NOW, "Europe/Moscow", 3).map((w) => w.start.toISOString())).toEqual([
+      "2026-11-11T06:00:00.000Z",
+      "2026-11-11T07:00:00.000Z",
+    ]);
+    // Ташкент, UTC+5 — как Кызылорда
+    expect(computeWindows(wed, [], NOW, "Asia/Tashkent", 3).map((w) => w.start.toISOString())).toEqual(starts(wed));
+    // 20:00 вторника по UTC: в Кызылорде уже среда 01:00 — «сегодня» среда, в Москве ещё вторник 23:00
+    const lateTue = at("2026-11-10T20:00:00Z");
+    expect(computeWindows(wed, [], lateTue, TZ, 1)).toHaveLength(2);
+    expect(computeWindows(wed, [], lateTue, "Europe/Moscow", 1)).toEqual([]);
   });
 });
 

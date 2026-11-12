@@ -173,6 +173,7 @@ vi.mock("@/modules/trainers", () => ({ getBookableTrainer: async () => ({ id: "r
 vi.mock("@/modules/schedule", () => ({ BOOKING_HORIZON_DAYS: 14, isWindowFree: async () => true, sessionMinutesOf: async () => 60 }));
 
 describe.skipIf(!URL_)("Записи на MariaDB: гонка", () => {
+  const TZ = "Asia/Qyzylorda";
   const now = new Date("2026-11-09T03:00:00Z");
   const start = new Date("2026-11-11T14:00:00Z");
   const key = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -202,7 +203,7 @@ describe.skipIf(!URL_)("Записи на MariaDB: гонка", () => {
 
   it("50 Клиентов параллельно на одно Окно — ровно одна Запись, остальным «занято»", async () => {
     const results = await Promise.all(
-      Array.from({ length: 50 }, (_, i) => createBookingFor(`race${i}`, { trainerId: "race-trainer", startAt: start, idempotencyKey: key(i) }, now)),
+      Array.from({ length: 50 }, (_, i) => createBookingFor(`race${i}`, { trainerId: "race-trainer", startAt: start, idempotencyKey: key(i) }, TZ, now)),
     );
     expect(results.filter((r) => r.ok)).toHaveLength(1);
     expect(results.filter((r) => !r.ok && r.error === "taken")).toHaveLength(49);
@@ -212,14 +213,14 @@ describe.skipIf(!URL_)("Записи на MariaDB: гонка", () => {
   it("отмена освобождает Окно: снова можно записаться", async () => {
     const active = await db.booking.findFirstOrThrow({ where: { startAt: start, status: "ACTIVE" } });
     await db.booking.update({ where: { id: active.id }, data: { status: "CANCELLED", activeTrainerId: null } });
-    const again = await createBookingFor("race49", { trainerId: "race-trainer", startAt: start, idempotencyKey: key(100) }, now);
+    const again = await createBookingFor("race49", { trainerId: "race-trainer", startAt: start, idempotencyKey: key(100) }, TZ, now);
     expect(again.ok).toBe(true);
   });
 
   it("один Клиент, 10 параллельных Записей на разное время — не больше 3", async () => {
     const results = await Promise.all(
       Array.from({ length: 10 }, (_, i) =>
-        createBookingFor("race7", { trainerId: "race-trainer", startAt: new Date(start.getTime() + (i + 1) * 3_600_000), idempotencyKey: key(200 + i) }, now),
+        createBookingFor("race7", { trainerId: "race-trainer", startAt: new Date(start.getTime() + (i + 1) * 3_600_000), idempotencyKey: key(200 + i) }, TZ, now),
       ),
     );
     expect(results.filter((r) => r.ok)).toHaveLength(3);
@@ -229,7 +230,7 @@ describe.skipIf(!URL_)("Записи на MariaDB: гонка", () => {
   it("одна форма, отправленная 10 раз параллельно, — одна Запись", async () => {
     const at = new Date(start.getTime() + 24 * 3_600_000);
     const results = await Promise.all(
-      Array.from({ length: 10 }, () => createBookingFor("race8", { trainerId: "race-trainer", startAt: at, idempotencyKey: key(300) }, now)),
+      Array.from({ length: 10 }, () => createBookingFor("race8", { trainerId: "race-trainer", startAt: at, idempotencyKey: key(300) }, TZ, now)),
     );
     expect(results.every((r) => r.ok)).toBe(true);
     expect(new Set(results.map((r) => (r.ok ? r.booking.id : "")))).toHaveProperty("size", 1);

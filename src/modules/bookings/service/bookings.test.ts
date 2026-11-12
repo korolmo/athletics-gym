@@ -81,6 +81,7 @@ vi.mock("@/modules/schedule", () => ({
 
 const { createBooking, cancelMyBooking, cancelBookingByOwner, listMyBookings } = await import("./bookings");
 
+const TZ = "Asia/Qyzylorda";
 const now = new Date("2026-11-09T03:00:00Z");
 const start = new Date("2026-11-11T14:00:00Z");
 const key = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -97,66 +98,66 @@ beforeEach(() => {
 
 describe("создание Записи", () => {
   it("создаёт Запись на длительность тренировки, в Зале Тренера, под блокировкой Клиента", async () => {
-    const r = await createBooking(input(), now);
+    const r = await createBooking(input(), TZ, now);
     expect(r).toMatchObject({ ok: true, repeated: false, booking: { trainerId: "t1", hallId: "general", startAt: start, endAt: new Date("2026-11-11T15:00:00Z") } });
     expect(state.rows[0]).toMatchObject({ clientId: "k1", activeTrainerId: "t1", status: "ACTIVE" });
     expect(mocks.lockClient).toHaveBeenCalledWith(expect.anything(), "k1");
   });
 
   it("повтор с тем же ключом возвращает ту же Запись", async () => {
-    const a = await createBooking(input(), now);
+    const a = await createBooking(input(), TZ, now);
     state.windowFree = false; // Окно уже занято самой этой Записью
-    const b = await createBooking(input(), now);
+    const b = await createBooking(input(), TZ, now);
     expect(b).toMatchObject({ ok: true, repeated: true });
     expect(a.ok && b.ok && a.booking.id === b.booking.id).toBe(true);
     expect(state.rows).toHaveLength(1);
   });
 
   it("чужой ключ повтора не отдаёт чужую Запись", async () => {
-    await createBooking(input(), now);
+    await createBooking(input(), TZ, now);
     state.client = "k2";
-    expect(await createBooking({ ...input(), startAt: new Date("2026-11-12T14:00:00Z") }, now)).toEqual({ ok: false, error: "badRequest" });
+    expect(await createBooking({ ...input(), startAt: new Date("2026-11-12T14:00:00Z") }, TZ, now)).toEqual({ ok: false, error: "badRequest" });
   });
 
   it("скрытый или удалённый Тренер — noTrainer; занятое Окно — taken", async () => {
     state.trainer = null;
-    expect(await createBooking(input(), now)).toEqual({ ok: false, error: "noTrainer" });
+    expect(await createBooking(input(), TZ, now)).toEqual({ ok: false, error: "noTrainer" });
     state.trainer = { id: "t1", name: "Арман", hallId: "general" };
     state.windowFree = false;
-    expect(await createBooking(input(), now)).toEqual({ ok: false, error: "taken" });
+    expect(await createBooking(input(), TZ, now)).toEqual({ ok: false, error: "taken" });
   });
 
   it("гонка: проверка пропустила, а индекс базы отказал — taken, а не ошибка", async () => {
-    await createBooking(input(1), now);
+    await createBooking(input(1), TZ, now);
     state.client = "k2";
-    expect(await createBooking(input(2), now)).toEqual({ ok: false, error: "taken" });
+    expect(await createBooking(input(2), TZ, now)).toEqual({ ok: false, error: "taken" });
   });
 
   it("не больше 3 будущих Записей; отменённые и прошедшие не считаются", async () => {
-    for (let i = 0; i < 3; i++) expect((await createBooking(input(i + 1, new Date(start.getTime() + i * 3_600_000)), now)).ok).toBe(true);
-    expect(await createBooking(input(9, new Date(start.getTime() + 5 * 3_600_000)), now)).toEqual({ ok: false, error: "limit" });
+    for (let i = 0; i < 3; i++) expect((await createBooking(input(i + 1, new Date(start.getTime() + i * 3_600_000)), TZ, now)).ok).toBe(true);
+    expect(await createBooking(input(9, new Date(start.getTime() + 5 * 3_600_000)), TZ, now)).toEqual({ ok: false, error: "limit" });
     state.rows[0].status = "CANCELLED";
-    expect((await createBooking(input(10, new Date(start.getTime() + 5 * 3_600_000)), now)).ok).toBe(true);
+    expect((await createBooking(input(10, new Date(start.getTime() + 5 * 3_600_000)), TZ, now)).ok).toBe(true);
   });
 });
 
 describe("отмена", () => {
   it("Клиент отменяет свою Запись заранее — Окно освобождается", async () => {
-    await createBooking(input(), now);
+    await createBooking(input(), TZ, now);
     expect(await cancelMyBooking("b1", now)).toEqual({ ok: true });
     expect(state.rows[0]).toMatchObject({ status: "CANCELLED", activeTrainerId: null, cancelledBy: "client" });
     expect(await cancelMyBooking("b1", now)).toEqual({ ok: false, error: "notFound" });
   });
 
   it("позже чем за 12 часов — только через зал; чужую — notFound", async () => {
-    await createBooking(input(), now);
+    await createBooking(input(), TZ, now);
     expect(await cancelMyBooking("b1", new Date(start.getTime() - 11 * 3_600_000))).toEqual({ ok: false, error: "tooLate" });
     state.client = "k2";
     expect(await cancelMyBooking("b1", now)).toEqual({ ok: false, error: "notFound" });
   });
 
   it("Владелец отменяет любую действующую — в любое время, с проверкой сессии", async () => {
-    await createBooking(input(), now);
+    await createBooking(input(), TZ, now);
     expect(await cancelBookingByOwner("b1", new Date(start.getTime() - 60_000))).toBe(true);
     expect(mocks.requireOwner).toHaveBeenCalled();
     expect(state.rows[0].cancelledBy).toBe("owner");
@@ -166,8 +167,8 @@ describe("отмена", () => {
 
 describe("Мои Записи", () => {
   it("будущие — ближайшими первыми, потом прошедшие и отменённые; у каждой — можно ли отменить", async () => {
-    await createBooking(input(1, new Date("2026-11-12T14:00:00Z")), now);
-    await createBooking(input(2, new Date("2026-11-09T12:00:00Z")), now);
+    await createBooking(input(1, new Date("2026-11-12T14:00:00Z")), TZ, now);
+    await createBooking(input(2, new Date("2026-11-09T12:00:00Z")), TZ, now);
     state.rows.push({ ...state.rows[0], id: "old", idempotencyKey: null, startAt: new Date("2026-11-01T10:00:00Z"), endAt: new Date("2026-11-01T11:00:00Z") });
     const list = await listMyBookings(now);
     expect(list.map((b) => [b.id, b.view, b.canCancel])).toEqual([
@@ -180,7 +181,7 @@ describe("Мои Записи", () => {
 
 describe("уведомления Владельцу (outbox)", () => {
   it("новая Запись пишет событие в той же транзакции, с именами и временем", async () => {
-    await createBooking(input(), now);
+    await createBooking(input(), TZ, now);
     expect(mocks.enqueue).toHaveBeenCalledTimes(1);
     expect(mocks.enqueue).toHaveBeenCalledWith(
       expect.objectContaining({ booking: expect.anything() }),
@@ -190,15 +191,15 @@ describe("уведомления Владельцу (outbox)", () => {
   });
 
   it("повтор формы и отказ по лимиту события не пишут", async () => {
-    await createBooking(input(), now);
-    await createBooking(input(), now);
-    for (let i = 2; i <= 4; i++) await createBooking(input(i, new Date(start.getTime() + i * 3_600_000)), now);
+    await createBooking(input(), TZ, now);
+    await createBooking(input(), TZ, now);
+    for (let i = 2; i <= 4; i++) await createBooking(input(i, new Date(start.getTime() + i * 3_600_000)), TZ, now);
     // 1 + 2 успешных (лимит 3), повтор и четвёртая — без события
     expect(mocks.enqueue).toHaveBeenCalledTimes(3);
   });
 
   it("отмена Клиентом пишет событие отмены; неудачная отмена — нет", async () => {
-    await createBooking(input(), now);
+    await createBooking(input(), TZ, now);
     mocks.enqueue.mockClear();
     await cancelMyBooking("b1", now);
     expect(mocks.enqueue).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: "booking.cancelled", trainerName: "Арман" }), now);

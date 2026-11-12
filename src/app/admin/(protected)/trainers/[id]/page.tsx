@@ -8,6 +8,7 @@ import { DeleteTrainerButton, TrainerForm } from "../TrainerForm";
 import { PhotoSlot } from "../../photos/PhotoSlot";
 import { isStorageConfigured, mediaUrl } from "@/modules/photos";
 import { getScheduleForAdmin } from "@/modules/schedule";
+import { getClubOnce } from "@/app/brand";
 import { ScheduleCard } from "../ScheduleCard";
 import { CardTitle, Empty, Notice, PageHead, btnDark, card } from "../../../ui";
 
@@ -28,7 +29,7 @@ export default async function EditTrainerPage({
   const { saved, deleted } = await searchParams;
   const tr = await getTrainerWithTariffs(id);
   if (!tr || !isHall(tr.hallId)) notFound();
-  const schedule = await getScheduleForAdmin(tr.id);
+  const schedule = await getScheduleForAdmin(tr.id, (await getClubOnce()).timeZone);
 
 
   return (

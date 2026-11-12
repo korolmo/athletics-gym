@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { after, sender } = vi.hoisted(() => ({ after: vi.fn(), sender: { current: null as object | null } }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/server", () => ({ after }));
+vi.mock("@/modules/club", () => ({ getClub: async () => ({ timeZone: "Asia/Qyzylorda" }) }));
 vi.mock("@/modules/notifications", () => ({ resolveSender: () => sender.current, deliverPending: vi.fn(async () => ({})) }));
 
 const { kickOutbox, KICK_GAP_MS } = await import("./outbox-kick");
