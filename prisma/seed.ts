@@ -85,10 +85,7 @@ const trainers: TrainerSeed[] = [
 
 async function main() {
   // Seed стирает данные: на боевой базе — только с явным флагом
-  const decision = decideSeed(
-    { DATABASE_URL: process.env.DATABASE_URL, DIRECT_URL: process.env.DIRECT_URL, APP_ENV: process.env.APP_ENV },
-    process.argv,
-  );
+  const decision = decideSeed({ APP_ENV: process.env.APP_ENV }, process.argv);
   if (!decision.allowed) {
     console.error(decision.reason);
     process.exitCode = 1;
