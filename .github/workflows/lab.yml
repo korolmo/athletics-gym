@@ -100,6 +100,9 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # Тревоги выгорания (этап 5, ADR 0028): ключ UptimeRobot «только чтение» и чат «Дежурство» — только production
+          UPTIMEROBOT_READ_KEY: ${{ secrets.UPTIMEROBOT_READ_KEY }}
+          TELEGRAM_ALERT_CHAT_ID: ${{ secrets.TELEGRAM_ALERT_CHAT_ID }}
         run: |
           # Проект — только из VERCEL_PROJECT_ID: старый athletics-gym сюда не попадёт ни при каких настройках
           test "$VERCEL_PROJECT_ID" != "prj_AfWwCrzvgFoYkV56C2aocZ2DM4AM"
@@ -110,6 +113,8 @@ jobs:
           if [ -n "$CRON_SECRET" ]; then DB+=(--env "CRON_SECRET=$CRON_SECRET"); fi
           if [ -n "$TELEGRAM_CHAT_ID" ]; then DB+=(--env "TELEGRAM_CHAT_ID=$TELEGRAM_CHAT_ID"); fi
           if [ -n "$TELEGRAM_BOT_TOKEN" ]; then DB+=(--env "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN"); fi
+          if [ -n "$PROD" ] && [ -n "$UPTIMEROBOT_READ_KEY" ]; then DB+=(--env "UPTIMEROBOT_READ_KEY=$UPTIMEROBOT_READ_KEY"); fi
+          if [ -n "$PROD" ] && [ -n "$TELEGRAM_ALERT_CHAT_ID" ]; then DB+=(--env "TELEGRAM_ALERT_CHAT_ID=$TELEGRAM_ALERT_CHAT_ID"); fi
           URL=$(npx --yes vercel@50.4.9 deploy $PROD --yes --token "$VERCEL_TOKEN" "${DB[@]}" \
             --meta githubCommitSha=${{ github.sha }} --env RELEASE=${{ github.sha }} --build-env RELEASE=${{ github.sha }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
