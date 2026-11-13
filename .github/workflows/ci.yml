@@ -28,6 +28,28 @@ jobs:
       - name: Check workflows
         run: ./actionlint -color
 
+  budget:
+    # Бюджет ошибок Лаборатории (этап 5, docs/runbooks/error-budget.md): остаток — в отчёт PR. Только видимость:
+    # шаг никогда не красный и мерж не блокирует. Исчерпан — по политике в main идут только PR про надёжность.
+    name: Error budget (info)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Budget of the Lab
+        continue-on-error: true
+        run: |
+          json=$(curl -sf --max-time 20 https://korolmo.github.io/athletics-gym/status.json) || { echo "Страница статуса недоступна — остаток неизвестен." >> "$GITHUB_STEP_SUMMARY"; exit 0; }
+          node -e '
+            const s = JSON.parse(process.argv[1]);
+            const pct = (x) => (x * 100).toFixed(1).replace(".", ",") + " %";
+            const r = s.budget.remaining;
+            const head = r < 0
+              ? "### ⛔ Бюджет ошибок Лаборатории исчерпан: " + pct(r) + "\nПо политике (docs/runbooks/error-budget.md) в main — только PR про надёжность; исключение — строкой в описании PR."
+              : "### ✅ Бюджет ошибок Лаборатории: остаток " + pct(r);
+            const body = "Доступность страниц за окно: " + pct(s.overall.availability) + ", ошибок " + s.budget.errors + " из допустимых " + s.budget.allowedErrors.toFixed(1) + "; отчёт от " + s.generatedAt + ".";
+            console.log(head + "\n\n" + body);
+          ' "$json" >> "$GITHUB_STEP_SUMMARY"
+
   boundaries:
     # Границы кода (этап 6, ADR 0015): новое нарушение — ошибка; известные — в
     # .dependency-cruiser-known-violations.json, их число убывает с каждым перенесённым модулем.
