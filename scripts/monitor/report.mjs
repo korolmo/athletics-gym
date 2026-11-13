@@ -75,7 +75,7 @@ const hhmm = (t) => new Date(t).toISOString().slice(5, 16).replace("T", " ").rep
 const KIND_RU = { fastBurn: "быстрое выгорание (1 ч ≥ 14,4)", slowBurn: "медленное выгорание (6 ч ≥ 6)" };
 const episodeRows = episodes.slice(0, 20).map((e) => `<tr><td>${e.from === e.to ? esc(hhmm(e.from)) : `${esc(hhmm(e.from))} – ${esc(hhmm(e.to))}`}</td><td>${esc(KIND_RU[e.kind])}</td><td>${num(e.worst)}</td></tr>`).join("");
 const pmItems = postmortems.map((p) => `<li><a href="${REPO}/docs/postmortems/${esc(p.file)}">${esc(p.title)}</a> — ${esc(p.date)}, ${esc(p.status)}</li>`).join("");
-const budgetGone = s.budget.remaining < 0;
+const budgetGone = s.budget.remaining < 0 || s.speed.budget.remaining < 0;
 
 const html = `<!doctype html>
 <html lang="ru">
@@ -130,8 +130,9 @@ ul.pm { margin:0; padding-left:20px; }
 <span class="state"><span class="dot"></span>${state[1]}</span>
 ${reasons.length ? `<ul class="alerts">${reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
 <div class="grid">
-<div class="card"><span>Доступность страниц за 30 дней</span><b>${pct(s.overall.availability, 3)}</b><span>SLO ${pct(SLO.target, 1)}: ответ 200 со страницей быстрее ${SLO.latencyMs} мс</span></div>
-<div class="card"><span>Остаток бюджета ошибок</span><b>${pct(Math.max(-1, s.budget.remaining), 1)}</b><span>ошибок ${s.budget.errors} из допустимых ${num(s.budget.allowedErrors)}</span></div>
+<div class="card"><span>Доступность страниц за 30 дней</span><b>${pct(s.overall.availability, 3)}</b><span>SLO ${pct(SLO.target, 1)}: ответ 200 с первым экраном</span></div>
+<div class="card"><span>Остаток бюджета доступности</span><b>${pct(Math.max(-1, s.budget.remaining), 1)}</b><span>сбоев ${s.budget.errors} из допустимых ${num(s.budget.allowedErrors)}</span></div>
+<div class="card"><span>Скорость: быстрее ${s.speed.latencyMs} мс</span><b>${pct(s.speed.share, 2)}</b><span>SLO ${pct(s.speed.target, 0)}; бюджет ${pct(Math.max(-1, s.speed.budget.remaining), 0)} — медленных ${s.speed.budget.errors} из ${num(s.speed.budget.allowedErrors)}</span></div>
 <div class="card"><span>Задержка p50 / p95</span><b>${ms(s.overall.p50)} / ${ms(s.overall.p95)}</b><span>страницы, успешные ответы</span></div>
 <div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>${num(s.burn["1h"])} / ${num(s.burn["6h"])} / ${num(s.burn["24h"])}</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
 <div class="card"><span>Холодный старт (после выкаток)</span><b>${pct(cs.share, 0)}</b><span>${cs.good} из ${cs.cold} быстрее ${cs.latencyMs} мс, цель ${pct(cs.target, 0)}; p50 ${ms(cs.p50)}</span></div>
@@ -164,7 +165,7 @@ ${pmItems ? `<ul class="pm">${pmItems}</ul>` : `<p class="note">Разборов
 fs.writeFileSync(path.join(dir, "index.html"), html);
 fs.writeFileSync(path.join(dir, ".nojekyll"), "");
 
-const line = `Доступность страниц 30 д: ${pct(s.overall.availability, 3)} (проверок ${s.overall.total}), бюджет: ${pct(s.budget.remaining, 1)}, p95 ${ms(s.overall.p95)}, burn 24h ${num(s.burn["24h"])}; холодный старт: ${cs.good} из ${cs.cold}`;
+const line = `Доступность страниц 30 д: ${pct(s.overall.availability, 3)} (проверок ${s.overall.total}), бюджет: ${pct(s.budget.remaining, 1)}; скорость: ${pct(s.speed.share, 2)} быстрее 1 с, бюджет ${pct(s.speed.budget.remaining, 0)}; p95 ${ms(s.overall.p95)}, burn 24h ${num(s.burn["24h"])}; холодный старт: ${cs.good} из ${cs.cold}`;
 console.log(line);
 if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${line}\n${reasons.map((r) => `- ${r}`).join("\n")}\n`);
 if (s.alerting) {

@@ -42,11 +42,14 @@ jobs:
           node -e '
             const s = JSON.parse(process.argv[1]);
             const pct = (x) => (x * 100).toFixed(1).replace(".", ",") + " %";
-            const r = s.budget.remaining;
+            // Два бюджета (поправка к ADR 0014): доступность и скорость; политика — по худшему
+            const sp = s.speed ? s.speed.budget.remaining : 1;
+            const r = Math.min(s.budget.remaining, sp);
             const head = r < 0
               ? "### ⛔ Бюджет ошибок Лаборатории исчерпан: " + pct(r) + "\nПо политике (docs/runbooks/error-budget.md) в main — только PR про надёжность; исключение — строкой в описании PR."
               : "### ✅ Бюджет ошибок Лаборатории: остаток " + pct(r);
-            const body = "Доступность страниц за окно: " + pct(s.overall.availability) + ", ошибок " + s.budget.errors + " из допустимых " + s.budget.allowedErrors.toFixed(1) + "; отчёт от " + s.generatedAt + ".";
+            const speed = s.speed ? "; скорость: " + pct(s.speed.share) + " быстрее 1 с (цель 95 %), бюджет " + pct(sp) : "";
+            const body = "Доступность страниц за окно: " + pct(s.overall.availability) + " (цель 99,5 %), бюджет " + pct(s.budget.remaining) + speed + "; отчёт от " + s.generatedAt + ".";
             console.log(head + "\n\n" + body);
           ' "$json" >> "$GITHUB_STEP_SUMMARY"
 
