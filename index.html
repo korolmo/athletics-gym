@@ -14,7 +14,7 @@ main { max-width:860px; margin:0 auto; padding:32px 16px 48px; }
 h1 { font-size:1.6rem; margin:0 0 4px; }
 .sub { color:var(--muted); margin:0 0 24px; }
 .state { display:inline-flex; align-items:center; gap:8px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); }
-.dot { width:10px; height:10px; border-radius:50%; background:var(--bad); }
+.dot { width:10px; height:10px; border-radius:50%; background:var(--ok); }
 .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:24px 0; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
 .card b { display:block; font-size:1.5rem; font-variant-numeric:tabular-nums; }
@@ -28,32 +28,55 @@ ul.alerts { margin:16px 0 0; padding-left:20px; color:var(--bad); }
 p.note, p.stale { color:var(--muted); font-size:.875rem; margin-top:24px; }
 p.stale { color:var(--bad); font-weight:600; }
 a { color:inherit; }
+h2 { font-size:1.1rem; margin:32px 0 12px; }
+p.policy { background:var(--card); border:1px solid var(--bad); border-radius:12px; padding:12px 16px; color:var(--fg); }
+.chart { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px; }
+.chart svg { width:100%; height:auto; display:block; }
+.chart .frame { fill:none; stroke:var(--line); }
+.chart .thr { stroke:var(--bad); stroke-dasharray:4 4; opacity:.6; }
+.chart .fast { fill:none; stroke:var(--bad); stroke-width:1.5; }
+.chart .slow { fill:none; stroke:var(--warn); stroke-width:1.5; stroke-dasharray:6 3; }
+.chart .lbl { fill:var(--muted); font-size:10px; }
+p.legend { color:var(--muted); font-size:.8125rem; margin:8px 0 0; }
+.k { display:inline-block; width:14px; height:0; border-top:2px solid var(--bad); vertical-align:middle; margin:0 4px 0 8px; }
+.k.slow { border-top:2px dashed var(--warn); }
+ul.pm { margin:0; padding-left:20px; }
 </style>
 </head>
 <body>
 <main>
 <h1>Лаборатория Athletic's Gym — статус</h1>
-<p class="sub">Проверки UptimeRobot каждые 5 минут: страницы <code>/ru</code> и <code>/kk</code> (SLO), <code>/api/health/ready</code> (диагностика). Пересчёт раз в сутки, обновлено <span id="gen">2026-11-13 12:08</span> UTC.</p>
+<p class="sub">Проверки UptimeRobot каждые 5 минут: страницы <code>/ru</code> и <code>/kk</code> (SLO), <code>/api/health/ready</code> (диагностика). Пересчёт раз в сутки, обновлено <span id="gen">2026-11-13 20:50</span> UTC.</p>
 <p class="stale" id="stale" hidden>Данные старше 36 часов: суточный пересчёт не запускался.</p>
-<span class="state"><span class="dot"></span>Тревога</span>
-<ul class="alerts"><li>быстрое выгорание бюджета: burn за час до 25,00 (порог 14,4)</li><li>медленное выгорание: burn за 6 часов до 8,57 (порог 6)</li></ul>
+<span class="state"><span class="dot"></span>SLO выполняется</span>
+
 <div class="grid">
-<div class="card"><span>Доступность страниц за 30 дней</span><b>98,735 %</b><span>SLO 99,5 %: ответ 200 со страницей быстрее 1000 мс</span></div>
-<div class="card"><span>Остаток бюджета ошибок</span><b>-100,0 %</b><span>ошибок 42 из допустимых 16,60</span></div>
-<div class="card"><span>Задержка p50 / p95</span><b>82 мс / 300 мс</b><span>страницы, успешные ответы</span></div>
-<div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>0,00 / 0,00 / 2,17</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
-<div class="card"><span>Холодный старт (после выкаток)</span><b>98 %</b><span>41 из 42 быстрее 1500 мс, цель 90 %; p50 916 мс</span></div>
+<div class="card"><span>Доступность страниц за 30 дней</span><b>100,000 %</b><span>SLO 99,5 %: ответ 200 с первым экраном</span></div>
+<div class="card"><span>Остаток бюджета доступности</span><b>100,0 %</b><span>сбоев 0 из допустимых 17,80</span></div>
+<div class="card"><span>Скорость: быстрее 1000 мс</span><b>98,60 %</b><span>SLO 95 %; бюджет 72 % — медленных 50 из 177,95</span></div>
+<div class="card"><span>Задержка p50 / p95</span><b>82 мс / 309 мс</b><span>страницы, успешные ответы</span></div>
+<div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>0,00 / 0,00 / 0,00</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
+<div class="card"><span>Холодный старт (после выкаток)</span><b>98 %</b><span>51 из 52 быстрее 1500 мс, цель 90 %; p50 929 мс</span></div>
 </div>
+
+<h2>Burn rate за 7 дней</h2>
+<div class="chart"><svg viewBox="0 0 820 180" role="img" aria-label="Burn rate за 1 и 6 часов, по часам"><rect x="36" y="10" width="776" height="148" class="frame"/><line x1="36" x2="812" y1="87.0" y2="87.0" class="thr"/><text x="32" y="91.0" class="lbl" text-anchor="end">14,4</text><line x1="36" x2="812" y1="128.4" y2="128.4" class="thr"/><text x="32" y="132.4" class="lbl" text-anchor="end">6</text><path d="M128.9,158.0L133.6,158.0L138.2,158.0L142.9,158.0L147.5,158.0L152.2,158.0L156.8,158.0L161.5,158.0L166.1,158.0L170.8,158.0L175.4,158.0L180.0,158.0L184.7,158.0L189.3,158.0L194.0,158.0L198.6,158.0L203.3,158.0L207.9,158.0L212.6,158.0L217.2,158.0M235.8,158.0L240.5,158.0L245.1,158.0L249.7,158.0L254.4,158.0L259.0,158.0L263.7,158.0L268.3,158.0L273.0,158.0L277.6,158.0L282.3,158.0L286.9,158.0L291.6,158.0L296.2,158.0L300.9,158.0L305.5,158.0L310.2,158.0L314.8,158.0L319.4,158.0L324.1,158.0L328.7,158.0L333.4,158.0L338.0,158.0L342.7,158.0L347.3,158.0L352.0,158.0L356.6,158.0L361.3,158.0L365.9,158.0L370.6,158.0L375.2,158.0L379.9,158.0L384.5,158.0L389.1,158.0L393.8,158.0L398.4,158.0L403.1,158.0L407.7,158.0L412.4,158.0L417.0,158.0L421.7,158.0L426.3,158.0L431.0,158.0L435.6,158.0L440.3,158.0L444.9,158.0L449.6,158.0L454.2,158.0L458.9,158.0L463.5,158.0L468.1,158.0L472.8,158.0L477.4,158.0L482.1,158.0L486.7,158.0L491.4,158.0L496.0,158.0L500.7,158.0L505.3,158.0L510.0,158.0L514.6,158.0L519.3,158.0L523.9,158.0L528.6,158.0L533.2,158.0L537.8,158.0L542.5,158.0L547.1,158.0L551.8,158.0L556.4,158.0L561.1,158.0L565.7,158.0L570.4,158.0L575.0,158.0L579.7,158.0L584.3,158.0L589.0,158.0L593.6,158.0L598.3,158.0L602.9,158.0L607.5,158.0L612.2,158.0L616.8,158.0L621.5,158.0L626.1,158.0L630.8,158.0L635.4,158.0L640.1,158.0L644.7,158.0L649.4,158.0L654.0,158.0L658.7,158.0L663.3,158.0L668.0,158.0L672.6,158.0L677.2,158.0L681.9,158.0L686.5,158.0L691.2,158.0L695.8,158.0L700.5,158.0L705.1,158.0L709.8,158.0L714.4,158.0L719.1,158.0L723.7,158.0L728.4,158.0L733.0,158.0L737.7,158.0L742.3,158.0L746.9,158.0L751.6,158.0L756.2,158.0L760.9,158.0L765.5,158.0L770.2,158.0L774.8,158.0L779.5,158.0L784.1,158.0L788.8,158.0L793.4,158.0L798.1,158.0L802.7,158.0L807.4,158.0L812.0,158.0" class="slow"/><path d="M115.0,158.0L119.6,158.0L124.3,158.0L128.9,158.0L133.6,158.0L138.2,158.0L142.9,158.0L147.5,158.0L152.2,158.0L156.8,158.0L161.5,158.0L166.1,158.0L170.8,158.0L175.4,158.0L180.0,158.0L184.7,158.0L189.3,158.0L194.0,158.0L198.6,158.0L203.3,158.0M212.6,158.0M226.5,158.0L231.2,158.0L235.8,158.0L240.5,158.0L245.1,158.0L249.7,158.0L254.4,158.0L259.0,158.0L263.7,158.0L268.3,158.0L273.0,158.0L277.6,158.0L282.3,158.0L286.9,158.0L291.6,158.0L296.2,158.0L300.9,158.0L305.5,158.0L310.2,158.0L314.8,158.0L319.4,158.0L324.1,158.0L328.7,158.0L333.4,158.0L338.0,158.0L342.7,158.0L347.3,158.0L352.0,158.0L356.6,158.0L361.3,158.0L365.9,158.0L370.6,158.0L375.2,158.0L379.9,158.0L384.5,158.0L389.1,158.0L393.8,158.0L398.4,158.0L403.1,158.0L407.7,158.0L412.4,158.0L417.0,158.0L421.7,158.0L426.3,158.0L431.0,158.0L435.6,158.0L440.3,158.0L444.9,158.0L449.6,158.0L454.2,158.0L458.9,158.0L463.5,158.0L468.1,158.0L472.8,158.0L477.4,158.0L482.1,158.0L486.7,158.0L491.4,158.0L496.0,158.0L500.7,158.0L505.3,158.0L510.0,158.0L514.6,158.0L519.3,158.0L523.9,158.0L528.6,158.0L533.2,158.0L537.8,158.0L542.5,158.0L547.1,158.0L551.8,158.0M561.1,158.0L565.7,158.0L570.4,158.0L575.0,158.0L579.7,158.0L584.3,158.0L589.0,158.0L593.6,158.0L598.3,158.0L602.9,158.0L607.5,158.0L612.2,158.0L616.8,158.0L621.5,158.0L626.1,158.0L630.8,158.0L635.4,158.0L640.1,158.0M649.4,158.0L654.0,158.0L658.7,158.0L663.3,158.0L668.0,158.0L672.6,158.0L677.2,158.0L681.9,158.0L686.5,158.0L691.2,158.0L695.8,158.0L700.5,158.0L705.1,158.0L709.8,158.0L714.4,158.0L719.1,158.0L723.7,158.0L728.4,158.0L733.0,158.0L737.7,158.0L742.3,158.0L746.9,158.0L751.6,158.0L756.2,158.0L760.9,158.0L765.5,158.0L770.2,158.0L774.8,158.0L779.5,158.0L784.1,158.0L788.8,158.0L793.4,158.0L798.1,158.0L802.7,158.0L807.4,158.0" class="fast"/><text x="49.9" y="174" class="lbl" text-anchor="middle">11.07</text><text x="161.5" y="174" class="lbl" text-anchor="middle">11.08</text><text x="273.0" y="174" class="lbl" text-anchor="middle">11.09</text><text x="384.5" y="174" class="lbl" text-anchor="middle">11.10</text><text x="496.0" y="174" class="lbl" text-anchor="middle">11.11</text><text x="607.5" y="174" class="lbl" text-anchor="middle">11.12</text><text x="719.1" y="174" class="lbl" text-anchor="middle">11.13</text></svg></div>
+<p class="legend"><span class="k fast"></span>окно 1 ч <span class="k slow"></span>окно 6 ч · линии — пороги тревог 14,4 и 6 · по часам UTC; разрыв — данных мало</p>
+<h2>Тревоги за 7 дней</h2>
+<p class="note">Тревог не было.</p>
+<h2>Постмортемы</h2>
+<p class="note">Разборов пока нет.</p>
+<h2>Адреса</h2>
 <div class="table"><table>
 <thead><tr><th>Адрес</th><th>Роль</th><th>Доступность</th><th>p50</th><th>p95</th><th>За сутки</th><th>Последняя</th></tr></thead>
-<tbody><tr><td><code>/ru</code></td><td>SLO</td><td>98,85 %</td><td>84 мс</td><td>284 мс</td><td>276</td><td>200, 55 мс</td></tr><tr><td><code>/kk</code></td><td>SLO</td><td>98,62 %</td><td>81 мс</td><td>340 мс</td><td>277</td><td>200, 85 мс</td></tr><tr><td><code>/api/health/ready</code></td><td>диагностика</td><td>80,24 %</td><td>420 мс</td><td>1828 мс</td><td>276</td><td>200, 2973 мс</td></tr></tbody>
+<tbody><tr><td><code>/ru</code></td><td>SLO</td><td>100,00 %</td><td>84 мс</td><td>280 мс</td><td>291</td><td>200, 59 мс</td></tr><tr><td><code>/kk</code></td><td>SLO</td><td>100,00 %</td><td>81 мс</td><td>411 мс</td><td>289</td><td>200, 192 мс</td></tr><tr><td><code>/api/health/ready</code></td><td>диагностика</td><td>99,66 %</td><td>424 мс</td><td>1828 мс</td><td>290</td><td>200, 624 мс</td></tr></tbody>
 </table></div>
-<p class="note">Проверок страниц за окно: 3320. Опрос раз в 5 минут сам держит функцию Vercel тёплой, поэтому холодный старт меряется отдельно — сразу после выкатки, по заголовку <code>X-Cold-Start</code>. Синтетика GitHub Actions до 25 октября 2026 в расчёт не входит: cron запускался в 40 раз реже плана, измерение невалидно (ADR 0014). Это демо-стенд с синтетическими данными; боевой сайт клиента здесь не проверяется. Данные — <a href="status.json">status.json</a> и <code>data/</code> в ветке <code>monitoring</code>.</p>
+<p class="note">Проверок страниц за окно: 3559. Опрос раз в 5 минут сам держит функцию Vercel тёплой, поэтому холодный старт меряется отдельно — сразу после выкатки, по заголовку <code>X-Cold-Start</code>. Синтетика GitHub Actions до 25 октября 2026 в расчёт не входит: cron запускался в 40 раз реже плана, измерение невалидно (ADR 0014). Это демо-стенд с синтетическими данными; боевой сайт клиента здесь не проверяется. Данные — <a href="status.json">status.json</a> и <code>data/</code> в ветке <code>monitoring</code>.</p>
 </main>
 <script>
 // Суточный пересчёт может не запуститься (cron GitHub) — тогда страница сама скажет, что данные старые
 (function () {
-  var gen = Date.parse("2026-11-13T12:08:26.223Z");
+  var gen = Date.parse("2026-11-13T20:50:22.666Z");
   if (Date.now() - gen > 36 * 3600 * 1000) document.getElementById("stale").hidden = false;
 })();
 </script>
