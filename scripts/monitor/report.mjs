@@ -7,6 +7,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SLO, TARGETS, summarize } from "./sli.mjs";
+import { alertEpisodes, burnChartSvg, burnSeries, postmortemsFromReadme } from "./panel.mjs";
+
+/** Постмортемы и политика бюджета — в репозитории; страница ссылается на их версию в main. */
+const REPO = "https://github.com/korolmo/athletics-gym/blob/main";
 
 const dir = process.argv[2];
 if (!dir) {
@@ -62,6 +66,17 @@ const rows = TARGETS.map((t) => {
 }).join("");
 const cs = s.coldStart;
 
+// SLO-панель (этап 5): burn по часам за 7 дней, эпизоды тревог, постмортемы, политика бюджета
+const series = burnSeries(checks, Date.now(), 7 * 24);
+const episodes = alertEpisodes(series);
+const pmFile = path.join("docs", "postmortems", "README.md");
+const postmortems = fs.existsSync(pmFile) ? postmortemsFromReadme(fs.readFileSync(pmFile, "utf8")) : [];
+const hhmm = (t) => new Date(t).toISOString().slice(5, 16).replace("T", " ").replace("-", ".");
+const KIND_RU = { fastBurn: "быстрое выгорание (1 ч ≥ 14,4)", slowBurn: "медленное выгорание (6 ч ≥ 6)" };
+const episodeRows = episodes.slice(0, 20).map((e) => `<tr><td>${e.from === e.to ? esc(hhmm(e.from)) : `${esc(hhmm(e.from))} – ${esc(hhmm(e.to))}`}</td><td>${esc(KIND_RU[e.kind])}</td><td>${num(e.worst)}</td></tr>`).join("");
+const pmItems = postmortems.map((p) => `<li><a href="${REPO}/docs/postmortems/${esc(p.file)}">${esc(p.title)}</a> — ${esc(p.date)}, ${esc(p.status)}</li>`).join("");
+const budgetGone = s.budget.remaining < 0;
+
 const html = `<!doctype html>
 <html lang="ru">
 <head>
@@ -92,6 +107,19 @@ ul.alerts { margin:16px 0 0; padding-left:20px; color:var(--bad); }
 p.note, p.stale { color:var(--muted); font-size:.875rem; margin-top:24px; }
 p.stale { color:var(--bad); font-weight:600; }
 a { color:inherit; }
+h2 { font-size:1.1rem; margin:32px 0 12px; }
+p.policy { background:var(--card); border:1px solid var(--bad); border-radius:12px; padding:12px 16px; color:var(--fg); }
+.chart { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px; }
+.chart svg { width:100%; height:auto; display:block; }
+.chart .frame { fill:none; stroke:var(--line); }
+.chart .thr { stroke:var(--bad); stroke-dasharray:4 4; opacity:.6; }
+.chart .fast { fill:none; stroke:var(--bad); stroke-width:1.5; }
+.chart .slow { fill:none; stroke:var(--warn); stroke-width:1.5; stroke-dasharray:6 3; }
+.chart .lbl { fill:var(--muted); font-size:10px; }
+p.legend { color:var(--muted); font-size:.8125rem; margin:8px 0 0; }
+.k { display:inline-block; width:14px; height:0; border-top:2px solid var(--bad); vertical-align:middle; margin:0 4px 0 8px; }
+.k.slow { border-top:2px dashed var(--warn); }
+ul.pm { margin:0; padding-left:20px; }
 </style>
 </head>
 <body>
@@ -108,6 +136,15 @@ ${reasons.length ? `<ul class="alerts">${reasons.map((r) => `<li>${esc(r)}</li>`
 <div class="card"><span>Burn rate 1 ч / 6 ч / 24 ч</span><b>${num(s.burn["1h"])} / ${num(s.burn["6h"])} / ${num(s.burn["24h"])}</b><span>1 — бюджет кончится ровно за 30 дней</span></div>
 <div class="card"><span>Холодный старт (после выкаток)</span><b>${pct(cs.share, 0)}</b><span>${cs.good} из ${cs.cold} быстрее ${cs.latencyMs} мс, цель ${pct(cs.target, 0)}; p50 ${ms(cs.p50)}</span></div>
 </div>
+${budgetGone ? `<p class="policy">Бюджет ошибок исчерпан: по <a href="${REPO}/docs/runbooks/error-budget.md">политике</a> в Лабораторию идут только изменения про надёжность, пока остаток не станет ≥ 0.</p>` : ""}
+<h2>Burn rate за 7 дней</h2>
+<div class="chart">${burnChartSvg(series)}</div>
+<p class="legend"><span class="k fast"></span>окно 1 ч <span class="k slow"></span>окно 6 ч · линии — пороги тревог 14,4 и 6 · по часам UTC; разрыв — данных мало</p>
+<h2>Тревоги за 7 дней</h2>
+${episodeRows ? `<div class="table"><table><thead><tr><th>Горела (UTC, конец окна)</th><th>Тревога</th><th>Худший burn</th></tr></thead><tbody>${episodeRows}</tbody></table></div>` : `<p class="note">Тревог не было.</p>`}
+<h2>Постмортемы</h2>
+${pmItems ? `<ul class="pm">${pmItems}</ul>` : `<p class="note">Разборов пока нет.</p>`}
+<h2>Адреса</h2>
 <div class="table"><table>
 <thead><tr><th>Адрес</th><th>Роль</th><th>Доступность</th><th>p50</th><th>p95</th><th>За сутки</th><th>Последняя</th></tr></thead>
 <tbody>${rows}</tbody>
