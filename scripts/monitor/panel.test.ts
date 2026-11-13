@@ -8,7 +8,7 @@ const NOW = Date.parse("2026-11-13T18:00:00Z");
 function checks(hours: number, bad: (ts: number) => boolean = () => false) {
   const out = [];
   for (let t = NOW - hours * HOUR + 5 * 60_000; t <= NOW; t += 5 * 60_000) {
-    for (const target of ["/ru", "/kk"]) out.push({ t: new Date(t).toISOString(), target, status: 200, ms: bad(t) ? 2100 : 300 });
+    for (const target of ["/ru", "/kk"]) out.push({ t: new Date(t).toISOString(), target, status: bad(t) ? 0 : 200, ms: bad(t) ? null : 300 });
   }
   return out;
 }
@@ -22,7 +22,7 @@ describe("SLO-панель", () => {
   });
 
   it("эпизод тревоги — подряд идущие часы выше порога, с худшим значением", () => {
-    // Медленные проверки 15:35, 15:40, 15:45 на /ru и /kk — 6 из 24 за час (burn 50) и 6 из 144 за 6 часов (8,3)
+    // Сбои 15:35, 15:40, 15:45 на /ru и /kk — 6 из 24 за час (burn 50) и 6 из 144 за 6 часов (8,3)
     const bad = (t: number) => t > NOW - 2.5 * HOUR && t <= NOW - 2.25 * HOUR;
     const ep = alertEpisodes(burnSeries(checks(10, bad), NOW, 10));
     const fast = ep.filter((e) => e.kind === "fastBurn");
