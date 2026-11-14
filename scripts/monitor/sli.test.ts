@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MIN_DAILY_CHECKS, assertLabUrl, isGood, percentile, summarize, summarizeColdStarts } from "./sli.mjs";
+import { MIN_DAILY_CHECKS, assertLabUrl, isFast, isGood, percentile, summarize, summarizeColdStarts } from "./sli.mjs";
 
 const NOW = Date.parse("2026-10-27T12:00:00Z");
 const at = (minutesAgo: number) => new Date(NOW - minutesAgo * 60_000).toISOString();
@@ -13,11 +13,14 @@ function checks(n: number, bad: (i: number, target: string) => boolean = () => f
 const DAY = 288;
 
 describe("SLI", () => {
-  it("успех — 200 и быстрее секунды; сбой из журнала UptimeRobot (без времени) — неуспех", () => {
+  it("доступность — 200 с первым экраном, время не важно; скорость — ещё и быстрее секунды (поправка 13 ноября)", () => {
     expect(isGood({ status: 200, ms: 999 })).toBe(true);
-    expect(isGood({ status: 200, ms: 1000 })).toBe(false);
+    expect(isGood({ status: 200, ms: 2100 })).toBe(true);
     expect(isGood({ status: 503, ms: 10 })).toBe(false);
     expect(isGood({ status: 0, ms: null })).toBe(false);
+    expect(isFast({ status: 200, ms: 999 })).toBe(true);
+    expect(isFast({ status: 200, ms: 1000 })).toBe(false);
+    expect(isFast({ status: 0, ms: null })).toBe(false);
   });
 
   it("процентиль", () => {
@@ -58,6 +61,19 @@ describe("SLO 99,5 % за 30 дней: только страницы /ru и /kk"
     expect(s.budget.errors).toBe(29);
     expect(s.budget.remaining).toBeCloseTo(1 - 29 / 28.8);
     expect(s.alerts.fastBurn.firing).toBe(false);
+  });
+
+  it("медленные ответы тратят бюджет скорости (5 %), а не доступности", () => {
+    // 2 дня: 1152 проверки страниц, 2 % медленных — как сеть до внешнего проверяющего, но вдвое хуже
+    const all = checks(2 * DAY).map((c, i) => (c.target !== "/api/health/ready" && i % 50 === 0 ? { ...c, ms: 2100 } : c));
+    const s = summarize(all, NOW);
+    expect(s.overall.availability).toBe(1);
+    expect(s.budget.remaining).toBe(1);
+    expect(s.alerting).toBe(false);
+    expect(s.speed.target).toBe(0.95);
+    expect(s.speed.share).toBeGreaterThan(0.95);
+    expect(s.speed.budget.remaining).toBeGreaterThan(0);
+    expect(s.speed.budget.remaining).toBeLessThan(1);
   });
 
   it("проверки старше 30 дней не считаются", () => {
