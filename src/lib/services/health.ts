@@ -87,6 +87,8 @@ export async function getHealth(storage: StorageHealth, ensureOwner: () => Promi
       heapUsed: mb(memory.heapUsed),
       heapTotal: mb(memory.heapTotal),
       external: mb(memory.external),
+      // Часть external: буферы (драйвер базы, ответы); остальное вне кучи — WASM компилятора запросов Prisma 7
+      arrayBuffers: mb(memory.arrayBuffers),
       heapLimit: mb(v8.getHeapStatistics().heap_size_limit),
       systemFree: mb(os.freemem()),
     },

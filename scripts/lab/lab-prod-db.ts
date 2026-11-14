@@ -7,7 +7,8 @@
 // Адрес кластера — LAB_DATABASE_URL (секрет), база здесь всегда athletics. Боевую базу (hoster.kz) этот скрипт
 // не знает и знать не может: её адрес есть только в Plesk.
 import { spawnSync } from "node:child_process";
-import { PrismaClient } from "@prisma/client";
+// Prisma 7: клиент генерируется в TypeScript, поэтому скрипт — .ts и запускается через tsx (lab.yml)
+import { createPrismaClient } from "../../src/lib/db-client";
 import { hideUrl, withConnectRetry } from "./connect-retry.mjs";
 import { labProductionUrl } from "./preview-db-core.mjs";
 
@@ -16,7 +17,7 @@ if (!base) {
   console.error("Нет LAB_DATABASE_URL (секрет репозитория) — миграции Лаборатории пропущены.");
   process.exit(1);
 }
-const url = labProductionUrl(base);
+const url: string = labProductionUrl(base);
 
 /** Пн–сб 09:00–13:00 и 15:00–21:00, тренировка — час; как в seed Лаборатории для превью. */
 const DEFAULT_HOURS = [1, 2, 3, 4, 5, 6].flatMap((weekday) => [
@@ -28,7 +29,7 @@ async function main() {
   const migrate = spawnSync(process.execPath, ["scripts/standalone/migrate.cjs"], { env: { ...process.env, DATABASE_URL: url }, stdio: "inherit" });
   if (migrate.status !== 0) throw new Error(`Миграции Лаборатории не применились (код ${migrate.status}).`);
 
-  const db = new PrismaClient({ datasourceUrl: url });
+  const db = createPrismaClient(url);
   try {
     await withConnectRetry(() => db.$queryRawUnsafe("SELECT 1"));
     const trainers = await db.trainer.findMany({ where: { workHours: { none: {} }, schedule: null }, select: { id: true } });

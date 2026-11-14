@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/db-client";
 import { decideSeed } from "../src/lib/db-guard/production";
 import { DEFAULT_ABOUT_CARDS, DEFAULT_SETTINGS } from "../src/modules/site/domain/site-settings.defaults";
 import { settingsToRow } from "../src/modules/site/domain/site-settings";
@@ -7,7 +7,7 @@ import { HALLS, MONTH, ONCE, hallTariffs, type HallId, type TariffSeed } from ".
 
 // Реальный прайс и Тренеры от Владельца (7 октября 2026):
 // docs/owner/prices-2026-10.md и docs/owner/trainers-2026-10.md
-const db = new PrismaClient();
+const db = createPrismaClient(process.env.DATABASE_URL);
 
 type TrainerSeed = {
   name: string;

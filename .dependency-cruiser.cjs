@@ -173,7 +173,8 @@ module.exports = {
 
   options: {
     doNotFollow: { path: "node_modules" },
-    exclude: { path: ["\\.test\\.tsx?$", "\\.d\\.ts$"] },
+    // src/generated — клиент Prisma 7: генерируется (prisma generate), не наш код, свои циклы
+    exclude: { path: ["\\.test\\.tsx?$", "\\.d\\.ts$", "^src/generated/"] },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: "tsconfig.json" },
     enhancedResolveOptions: {

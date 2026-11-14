@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../generated/prisma/client";
+import { createPrismaClient } from "./db-client";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { isNotFound } from "@/lib/admin/db-errors";
 import { settingsFromRow, settingsToRow } from "@/modules/site/client";
@@ -14,9 +15,8 @@ import { CLUB_FIELDS, CLUB_ID, DEFAULT_CLUB } from "@/modules/club/client";
 
 const URL_ = process.env.TEST_DATABASE_URL;
 const require = createRequire(import.meta.url);
-const { migrate, singleConnectionUrl } = require("../../scripts/standalone/migrate.cjs") as {
+const { migrate } = require("../../scripts/standalone/migrate.cjs") as {
   migrate: (o: { db: PrismaClient; dir: string; log?: (m: string) => void }) => Promise<string[]>;
-  singleConnectionUrl: (url: string) => string;
 };
 const DIR = "prisma/migrations";
 const BASELINE = "20261015000000_init_mariadb";
@@ -27,7 +27,7 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
   let db: PrismaClient;
 
   beforeAll(async () => {
-    db = new PrismaClient({ datasourceUrl: singleConnectionUrl(URL_!) });
+    db = createPrismaClient(URL_!, { connectionLimit: 1 });
     const tables = await db.$queryRawUnsafe<{ name: string }[]>(
       "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE()",
     );
@@ -164,8 +164,8 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
 const pooled = vi.hoisted(() => ({ db: null as PrismaClient | null }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", async () => {
-  const { PrismaClient: Client } = await import("@prisma/client");
-  pooled.db = new Client({ datasourceUrl: process.env.TEST_DATABASE_URL });
+  const { createPrismaClient: create } = await import("./db-client");
+  pooled.db = create(process.env.TEST_DATABASE_URL);
   return { db: pooled.db };
 });
 vi.mock("@/modules/owner", () => ({ requireOwner: async () => {} }));

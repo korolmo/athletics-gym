@@ -1,5 +1,5 @@
 import "server-only";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 
 // Что модуль Клиенты отдаёт другим модулям (этап 1). Клиенты ни от кого не зависят: проверку Владельца

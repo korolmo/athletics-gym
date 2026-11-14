@@ -15,7 +15,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../../src/lib/db-client";
 import dotenv from "dotenv";
 import sharp from "sharp";
 import { SESSION_COOKIE, signSession } from "../../src/modules/owner/domain/session";
@@ -86,7 +86,7 @@ async function waitReady(): Promise<void> {
 }
 
 async function ownerCookie(): Promise<string> {
-  const db = new PrismaClient({ datasourceUrl: env.DATABASE_URL });
+  const db = createPrismaClient(env.DATABASE_URL);
   try {
     const owner = await db.owner.findUnique({ where: { id: "owner" }, select: { sessionVersion: true } });
     if (!owner) throw new Error("В базе нет аккаунта Владельца — импортируйте дамп или войдите в админку один раз.");

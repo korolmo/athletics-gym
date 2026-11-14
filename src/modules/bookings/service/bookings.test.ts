@@ -19,7 +19,14 @@ type Row = {
 
 const { state, db, mocks } = vi.hoisted(() => {
   const state = { rows: [] as Row[], seq: 0, client: "k1", windowFree: true, trainer: { id: "t1", name: "Арман", hallId: "general" } as object | null };
-  const p2002 = (target: string[]) => Object.assign(new Error("unique"), { code: "P2002", meta: { target } });
+  // Как в Prisma 7 с драйвером mariadb: полей в meta нет, только имя индекса Booking_<поля>_key
+  const p2002 = (target: string[]) => {
+    const index = `Booking_${target.join("_")}_key`;
+    return Object.assign(new Error(`Unique constraint failed on the constraint: ${index}`), {
+      code: "P2002",
+      meta: { modelName: "Booking", driverAdapterError: { cause: { kind: "UniqueConstraintViolation", constraint: { index } } } },
+    });
+  };
   const pick = (r: Row, select?: Record<string, boolean>) => (select ? Object.fromEntries(Object.keys(select).map((k) => [k, r[k as keyof Row]])) : { ...r });
   const match = (r: Row, w: Record<string, unknown>) =>
     Object.entries(w).every(([k, v]) => {

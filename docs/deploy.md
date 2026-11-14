@@ -282,7 +282,15 @@ PR #17. Миграция применена к боевой базе до merge;
 ## Что стоит сделать позже
 
 - 15 ноября (30 дней после переключения без отката): удалить `.env.preview`, скрипты `transfer:*`, драйвер `supabase` и `@supabase/supabase-js`; поставить на паузу обе базы Supabase.
-- Если памяти станет мало: Prisma с драйвером `@prisma/adapter-mariadb` без движка на Rust (в Prisma 6 — preview-возможность; меньше памяти и не нужны `binaryTargets`).
+## Prisma 7 и драйвер mariadb (с ноября 2026)
+
+- Клиент Prisma 7 — без движка на Rust: запросы идут через драйвер `mariadb` (`@prisma/adapter-mariadb`, `src/lib/db-client.ts`). Клиент генерируется в `src/generated/prisma` (не в git) — `npm install` запускает `prisma generate`. Настройки CLI (схема, миграции, seed, строка для `migrate`) — `prisma.config.ts`; `.env` CLI сам больше не читает, его читает этот файл.
+- **Строка `DATABASE_URL` прежняя** (`mysql://…`). Параметры Prisma переводит в настройки драйвера `scripts/standalone/db-config.cjs`: `connection_limit` (по умолчанию ядра × 2 + 1), `connect_timeout` и `pool_timeout` в секундах (5 и 10). TLS по адресу: доменное имя (TiDB Лаборатории) — с проверкой сертификата, IP-адрес (hoster.kz — 127.0.0.1) и имя без точки (localhost, сервисы Docker) — без TLS; `sslaccept=strict|accept_invalid_certs` и `sslmode=disable` главнее. Драйвер не умеет «TLS, если сервер может», как Prisma 6.
+- **Миграции на хостинге** (`start.cjs`, `migrate.cjs`) идут тем же драйвером одним соединением; клиент Prisma им не нужен. Драйвер в сборке — пакетом в `node_modules` (`serverExternalPackages` в `next.config.mjs`), `assemble.mjs` проверяет, что он там есть.
+- **Отличие от Prisma 6:** если база недоступна совсем, запрос ждёт до `pool_timeout` (10 с), пока пул пытается подключиться; Prisma 6 падала сразу. Страницы при этом отвечают ошибкой, как и раньше, только позже.
+- Нарушение уникального индекса (P2002): в Prisma 7 полей в `meta.target` нет — только имя индекса (`Booking_idempotencyKey_key`) в `meta.driverAdapterError.cause.constraint` и в тексте ошибки; так их и разбирать (`uniqueTarget` в модуле Записей). Поймал тест гонки на MariaDB.
+- **Память (прод-двойник, 256 МБ):** после запуска 115 → 101 МБ, пик под нагрузкой 195 → 214–221 МБ (порог 230): запросы разбирают JS и WASM-компилятор, а не Rust. Компилятор — сборка `small` (`compilerBuild` в схеме): с `fast` пик был 300 МБ. Клиент — один на процесс (`src/lib/db.ts`, `globalThis`): сборка встраивает модуль в несколько chunk'ов.
+- Пакет для хостинга: 106 МБ → 39 МБ (вариантов движка под Linux больше нет).
 
 ## История
 

@@ -8,7 +8,9 @@ export const CONNECT_RETRY_DELAY_MS = 3000;
 
 // P1001 — сервер недоступен, P1002 — тайм-аут, P1017 — сервер закрыл соединение
 const CONNECT_CODES = new Set(["P1001", "P1002", "P1017"]);
-const CONNECT_MESSAGE = /can't reach database server|timed out|connection (refused|reset|closed)|ECONNRESET|ECONNREFUSED|ETIMEDOUT/i;
+// Драйвер mariadb (Prisma 7): «connection timeout», «socket timeout», ER_CONNECTION_TIMEOUT, ER_GET_CONNECTION_TIMEOUT
+const CONNECT_MESSAGE =
+  /can't reach database server|timed out|connection (refused|reset|closed|timeout)|socket timeout|ER_(GET_)?CONNECTION_TIMEOUT|ECONNRESET|ECONNREFUSED|ETIMEDOUT/i;
 
 /** Ошибка соединения с базой, а не запроса. */
 export function isConnectError(error) {

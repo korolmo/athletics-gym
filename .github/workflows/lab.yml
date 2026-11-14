@@ -74,7 +74,7 @@ jobs:
             exit 0
           fi
           npm ci --no-audit --no-fund
-          node scripts/lab/lab-prod-db.mjs
+          npx tsx scripts/lab/lab-prod-db.ts
 
       - name: Preview database pr_${{ github.event.number }}
         if: github.event_name == 'pull_request' && steps.token.outputs.skip != 'true'

@@ -72,16 +72,15 @@ const nextConfig = {
     "/\\[locale\\]/twitter-image": OG_IMAGE_FILES,
   },
   // Turbopack (Next 16) трассирует шире webpack: исходники модуля Фото (по чтению папки Фото) и весь runtime Prisma —
-  // WASM-движки и компиляторы запросов для пяти баз (~50 МБ при диске 1 ГБ). Нам нужен только движок-библиотека
-  // (runtime/library.js + .so.node из binaryTargets); пакет для хостинга проверяет scripts/standalone/assemble.mjs.
+  // компиляторы запросов для пяти баз и варианты для edge (десятки МБ при диске 1 ГБ). Prisma 7 нужен только
+  // компилятор запросов MySQL (query_compiler_*_bg.mysql) и runtime/client; пакет для хостинга проверяет assemble.mjs.
   outputFileTracingExcludes: {
     "/**": [
       "./src/**/*.{ts,tsx}",
-      "./node_modules/@prisma/client/runtime/*.wasm-base64.*",
-      "./node_modules/@prisma/client/runtime/query_{compiler,engine}_bg.*",
-      "./node_modules/@prisma/client/runtime/{edge,edge-esm,binary,react-native,wasm-*}.*",
+      "./node_modules/@prisma/client/runtime/*.{postgresql,sqlite,sqlserver,cockroachdb}.*",
+      "./node_modules/@prisma/client/runtime/query_compiler_fast_bg.*",
+      "./node_modules/@prisma/client/runtime/{edge,edge-esm,binary,library,react-native,wasm-*}.*",
       "./node_modules/@prisma/client/runtime/*.d.{ts,mts}",
-      "./node_modules/.prisma/client/{query_engine_bg.wasm,wasm*,edge.js}",
     ],
   },
   // Оптимизатора картинок на сервере нет (памяти мало, sharp на хостинг не ставим). Размеры готовят заранее:
@@ -94,6 +93,9 @@ const nextConfig = {
     imageSizes: [64, 128, 256],
   },
   poweredByHeader: false,
+  // Драйвер базы (Prisma 7) — не в бандл, а пакетом в node_modules сборки: тем же драйвером start.cjs применяет
+  // миграции до запуска сервера (scripts/standalone/db-config.cjs), бандл ему недоступен
+  serverExternalPackages: ["@prisma/adapter-mariadb", "mariadb"],
   // Страница 404 для адресов без маршрута — app/global-not-found.tsx (ADR 0013)
   experimental: { globalNotFound: true },
   async headers() {

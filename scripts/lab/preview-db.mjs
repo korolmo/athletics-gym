@@ -4,7 +4,7 @@
 //   node scripts/lab/preview-db.mjs drop <номер PR>     — удалить pr_<номер> (PR закрыт)
 // Адрес кластера — LAB_DATABASE_URL (база в пути неважна). Работает только с базами pr_<число>.
 import fs from "node:fs";
-import { PrismaClient } from "@prisma/client";
+import { createRequire } from "node:module";
 import { databasesToDrop, previewDbName, withDatabase } from "./preview-db-core.mjs";
 import { hideUrl, withConnectRetry } from "./connect-retry.mjs";
 
@@ -20,7 +20,10 @@ if (!base) {
 }
 
 const name = previewDbName(prNumber);
-const db = new PrismaClient({ datasourceUrl: withDatabase(base, "mysql") });
+// Prisma 7: клиент генерируется в TypeScript — здесь, в обычном node, только SQL через драйвер mariadb (db-config.cjs)
+const { openSingleConnection } = createRequire(import.meta.url)("../standalone/db-config.cjs");
+/** @type {Awaited<ReturnType<typeof openSingleConnection>> | undefined} */
+let db;
 
 async function previewDatabases() {
   const schemas = await db.$queryRawUnsafe("SELECT SCHEMA_NAME AS name FROM information_schema.SCHEMATA WHERE SCHEMA_NAME LIKE 'pr\_%'");
@@ -34,7 +37,7 @@ async function previewDatabases() {
 // Имена проверены previewDbName / databasesToDrop: только pr_<число>, поэтому подстановка в SQL безопасна
 async function main() {
   // Холодный TiDB: первое соединение бывает дольше тайм-аута — повторяем только его
-  await withConnectRetry(() => db.$queryRawUnsafe("SELECT 1"));
+  db = await withConnectRetry(() => openSingleConnection(withDatabase(base, "mysql")));
   if (command === "drop") {
     await db.$executeRawUnsafe(`DROP DATABASE IF EXISTS \`${name}\``);
     console.log(`База превью ${name} удалена.`);
@@ -60,4 +63,4 @@ main()
     console.error(hideUrl(e?.message ?? e));
     process.exitCode = 1;
   })
-  .finally(() => db.$disconnect());
+  .finally(() => db?.$disconnect());

@@ -21,7 +21,8 @@ const ROOT = path.resolve(__dirname, "..", "..");
 function files(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const full = path.join(dir, e.name);
-    if (e.isDirectory()) return files(full);
+    // src/generated — клиент Prisma 7, копия схемы с комментариями: не код
+    if (e.isDirectory()) return full === path.join(ROOT, "src", "generated") ? [] : files(full);
     return /\.(ts|tsx)$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) ? [full] : [];
   });
 }

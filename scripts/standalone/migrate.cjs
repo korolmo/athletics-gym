@@ -95,15 +95,20 @@ function singleConnectionUrl(url) {
 module.exports = { migrate, listMigrations, singleConnectionUrl };
 
 if (require.main === module) {
-  const { PrismaClient } = require("@prisma/client");
-  const db = new PrismaClient({ datasourceUrl: singleConnectionUrl(process.env.DATABASE_URL) });
+  // Prisma 7: клиент генерируется в TypeScript и обычному node недоступен — миграции идут прямо через драйвер mariadb
+  const { openSingleConnection } = require("./db-config.cjs");
   // В собранном приложении папка миграций лежит рядом с этим файлом, в репозитории — в prisma/ от корня
   const bundled = path.join(__dirname, "prisma", "migrations");
-  migrate({ db, dir: fs.existsSync(bundled) ? bundled : path.resolve("prisma", "migrations") })
-    .then((applied) => console.log(applied.length ? `Готово: применено ${applied.length}.` : "Новых миграций нет."))
-    .catch((e) => {
-      console.error(e.message);
-      process.exitCode = 1;
-    })
-    .finally(() => db.$disconnect());
+  (async () => {
+    const db = await openSingleConnection(process.env.DATABASE_URL);
+    try {
+      const applied = await migrate({ db, dir: fs.existsSync(bundled) ? bundled : path.resolve("prisma", "migrations") });
+      console.log(applied.length ? `Готово: применено ${applied.length}.` : "Новых миграций нет.");
+    } finally {
+      await db.$disconnect();
+    }
+  })().catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });
 }
