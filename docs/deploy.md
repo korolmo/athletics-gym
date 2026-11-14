@@ -13,8 +13,8 @@
 | **Боевая (hoster.kz)** | MariaDB 10.4 на `127.0.0.1:3306` хостинга (в `DATABASE_URL` — `127.0.0.1`, не `localhost`), снаружи недоступна | только сайт на hoster.kz | переменные среды Plesk |
 | **Лаборатория** | TiDB Cloud Starter (Франкфурт, eu-central-1), база `athletics`, TLS (`sslaccept=strict`) | production проекта Vercel `athletics-gym-lab`; `npm run seed:lab` | `.env.lab`, переменная `DATABASE_URL` проекта Vercel (только Production) |
 | **Превью PR** | тот же кластер TiDB, база `pr_<номер>` на каждый PR (ADR 0012): пересоздаётся при каждой выкатке, удаляется при закрытии PR, не больше 20 | превью Лаборатории этого PR | секрет репозитория `LAB_DATABASE_URL`; деплою — через `vercel deploy --env` |
-| **Прежняя боевая** | Supabase, код проекта `vrvupsqjhyhghgikboif` (Франкфурт) | до 16 октября — сайт на Vercel; теперь резерв для отката до 15 ноября: не пишем, не ставим на паузу; `npm run transfer:*` (только чтение) | `.env.preview` |
-| **Разработка до этапа 8** | Supabase `athletics-gym-dev` (`ptiiovdgxjdcpxlygnrx`) | кодом больше не используется (PostgreSQL) | `.env`, переменные с префиксом `SUPABASE_DEV_` |
+| **Прежняя боевая** | Supabase, код проекта `vrvupsqjhyhghgikboif` (Франкфурт) | до 16 октября — сайт на Vercel; с 15 ноября на паузе, кодом не используется (скрипты переноса удалены) | — |
+| **Разработка до этапа 8** | Supabase `athletics-gym-dev` (`ptiiovdgxjdcpxlygnrx`) | база (PostgreSQL) кодом не используется; **Storage — хранилище Фото Лаборатории**, проект не ставить на паузу | `.env` (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`), переменные проекта Vercel `athletics-gym-lab` |
 
 - Превью Vercel отключены (`vercel.json`: `git.deploymentEnabled: false`): без MariaDB они бы падали. Ветка проверяется локально и в CI.
 - Vercel сайт больше не собирает: production проекта `athletics-gym` — редирект из `ops/vercel-redirect` (308 на `https://athleticsgym.kz/…`). Прежний деплой сайта (`athletics-meaawsu1l-korolmos-projects.vercel.app`) оставлен для отката до 15 ноября — `docs/hosting-plesk.md`, «План отката». Сам редирект держать минимум 180 дней — до ~14 апреля 2027, лучше год (до 16 октября 2027): в Search Console идёт «Изменение адреса».
@@ -32,7 +32,6 @@
 | `npm run build`, затем `node scripts/standalone/assemble.mjs` | Сборка standalone и готовый пакет для хостинга в `dist/hosting` (как в ветке `deploy`) |
 | `npm run start:standalone` | Запуск `dist/hosting` локально, как в Plesk (`NODE_OPTIONS=--max-old-space-size=160`), порт 3100 |
 | `npm run memory:check` | Замер памяти собранного сервера под нагрузкой; с `DOCKER_IMAGE=node:23-bookworm-slim` — в Linux-контейнере с лимитом 256 МБ |
-| `npm run transfer:export`, `npm run transfer:verify` | Перенос данных с боевой Supabase: дамп и фото в `C:\gym-transfer` (вне OneDrive), проверка на локальной MariaDB (`docs/hosting-plesk.md`, раздел 4) |
 
 Скриптов `db:status:prod` / `db:migrate:prod` больше нет: схема теперь под MySQL, к боевой Supabase Prisma не подключится, а к MariaDB хостинга снаружи доступа нет.
 
@@ -281,7 +280,7 @@ PR #17. Миграция применена к боевой базе до merge;
 
 ## Что стоит сделать позже
 
-- 15 ноября (30 дней после переключения без отката): удалить `.env.preview`, скрипты `transfer:*`, драйвер `supabase` и `@supabase/supabase-js`; поставить на паузу обе базы Supabase.
+- Уборка этапа 8 (15 ноября 2026) сделана в коде: скрипты `transfer:*` и пакет `pg` удалены, проверка seed по строке боевой Supabase — тоже (боевая база — `APP_ENV=production`). Руками: боевую Supabase `vrvupsqjhyhghgikboif` — на паузу, `.env.preview` — удалить у себя. **Драйвер `supabase`, `@supabase/supabase-js` и dev-проект остаются** — в нём Фото Лаборатории: план уборки от 16 октября писался до Лаборатории.
 - Если памяти станет мало: Prisma с драйвером `@prisma/adapter-mariadb` без движка на Rust (в Prisma 6 — preview-возможность; меньше памяти и не нужны `binaryTargets`).
 
 ## История

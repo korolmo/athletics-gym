@@ -1,53 +1,23 @@
 // Защита от случайного запуска разрушительных команд на боевой базе.
-// Чистые функции без зависимостей: используются в prisma/seed.ts и в тестах.
-
-/** Боевая база: проект Supabase во Франкфурте. */
-export const PRODUCTION_DB = { projectRef: "vrvupsqjhyhghgikboif", region: "eu-central-1" } as const;
+// Чистые функции без зависимостей: используются в prisma/seed.ts, prisma/seed-lab.ts и в тестах.
 
 /** Флаг, которым осознанно разрешают seed на боевой базе; его передаёт `npm run seed:force-production`. */
 export const FORCE_PRODUCTION_FLAG = "--force-production";
 
-/**
- * Указывает ли строка подключения на боевую базу.
- * Проект узнаём по ссылке в имени пользователя (`postgres.<ref>` у пулера) или в хосте
- * (`db.<ref>.supabase.co` у прямого подключения); регион — по хосту пулера.
- */
-export function isProductionDatabaseUrl(url: string | undefined): boolean {
-  if (!url) return false;
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return false;
-  }
-  const user = decodeURIComponent(parsed.username).toLowerCase();
-  const host = parsed.hostname.toLowerCase();
-  const { projectRef, region } = PRODUCTION_DB;
-
-  const directHost = host === `db.${projectRef}.supabase.co`;
-  const poolerOfProject = user === `postgres.${projectRef}` && host.includes(region);
-  return directHost || poolerOfProject;
-}
-
 export type SeedDecision = { allowed: true; production: boolean } | { allowed: false; reason: string };
 
 /**
- * Можно ли запускать seed: на боевой базе — только с флагом.
- * Боевая база — та, что на хостинге hoster.kz (там задано APP_ENV=production, ADR 0004),
- * или прежняя боевая Supabase (по строкам подключения).
+ * Можно ли запускать seed: на боевой базе — только с флагом. Боевая база — на хостинге hoster.kz, там задано
+ * APP_ENV=production (ADR 0004); снаружи она недоступна. Проверку по строке прежней боевой Supabase убрала уборка
+ * этапа 8 (15 ноября 2026): та база на паузе, а схема теперь MySQL — Prisma к ней не подключится.
  */
-export function decideSeed(
-  env: { DATABASE_URL?: string; DIRECT_URL?: string; APP_ENV?: string },
-  argv: readonly string[],
-): SeedDecision {
-  const production =
-    env.APP_ENV === "production" || isProductionDatabaseUrl(env.DATABASE_URL) || isProductionDatabaseUrl(env.DIRECT_URL);
-  if (!production) return { allowed: true, production: false };
+export function decideSeed(env: { APP_ENV?: string }, argv: readonly string[]): SeedDecision {
+  if (env.APP_ENV !== "production") return { allowed: true, production: false };
   if (argv.includes(FORCE_PRODUCTION_FLAG)) return { allowed: true, production: true };
   return {
     allowed: false,
     reason:
-      `Отказ: это боевая база — APP_ENV=production или строка подключения к боевой Supabase (${PRODUCTION_DB.region}, проект ${PRODUCTION_DB.projectRef}).\n` +
+      `Отказ: это боевая база — APP_ENV=production.\n` +
       `Seed удаляет все Залы, Тарифы и Тренеров, заводит их заново из прайса и возвращает Настройки сайта к начальным.\n` +
       `Если это действительно нужно: npm run seed:force-production (передаёт ${FORCE_PRODUCTION_FLAG}).`,
   };

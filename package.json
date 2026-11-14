@@ -28,8 +28,6 @@
     "studio": "prisma studio",
     "storage:setup": "dotenv -e .env -- tsx scripts/storage-setup.ts",
     "db:up": "docker compose up -d mariadb",
-    "transfer:export": "tsx scripts/transfer/export.ts",
-    "transfer:verify": "tsx scripts/transfer/verify.ts",
     "memory:check": "tsx scripts/standalone/memory-check.ts",
     "twin:measure": "tsx scripts/twin/measure.ts"
   },
@@ -49,7 +47,6 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.0.0",
-    "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "dependency-cruiser": "18.7.0",
@@ -58,7 +55,6 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.6",
     "fflate": "^0.8.3",
-    "pg": "^8.23.1",
     "prisma": "^6.19.3",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.1.0",
