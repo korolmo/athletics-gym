@@ -1,11 +1,16 @@
 // SLI/SLO Лаборатории (ADR 0014): чистые функции без зависимостей — их берут uptimerobot-fetch.mjs, report.mjs и тесты.
-// Источник проверок — UptimeRobot, каждые 5 минут. SLO: 99,5 % проверок страниц /ru и /kk за 30 дней успешны;
-// успех — HTTP 200 (и ключевое слово страницы) быстрее 1 с. /api/health/ready — диагностика, в SLO не входит.
+// Источник проверок — UptimeRobot, каждые 5 минут. С 13 ноября 2026 (поправка к ADR 0014) два SLO по страницам /ru и /kk
+// за 30 дней: доступность — 99,5 % проверок с ответом 200 и первым экраном (время не важно); скорость — 95 % проверок
+// быстрее 1 с. Скорость отдельно, потому что сеть до внешнего проверяющего сама даёт ~1,3 % ответов медленнее секунды
+// (зонд кэша, постмортем 2026-11-13). /api/health/ready — диагностика, в SLO не входит.
 // Холодный старт — отдельный SLI по заголовку X-Cold-Start (замер после каждой выкатки, cold-start.mjs).
 // Бюджет ошибок — 0,5 % проверок окна; burn rate — доля ошибок в окне / 0,5 % (1 — бюджет тратится ровно за 30 дней).
 
 export const SLO = { target: 0.995, windowDays: 30, latencyMs: 1000 };
 export const BUDGET = 1 - SLO.target;
+/** SLO скорости: 95 % проверок страниц быстрее 1 с — свой бюджет 5 %, тревог выгорания у него нет. */
+export const SPEED_SLO = { target: 0.95, latencyMs: SLO.latencyMs };
+export const SPEED_BUDGET = 1 - SPEED_SLO.target;
 /** Страницы, по которым считается SLO. */
 export const SLO_TARGETS = ["/ru", "/kk"];
 /** Диагностика: видна на странице статуса, но бюджет не тратит. */
@@ -57,9 +62,17 @@ export function assertLabUrl(url) {
   return url;
 }
 
-/** Успешна ли проверка для SLO. ms нет — UptimeRobot записал адрес как недоступный. */
+/**
+ * Успешна ли проверка для SLO доступности: ответ 200 с первым экраном. ms нет — UptimeRobot записал адрес как
+ * недоступный (сбой, тайм-аут, нет ключевого слова). Время ответа здесь не важно — его мерит SLO скорости.
+ */
 export function isGood(check) {
-  return check.status === 200 && typeof check.ms === "number" && check.ms < SLO.latencyMs;
+  return check.status === 200 && typeof check.ms === "number";
+}
+
+/** Быстрая ли проверка для SLO скорости: доступна и быстрее 1 с. */
+export function isFast(check) {
+  return isGood(check) && check.ms < SPEED_SLO.latencyMs;
 }
 
 export function percentile(values, p) {
@@ -94,6 +107,15 @@ function windowBurn(sorted, start, end, windowMs) {
   const expected = (windowMs / HOUR) * CHECKS_PER_HOUR * SLO_TARGETS.length;
   if (total < expected * MIN_WINDOW_SHARE) return null;
   return bad / total / BUDGET;
+}
+
+/** SLO скорости за окно: доля быстрее 1 с и свой бюджет (5 % проверок). */
+function speedSummary(sloChecks) {
+  const total = sloChecks.length;
+  const fast = sloChecks.filter(isFast).length;
+  const slow = total - fast;
+  const allowed = total * SPEED_BUDGET;
+  return { ...SPEED_SLO, total, fast, share: total ? fast / total : null, budget: { allowedErrors: allowed, errors: slow, remaining: total ? 1 - slow / allowed : 1 } };
 }
 
 /** Худший burn rate среди окон длины windowMs, закончившихся за последние сутки (шаг — интервал проверок). */
@@ -180,6 +202,7 @@ export function summarize(checks, now = Date.now(), coldStarts = []) {
       errors: bad,
       remaining: overall.total ? 1 - bad / allowed : 1,
     },
+    speed: speedSummary(sloChecks),
     burn,
     alerts,
     alerting: Object.values(alerts).some((a) => a.firing),

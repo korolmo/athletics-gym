@@ -25,7 +25,57 @@ export type BookingEvent = {
   endAt: string;
 };
 
-export type OutboxEventType = BookingEvent["type"];
+/** События Записей — для Владельца: его чат, раздел «Уведомления» и сводка доставки. */
+export const BOOKING_TYPES = ["booking.created", "booking.cancelled"] as const;
+
+// ——— Тревоги мониторинга Лаборатории (этап 5, ADR 0028): та же очередь, другой чат — «Дежурство» ———
+
+/** Вид тревоги: быстрое и медленное выгорание бюджета (пороги ADR 0014) и «мониторинг слеп». */
+export type AlertKind = "fastBurn" | "slowBurn" | "blind";
+export const ALERT_KINDS: readonly AlertKind[] = ["fastBurn", "slowBurn", "blind"];
+export const ALERT_TYPES = ["alert.raised", "alert.recovered"] as const;
+
+export type AlertEvent =
+  | { type: "alert.raised"; kind: AlertKind; burn: number | null; threshold: number | null }
+  | { type: "alert.recovered"; kind: AlertKind };
+
+export type OutboxEventType = BookingEvent["type"] | AlertEvent["type"];
+
+const ALERT_NAME_RU: Record<AlertKind, string> = {
+  fastBurn: "быстрое выгорание бюджета ошибок (окно 1 ч)",
+  slowBurn: "медленное выгорание бюджета ошибок (окно 6 ч)",
+  blind: "мониторинг слеп",
+};
+
+const ru1 = (n: number) => n.toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** Текст тревоги для чата «Дежурство». Номер события в конце — по нему повтор узнаётся как то же событие. */
+export function alertText(e: AlertEvent, eventId: string): string {
+  const tail = `#${eventId.slice(-6)}`;
+  if (e.type === "alert.recovered") return [`✅ Лаборатория: ${ALERT_NAME_RU[e.kind]} — восстановлено`, tail].join("\n");
+  if (e.kind === "blind") {
+    return ["👁 Лаборатория: мониторинг слеп — проверок UptimeRobot нет или меньше 75 % (API не отвечает?)", "Тишина сейчас не значит «всё хорошо».", tail].join("\n");
+  }
+  const head = e.kind === "fastBurn" ? "🔥" : "🟠";
+  const burn = e.burn === null ? "—" : ru1(e.burn);
+  const threshold = e.threshold === null ? "" : ` (порог ${ru1(e.threshold)})`;
+  return [`${head} Лаборатория: ${ALERT_NAME_RU[e.kind]}`, `burn rate ${burn}${threshold}`, tail].join("\n");
+}
+
+/** Разбор сохранённой тревоги; испорченная — null. */
+export function parseAlert(type: string, payload: string): AlertEvent | null {
+  if (type !== "alert.raised" && type !== "alert.recovered") return null;
+  try {
+    const p = JSON.parse(payload) as { kind?: string; burn?: unknown; threshold?: unknown };
+    if (!ALERT_KINDS.includes(p.kind as AlertKind)) return null;
+    const kind = p.kind as AlertKind;
+    if (type === "alert.recovered") return { type, kind };
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+    return { type, kind, burn: num(p.burn), threshold: num(p.threshold) };
+  } catch {
+    return null;
+  }
+}
 
 const WD = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
 const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
@@ -59,6 +109,8 @@ export function parseEvent(type: string, payload: string): BookingEvent | null {
 export const EVENT_LABEL_RU: Record<OutboxEventType, string> = {
   "booking.created": "Новая запись",
   "booking.cancelled": "Отмена записи",
+  "alert.raised": "Тревога мониторинга",
+  "alert.recovered": "Мониторинг: восстановлено",
 };
 
 // ——— Сводка доставки (решение 20 этапа 1: доля доставленных за 5 минут и недоставленные за неделю) ———

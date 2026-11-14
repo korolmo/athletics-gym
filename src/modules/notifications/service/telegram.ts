@@ -32,6 +32,16 @@ export function telegramSender(token: string, chatId: string, fetchImpl: typeof 
   };
 }
 
+/**
+ * Канал тревог мониторинга (этап 5, ADR 0028): тот же бот, чат «Дежурство» — TELEGRAM_ALERT_CHAT_ID.
+ * Чата нет — тревог нет (null): чат Владельца с Записями для сбоев не годится.
+ */
+export function resolveAlertSender(env: Record<string, string | undefined> = process.env): Sender | null {
+  const token = env.TELEGRAM_BOT_TOKEN?.trim();
+  const chat = env.TELEGRAM_ALERT_CHAT_ID?.trim();
+  return token && chat ? telegramSender(token, chat) : null;
+}
+
 /** Канал по окружению: TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID. Нет хотя бы одного — канала нет (null). */
 export function resolveSender(env: Record<string, string | undefined> = process.env): Sender | null {
   const token = env.TELEGRAM_BOT_TOKEN?.trim();
