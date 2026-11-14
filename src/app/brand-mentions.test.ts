@@ -7,13 +7,13 @@ import { describe, expect, it } from "vitest";
 // (они и есть данные, которые переносит миграция). Технические имена (athletics.accessLog, домен) — не бренд.
 // До П1 (main, 10 ноября) таких строк было 42, после PR 2 — 0.
 
-export const BRAND_PATTERN = /Athletic('|’|&apos;)s|Athletic Club|ATHLETIC|Кызылорд|Қызылорд|КЫЗЫЛОРД|ҚЫЗЫЛОРД/;
+// С П2 (решение 14) и пояс Клуба: «Asia/Qyzylorda» — только в начальных значениях Клуба.
+export const BRAND_PATTERN = /Athletic('|’|&apos;)s|Athletic Club|ATHLETIC|Кызылорд|Қызылорд|КЫЗЫЛОРД|ҚЫЗЫЛОРД|Qyzylorda/;
 
 /** Файлы, где упоминание — начальное значение, а не текст в коде. */
 const ALLOWED = new Set([
   "src/modules/club/domain/club.ts", // DEFAULT_CLUB — Athletic's Gym, как в миграции
   "src/modules/site/domain/site-settings.defaults.ts", // начальные Настройки сайта: адрес, Instagram
-  "src/lib/time.ts", // CLUB_TIME_ZONE = "Asia/Qyzylorda" — пояс переходит на поле Клуба на П2
 ]);
 
 const ROOT = path.resolve(__dirname, "..", "..");

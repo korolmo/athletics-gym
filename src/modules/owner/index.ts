@@ -12,3 +12,6 @@ export { OWNER_ID, findOwner, getOwnerSessionVersion, loginOwner, passwordTools 
 export { changeOwnerPassword, getAccountLogin, revokeAllSessions } from "./service/account";
 export { checkLoginLimit, clearFailedLogins, recordFailedLogin } from "./service/login-limit";
 export { hashPassword, verifyPassword } from "./service/password";
+// Двухфакторный вход (этап 2, ADR 0024): домен готов раньше этапа, подключается вместе с полями 2FA у Аккаунта Владельца
+export * from "./domain/totp";
+export * from "./domain/totp-secret";

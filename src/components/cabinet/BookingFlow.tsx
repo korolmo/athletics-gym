@@ -23,11 +23,13 @@ type Props = {
   max: number;
   deadlineHours: number;
   waHref: string;
+  /** Пояс Клуба: дни и часы Окон — по нему, а не по часам браузера */
+  timeZone: string;
 };
 
 const chip = "flex items-center justify-center rounded-xl text-[17px] font-semibold transition";
 
-export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlineHours, waHref }: Props) {
+export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlineHours, waHref, timeZone }: Props) {
   const [hallId, setHallId] = useState(halls[0]?.id ?? "general");
   const [trainerId, setTrainerId] = useState<string | null>(null);
   const [data, setData] = useState<WindowsResult | null>(null);
@@ -40,16 +42,16 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
 
   const hallTrainers = trainers.filter((tr) => tr.hallId === hallId);
   const trainer = trainers.find((tr) => tr.id === trainerId) ?? null;
-  const today = zonedParts(new Date()).day;
+  const today = zonedParts(new Date(), timeZone).day;
   const days = Array.from({ length: BOOKING_HORIZON_DAYS }, (_, i) => addDays(today, i));
   const byDay = useMemo(() => {
     const map = new Map<Day, { start: string; end: string }[]>();
     for (const w of data?.windows ?? []) {
-      const d = zonedParts(new Date(w.start)).day;
+      const d = zonedParts(new Date(w.start), timeZone).day;
       map.set(d, [...(map.get(d) ?? []), w]);
     }
     return map;
-  }, [data]);
+  }, [data, timeZone]);
   const selected = data?.windows.find((w) => w.start === start) ?? null;
   // Ключ повтора — свой у каждой выбранной пары «Тренер + время»: повтор той же отправки не создаст вторую Запись
   const idempotencyKey = useMemo(() => (trainerId && start ? crypto.randomUUID() : ""), [trainerId, start]);
@@ -62,7 +64,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
     startLoading(async () => {
       const r = await windowsAction(locale, id);
       setData(r);
-      if (!keep) setDay(r.windows[0] ? zonedParts(new Date(r.windows[0].start)).day : null);
+      if (!keep) setDay(r.windows[0] ? zonedParts(new Date(r.windows[0].start), timeZone).day : null);
     });
   }
 
@@ -93,16 +95,16 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
           <div className={`${card} mt-6 text-left`}>
             <p className="flex items-center gap-3 text-[19px] font-bold text-text-primary">
               <EventAvailableSym className="h-6 w-6 text-primary-container" />
-              {fullWhen(s, new Date(result.end), t)}
+              {fullWhen(s, new Date(result.end), t, timeZone)}
             </p>
             <p className="mt-2 pl-9 text-body-lg text-text-muted">
               {trainers.find((tr) => tr.id === result.trainerId)?.name} · {halls.find((h) => h.id === hallId)?.name}
             </p>
           </div>
           <p className="mt-4 text-body-md text-text-muted">
-            {/* Тренировка ближе срока отмены — срок уже прошёл: отменить можно только через зал */}
-            {s.getTime() - deadlineHours * 3_600_000 > Date.now()
-              ? fill(t.result.okNote, { deadline: deadlineText(new Date(s.getTime() - deadlineHours * 3_600_000), t), h: deadlineHours })
+            {/* Тренировка ближе срока отмены — срок уже прошёл: отменить можно только через зал. Решает сервер (React 19: без Date.now() в отрисовке) */}
+            {result.cancelable
+              ? fill(t.result.okNote, { deadline: deadlineText(new Date(s.getTime() - deadlineHours * 3_600_000), t, timeZone), h: deadlineHours })
               : fill(t.bookings.lateNote, { h: deadlineHours })}
           </p>
           <Link href={`/${locale}/cabinet`} className={`${btnPrimary} mt-8`}>
@@ -137,7 +139,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
               </div>
               <p className="mt-4 flex items-center gap-3 text-[19px] font-bold text-text-primary">
                 <EventBusySym className="h-6 w-6 text-text-muted" />
-                {fullWhen(s, new Date(s.getTime() + (data?.sessionMinutes ?? 60) * 60_000), t)}
+                {fullWhen(s, new Date(s.getTime() + (data?.sessionMinutes ?? 60) * 60_000), t, timeZone)}
               </p>
               <p className="mt-1 pl-9 text-body-md text-text-muted">
                 {trainer?.name} · {halls.find((h) => h.id === hallId)?.name}
@@ -149,7 +151,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
               <p className="mb-2 text-label-uppercase uppercase tracking-wider text-text-primary">{t.result.nearest}</p>
               <ul>
                 {nearest.map((w) => {
-                  const d = zonedParts(new Date(w.start)).day;
+                  const d = zonedParts(new Date(w.start), timeZone).day;
                   return (
                     <li key={w.start}>
                       <button
@@ -163,7 +165,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
                       >
                         <span className="text-[19px] font-bold text-text-primary">{longDay(d, t)}</span>
                         <span className="flex items-center gap-2">
-                          <span className="rounded-lg bg-primary-container/15 px-3 py-1.5 text-[19px] font-bold text-primary-container">{clock(new Date(w.start))}</span>
+                          <span className="rounded-lg bg-primary-container/15 px-3 py-1.5 text-[19px] font-bold text-primary-container">{clock(new Date(w.start), timeZone)}</span>
                           <ChevronRightSym className="h-6 w-6 text-text-muted" />
                         </span>
                       </button>
@@ -213,7 +215,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
               <ul className="mt-3 space-y-3 text-left">
                 {upcoming.map((u) => {
                   const s = new Date(u.start);
-                  const d = zonedParts(s).day;
+                  const d = zonedParts(s, timeZone).day;
                   return (
                     <li key={u.start} className="flex items-center gap-4 rounded-2xl bg-surface-card p-4">
                       <span className="flex w-14 shrink-0 flex-col items-center rounded-xl bg-surface-container-lowest py-2">
@@ -222,7 +224,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-[19px] font-bold text-text-primary">
-                          {clock(s)} <span className="text-body-md font-normal text-text-muted">· {longDay(d, t).split(", ")[1]}</span>
+                          {clock(s, timeZone)} <span className="text-body-md font-normal text-text-muted">· {longDay(d, t).split(", ")[1]}</span>
                         </span>
                         <span className="block text-body-md text-text-muted">{u.trainer}</span>
                       </span>
@@ -390,7 +392,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
                     onClick={() => setStart(w.start)}
                     className={`${chip} h-14 ${on ? "bg-primary-container text-on-primary" : "bg-surface-card text-text-primary hover:bg-surface-container-high"}`}
                   >
-                    {clock(new Date(w.start))}
+                    {clock(new Date(w.start), timeZone)}
                   </button>
                 );
               })}
@@ -416,7 +418,7 @@ export function BookingFlow({ locale, t, halls, trainers, upcoming, max, deadlin
           <p className="flex items-start gap-3 text-[17px] font-bold text-text-primary">
             <CalendarMonthSym className="mt-0.5 h-6 w-6 shrink-0 text-primary-container" />
             <span>
-              {longDay(zonedParts(new Date(selected.start)).day, t)} · {timeRange(new Date(selected.start), new Date(selected.end))} · {trainer.name} ·{" "}
+              {longDay(zonedParts(new Date(selected.start), timeZone).day, t)} · {timeRange(new Date(selected.start), new Date(selected.end), timeZone)} · {trainer.name} ·{" "}
               {halls.find((h) => h.id === hallId)?.name}
             </span>
           </p>

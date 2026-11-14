@@ -1,12 +1,11 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { FlatCompat } from "@eslint/eslintrc";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta.url)) });
-
+// Плоский конфиг ESLint (Next 16): eslint-config-next отдаёт готовые наборы правил, FlatCompat больше не нужен.
 const config = [
   { ignores: [".next/**", "node_modules/**", "next-env.d.ts", "design/**", "public/**", "dist/**", "transfer-out/**"] },
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextVitals,
+  ...nextTs,
   // Файлы собранного приложения для хостинга (start.cjs, migrate.cjs) — CommonJS: их запускает Node без сборки
   { files: ["**/*.cjs"], rules: { "@typescript-eslint/no-require-imports": "off" } },
 ];

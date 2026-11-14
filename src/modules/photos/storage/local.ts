@@ -16,7 +16,8 @@ const MB = 1024 * 1024;
 /** Папка Фото: MEDIA_DIR (относительный путь — от папки приложения), по умолчанию media рядом с папкой приложения. */
 export function mediaDir(): string {
   const raw = process.env.MEDIA_DIR?.trim();
-  return raw ? path.resolve(raw) : path.resolve(process.cwd(), "..", "media");
+  // turbopackIgnore: папка Фото — данные вне сборки, трассировать её Turbopack не должен (Next 16)
+  return raw ? path.resolve(/*turbopackIgnore: true*/ raw) : path.resolve(/*turbopackIgnore: true*/ process.cwd(), "..", "media");
 }
 
 /** Лимит общего объёма Фото: MEDIA_QUOTA_MB, по умолчанию 500 МБ. */

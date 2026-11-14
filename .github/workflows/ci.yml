@@ -28,6 +28,31 @@ jobs:
       - name: Check workflows
         run: ./actionlint -color
 
+  budget:
+    # Бюджет ошибок Лаборатории (этап 5, docs/runbooks/error-budget.md): остаток — в отчёт PR. Только видимость:
+    # шаг никогда не красный и мерж не блокирует. Исчерпан — по политике в main идут только PR про надёжность.
+    name: Error budget (info)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Budget of the Lab
+        continue-on-error: true
+        run: |
+          json=$(curl -sf --max-time 20 https://korolmo.github.io/athletics-gym/status.json) || { echo "Страница статуса недоступна — остаток неизвестен." >> "$GITHUB_STEP_SUMMARY"; exit 0; }
+          node -e '
+            const s = JSON.parse(process.argv[1]);
+            const pct = (x) => (x * 100).toFixed(1).replace(".", ",") + " %";
+            // Два бюджета (поправка к ADR 0014): доступность и скорость; политика — по худшему
+            const sp = s.speed ? s.speed.budget.remaining : 1;
+            const r = Math.min(s.budget.remaining, sp);
+            const head = r < 0
+              ? "### ⛔ Бюджет ошибок Лаборатории исчерпан: " + pct(r) + "\nПо политике (docs/runbooks/error-budget.md) в main — только PR про надёжность; исключение — строкой в описании PR."
+              : "### ✅ Бюджет ошибок Лаборатории: остаток " + pct(r);
+            const speed = s.speed ? "; скорость: " + pct(s.speed.share) + " быстрее 1 с (цель 95 %), бюджет " + pct(sp) : "";
+            const body = "Доступность страниц за окно: " + pct(s.overall.availability) + " (цель 99,5 %), бюджет " + pct(s.budget.remaining) + speed + "; отчёт от " + s.generatedAt + ".";
+            console.log(head + "\n\n" + body);
+          ' "$json" >> "$GITHUB_STEP_SUMMARY"
+
   boundaries:
     # Границы кода (этап 6, ADR 0015): новое нарушение — ошибка; известные — в
     # .dependency-cruiser-known-violations.json, их число убывает с каждым перенесённым модулем.
@@ -127,6 +152,77 @@ jobs:
 
       - name: Hosting bundle
         run: node scripts/standalone/assemble.mjs
+
+  compat:
+    # Прежний код на новой схеме (ADR 0022): база мигрируется кодом ветки, на ней запускается сборка из базы (main до
+    # ветки) — откат на прежний релиз и старые экземпляры Vercel во время выкатки должны выдержать новую схему.
+    # Нужен, только когда меняются миграции (или сам этот шаг); иначе выходит сразу.
+    name: Old code on new schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      mariadb:
+        image: mariadb:10.4
+        env:
+          MARIADB_ROOT_PASSWORD: ci
+          MARIADB_DATABASE: athletics
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci"
+          --health-interval=5s --health-timeout=3s --health-retries=30
+    env:
+      DATABASE_URL: mysql://root:ci@127.0.0.1:3306/athletics
+      NEXT_TELEMETRY_DISABLED: "1"
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Is it needed
+        id: need
+        run: |
+          if [ -z "$BASE_SHA" ] || ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Нет базы для сравнения — шаг пропущен."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$BASE_SHA" HEAD -- prisma/migrations scripts/compat .github/workflows/ci.yml; then
+            echo "Миграции не менялись — шаг не нужен."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.need.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: New schema (migrations and seed of this branch)
+        if: steps.need.outputs.run == 'true'
+        run: |
+          npm ci
+          node scripts/standalone/migrate.cjs
+          npm run seed
+
+      - name: Old code (hosting bundle of the base)
+        if: steps.need.outputs.run == 'true'
+        run: |
+          git worktree add ../old "$BASE_SHA"
+          cd ../old
+          npm ci
+          npm run build
+          node scripts/standalone/assemble.mjs
+
+      - name: Old code on new schema
+        if: steps.need.outputs.run == 'true'
+        run: |
+          # start.cjs прежней сборки: её миграции уже применены, новые она должна пропустить и запустить сервер
+          (cd ../old/dist/hosting && PORT=3200 AUTH_SECRET=ci-compat-0123456789abcdef0123456789 MEDIA_DIR="$RUNNER_TEMP/media" \
+            node start.cjs > "$RUNNER_TEMP/old.log" 2>&1 &)
+          for _ in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3200/api/health/live && break; sleep 2; done
+          node scripts/compat/old-code-new-schema.mjs http://127.0.0.1:3200 3 || { tail -60 "$RUNNER_TEMP/old.log"; exit 1; }
 
   twin:
     # Прод-двойник (ADR 0005): собранный пакет для hoster.kz в Docker с лимитами хостинга —

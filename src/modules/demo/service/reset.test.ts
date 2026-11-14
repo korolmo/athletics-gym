@@ -47,7 +47,12 @@ for (const [mod, key, cap] of [
   ["@/modules/reviews", "reviews", "Reviews"],
   ["@/modules/photos", "photos", "Photos"],
 ] as const) {
-  vi.doMock(mod, () => ({ [`snapshot${cap}Demo`]: h.parts[key].snap, [`restore${cap}Demo`]: h.parts[key].restore }));
+  vi.doMock(mod, () => ({
+    [`snapshot${cap}Demo`]: h.parts[key].snap,
+    [`restore${cap}Demo`]: h.parts[key].restore,
+    // Пояс Клуба для границы сброса — Кызылорда, UTC+5
+    ...(key === "club" ? { getClub: async () => ({ timeZone: "Asia/Qyzylorda" }) } : {}),
+  }));
 }
 
 const { runDailyDemoReset } = await import("./reset");

@@ -1,5 +1,5 @@
 import { requireOwner } from "@/modules/owner";
-import { CLUB_TIME_ZONE } from "@/lib/time";
+import { getClubOnce } from "@/app/brand";
 import { countPending, deliveryStats, listProblemEvents, resolveSender } from "@/modules/notifications";
 import { EVENT_LABEL_RU, MAX_ATTEMPTS, whenLabel } from "@/modules/notifications/client";
 import { Chip, Empty, Notice, PageHead, btnDark, btnPrimary, card } from "../../ui";
@@ -9,11 +9,13 @@ import { resolveEventAction, retryEventAction } from "./actions";
 // не ушли Владельцу в Telegram, — число попыток, последняя ошибка, «Отправить ещё раз» и «Пометить решённым».
 export const dynamic = "force-dynamic";
 
-const fmt = (d: Date) =>
-  new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: CLUB_TIME_ZONE }).format(d);
+const fmtIn = (timeZone: string) => (d: Date) =>
+  new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone }).format(d);
 
 export default async function NotificationsPage() {
   await requireOwner();
+  const { timeZone } = await getClubOnce();
+  const fmt = fmtIn(timeZone);
   const [events, pending, stats] = await Promise.all([listProblemEvents(requireOwner), countPending(requireOwner), deliveryStats(requireOwner)]);
   const connected = resolveSender() !== null;
   const dead = events.filter((e) => e.status === "DEAD").length;
@@ -43,7 +45,7 @@ export default async function NotificationsPage() {
             <li key={e.id} className={card}>
               <p className="text-xs font-bold uppercase tracking-wider text-muted">{EVENT_LABEL_RU[e.type] ?? e.type}</p>
               <h2 className="mt-1 text-xl font-bold">
-                {e.event ? `${e.event.clientName} · ${whenLabel(e.event.startAt, e.event.endAt)}` : "Событие не разобрать"}
+                {e.event ? `${e.event.clientName} · ${whenLabel(e.event.startAt, e.event.endAt, timeZone)}` : "Событие не разобрать"}
               </h2>
               {e.event && <p className="text-sm text-muted">{e.event.trainerName} · {e.event.hallName}</p>}
               <div className="mt-3 flex flex-wrap gap-2">

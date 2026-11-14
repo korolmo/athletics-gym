@@ -1,6 +1,6 @@
 // Окна Тренера (GLOSSARY, ADR 0017): не хранятся, а вычисляются — часы работы минус исключения минус занятое время.
 // Чистые функции, без базы. Часы работы и исключения — в поясе Клуба, моменты — в UTC.
-import { CLUB_TIME_ZONE, addDays, isDay, weekdayOf, zonedParts, zonedToUtc, type Day } from "@/lib/time";
+import { addDays, isDay, weekdayOf, zonedParts, zonedToUtc, type Day } from "@/lib/time";
 
 /** Длительность тренировки: от 30 минут до 3 часов, шаг 15 минут. По умолчанию — час. */
 export const SESSION_MINUTES_MIN = 30;
@@ -80,8 +80,9 @@ export function computeWindows(
   schedule: TrainerSchedule,
   busy: Busy[],
   now: Date,
+  /** Пояс Клуба (IANA) */
+  timeZone: string,
   days: number = BOOKING_HORIZON_DAYS,
-  timeZone: string = CLUB_TIME_ZONE,
 ): Window[] {
   const { sessionMinutes, workHours, timeOff } = schedule;
   const earliest = now.getTime() + MIN_LEAD_MS;
@@ -106,6 +107,6 @@ export function computeWindows(
 }
 
 /** Есть ли среди свободных Окон окно, начинающееся ровно в `start` (проверка перед Записью). */
-export function isFreeWindow(schedule: TrainerSchedule, busy: Busy[], start: Date, now: Date, timeZone: string = CLUB_TIME_ZONE): boolean {
-  return computeWindows(schedule, busy, now, BOOKING_HORIZON_DAYS, timeZone).some((w) => w.start.getTime() === start.getTime());
+export function isFreeWindow(schedule: TrainerSchedule, busy: Busy[], start: Date, now: Date, timeZone: string): boolean {
+  return computeWindows(schedule, busy, now, timeZone).some((w) => w.start.getTime() === start.getTime());
 }

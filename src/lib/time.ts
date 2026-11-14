@@ -1,9 +1,6 @@
 // Платформа: время Клуба (этап 1, ADR 0017). В базе время — в UTC; шаблон Окон и показ — в часовом поясе Клуба.
-// Сущности Клуб в базе пока нет (П2): пояс — константа платформы, при П2 он станет полем Клуба и придёт аргументом.
+// Пояс — поле Клуба (П1, ADR 0018); с П2 (решение 14) функции берут его только аргументом, константы пояса в коде нет.
 // Чистые функции на Intl, без Node-модулей: работают на сервере, в браузере и в тестах.
-
-/** Кызылорда: UTC+5 круглый год (с 1 марта 2024 — единый пояс Казахстана, без перехода на летнее время). */
-export const CLUB_TIME_ZONE = "Asia/Qyzylorda";
 
 /** День в виде «2026-11-11». */
 export type Day = string;
@@ -49,7 +46,7 @@ export type ZonedParts = {
 };
 
 /** Местный день, день недели и минуты от полуночи для момента `date` в поясе `timeZone`. */
-export function zonedParts(date: Date, timeZone: string = CLUB_TIME_ZONE): ZonedParts {
+export function zonedParts(date: Date, timeZone: string): ZonedParts {
   const p = Object.fromEntries(formatter(timeZone).formatToParts(date).map((x) => [x.type, x.value]));
   return {
     day: `${p.year}-${p.month}-${p.day}`,
@@ -66,7 +63,7 @@ function offsetMinutes(date: Date, timeZone: string): number {
 }
 
 /** Момент UTC для местного дня и минут от полуночи. Два прохода — верно и для поясов с переводом часов. */
-export function zonedToUtc(day: Day, minutes: number, timeZone: string = CLUB_TIME_ZONE): Date {
+export function zonedToUtc(day: Day, minutes: number, timeZone: string): Date {
   const m = DAY_RE.exec(day);
   if (!m) throw new Error(`Неверный день: ${day}`);
   const naive = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) + minutes * 60_000;

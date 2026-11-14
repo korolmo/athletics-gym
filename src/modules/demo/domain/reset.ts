@@ -7,14 +7,14 @@ export const RESET_HOUR = 4;
 export const RESET_LOCK_MS = 5 * 60_000;
 
 /** Последняя граница сброса не позже `now`: сегодня в 04:00 по времени Клуба, а до 04:00 — вчера в 04:00. */
-export function lastResetBoundary(now: Date, timeZone?: string): Date {
+export function lastResetBoundary(now: Date, timeZone: string): Date {
   const today = zonedParts(now, timeZone).day;
   const boundary = zonedToUtc(today, RESET_HOUR * 60, timeZone);
   return boundary <= now ? boundary : zonedToUtc(addDays(today, -1), RESET_HOUR * 60, timeZone);
 }
 
 /** Пора ли сбрасывать: последнего сброса не было или он был до последней границы. */
-export function resetDue(lastResetAt: Date | null, now: Date, timeZone?: string): boolean {
+export function resetDue(lastResetAt: Date | null, now: Date, timeZone: string): boolean {
   return lastResetAt === null || lastResetAt < lastResetBoundary(now, timeZone);
 }
 

@@ -65,9 +65,24 @@ const nextConfig = {
   cacheMaxMemorySize: 0,
   // Картинка-превью ссылок читает шрифты и логотип с диска. Сборка Vercel кладёт в серверную функцию только те файлы,
   // которые нашла сама; эти она не находит — без явного списка маршрут отвечает ошибкой 500.
+  // Ключ — шаблон picomatch: скобки сегмента экранируются, иначе «[locale]» — класс символов и файлы молча
+  // не попадают в сборку (Next 16, проверяет scripts/standalone/assemble.mjs).
   outputFileTracingIncludes: {
-    "/[locale]/opengraph-image": OG_IMAGE_FILES,
-    "/[locale]/twitter-image": OG_IMAGE_FILES,
+    "/\\[locale\\]/opengraph-image": OG_IMAGE_FILES,
+    "/\\[locale\\]/twitter-image": OG_IMAGE_FILES,
+  },
+  // Turbopack (Next 16) трассирует шире webpack: исходники модуля Фото (по чтению папки Фото) и весь runtime Prisma —
+  // WASM-движки и компиляторы запросов для пяти баз (~50 МБ при диске 1 ГБ). Нам нужен только движок-библиотека
+  // (runtime/library.js + .so.node из binaryTargets); пакет для хостинга проверяет scripts/standalone/assemble.mjs.
+  outputFileTracingExcludes: {
+    "/**": [
+      "./src/**/*.{ts,tsx}",
+      "./node_modules/@prisma/client/runtime/*.wasm-base64.*",
+      "./node_modules/@prisma/client/runtime/query_{compiler,engine}_bg.*",
+      "./node_modules/@prisma/client/runtime/{edge,edge-esm,binary,react-native,wasm-*}.*",
+      "./node_modules/@prisma/client/runtime/*.d.{ts,mts}",
+      "./node_modules/.prisma/client/{query_engine_bg.wasm,wasm*,edge.js}",
+    ],
   },
   // Оптимизатора картинок на сервере нет (памяти мало, sharp на хостинг не ставим). Размеры готовят заранее:
   // для public/ — scripts/images/build-variants.mjs при сборке, для Фото — браузер Владельца при загрузке.

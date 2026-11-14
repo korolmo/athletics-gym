@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { getCabinetTexts } from "@/app/brand";
+import { getCabinetTexts, getClubOnce } from "@/app/brand";
 import { whatsappUrl } from "@/lib/site";
 import { requireClient } from "@/modules/clients";
 import { CLIENT_CANCEL_DEADLINE_MS, MAX_FUTURE_BOOKINGS, listMyBookings } from "@/modules/bookings";
@@ -36,6 +36,7 @@ export default async function CabinetBookPage({ params }: { params: Promise<{ lo
         max={MAX_FUTURE_BOOKINGS}
         deadlineHours={CLIENT_CANCEL_DEADLINE_MS / 3_600_000}
         waHref={whatsappUrl(settings.whatsapp, t.login.waText)}
+        timeZone={(await getClubOnce()).timeZone}
       />
     </CabinetShell>
   );
