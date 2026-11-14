@@ -36,19 +36,17 @@ function remove(target) {
 }
 
 // Turbopack (Next 16) ставит внешние пакеты под хэшированным именем: .next/node_modules/@prisma/client-<хэш> —
-// ссылка на node_modules/@prisma/client с абсолютным путём машины сборки. Копия по ссылке удвоила бы пакет (58 МБ
-// при диске 1 ГБ), а сама ссылка на сервере никуда не ведёт. Вместо неё — пакет-переходник на настоящий пакет.
-function externalShim(from, to) {
+// ссылка с абсолютным путём машины сборки, на сервере она никуда не ведёт. Копируем пакет по ссылке: сборка грузит
+// из него и вложенные пути (runtime/client, компилятор запросов), и ESM-вход адаптера — переходник их не повторит.
+// Пакеты маленькие (Prisma 7 без движков: клиент ~1 МБ, драйвер mariadb ~2 МБ); размер держит бюджет ниже.
+function linkTarget(from) {
   const target = path.relative(path.join(STANDALONE, "node_modules"), fs.realpathSync(from));
-  if (target.startsWith("..") || path.isAbsolute(target)) throw new Error(`Ссылка ведёт за пределы node_modules: ${from}`);
-  const pkg = target.split(path.sep).join("/");
-  fs.mkdirSync(to, { recursive: true });
-  fs.writeFileSync(path.join(to, "package.json"), JSON.stringify({ name: path.basename(to), private: true, main: "index.js" }) + "\n");
-  fs.writeFileSync(path.join(to, "index.js"), `// Переходник сборки (scripts/standalone/assemble.mjs)\nmodule.exports = require(${JSON.stringify(pkg)});\n`);
+  if (target.startsWith("..") || path.isAbsolute(target)) throw new Error(`Ссылка ведёт за пределы node_modules сборки: ${from}`);
+  return path.join(STANDALONE, "node_modules", target);
 }
 
 function copy(from, to) {
-  if (fs.lstatSync(from).isSymbolicLink() && from.includes(`${path.sep}.next${path.sep}node_modules${path.sep}`)) return externalShim(from, to);
+  if (fs.lstatSync(from).isSymbolicLink()) from = linkTarget(from);
   const st = fs.statSync(from);
   if (st.isDirectory()) {
     fs.mkdirSync(to, { recursive: true });
@@ -64,10 +62,10 @@ copy(path.join(ROOT, ".next", "static"), path.join(OUT, ".next", "static"));
 remove(path.join(OUT, "public"));
 copy(path.join(ROOT, "public"), path.join(OUT, "public"));
 copy(path.join(ROOT, "prisma", "migrations"), path.join(OUT, "prisma", "migrations"));
-for (const file of ["start.cjs", "migrate.cjs", "sql-split.cjs"]) copy(path.join(ROOT, "scripts", "standalone", file), path.join(OUT, file));
+for (const file of ["start.cjs", "migrate.cjs", "sql-split.cjs", "db-config.cjs"]) copy(path.join(ROOT, "scripts", "standalone", file), path.join(OUT, file));
 
 // На сервере не нужны: картинки не пересжимаются (sharp), типы не проверяются (typescript).
-// Движки Prisma — из binaryTargets схемы (в CI на Linux — только Linux; локально на Windows остаётся свой)
+// Движков Prisma на Rust с Prisma 7 нет: запросы идут через драйвер mariadb
 for (const dir of ["node_modules/sharp", "node_modules/@img", "node_modules/typescript"]) {
   remove(path.join(OUT, dir));
 }
@@ -148,7 +146,17 @@ if (leaks.length) {
 }
 
 // Проверка: файлы, которые сервер читает с диска (картинка-превью), попали в сборку — их кладёт outputFileTracingIncludes
-const required = ["src/assets/fonts/Onest-ExtraBold.ttf", "src/assets/fonts/Onest-Medium.ttf", "public/logo.png"];
+// и то, без чего не запустится база: драйвер mariadb (им же — миграции в start.cjs) и компилятор запросов Prisma для MySQL
+const required = [
+  "src/assets/fonts/Onest-ExtraBold.ttf",
+  "src/assets/fonts/Onest-Medium.ttf",
+  "public/logo.png",
+  "db-config.cjs",
+  "node_modules/mariadb/package.json",
+  "node_modules/@prisma/client/runtime/client.js",
+];
+const compiler = path.join(OUT, "node_modules", "@prisma", "client", "runtime");
+if (!fs.existsSync(compiler) || !fs.readdirSync(compiler).some((f) => /^query_compiler_.*mysql/.test(f))) required.push("node_modules/@prisma/client/runtime/query_compiler_*mysql*");
 const missing = required.filter((rel) => !fs.existsSync(path.join(OUT, ...rel.split("/"))));
 if (missing.length) {
   console.error("В сборке нет файлов, которые читает сервер (outputFileTracingIncludes в next.config.mjs):", missing);

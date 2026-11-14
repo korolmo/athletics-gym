@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/db-client";
 import { hashPassword } from "../src/modules/owner/service/password";
 import { decideSeed } from "../src/lib/db-guard/production";
 import { CONTACT_CHANNELS, CONTACT_LOCALES, CONTACT_SOURCES } from "../src/modules/contacts/domain/contact";
@@ -12,7 +12,7 @@ import { withConnectRetry } from "../scripts/lab/connect-retry.mjs";
 // Seed Лаборатории (ADR 0007): бренд, тексты и Тарифы Athletic's Gym; Тренеры вымышленные (без плакатов),
 // Отзывы и Обращения синтетические. Копий боевой базы нет.
 // Запуск: npm run seed:lab (строка базы и аккаунт Владельца — из .env.lab). Работает только при APP_ENV=lab.
-const db = new PrismaClient();
+const db = createPrismaClient(process.env.DATABASE_URL);
 
 type TrainerSeed = { name: string; hall: HallId; descriptionRu: string; tariffs: TariffSeed[] };
 
