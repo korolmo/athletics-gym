@@ -112,7 +112,7 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  const decision = decideSeed({ DATABASE_URL: process.env.DATABASE_URL, APP_ENV: process.env.APP_ENV }, []);
+  const decision = decideSeed({ APP_ENV: process.env.APP_ENV }, []);
   if (!decision.allowed || decision.production) {
     console.error("Отказ: строка подключения похожа на боевую базу.");
     process.exitCode = 1;
