@@ -1,0 +1,42 @@
+name: Lab stats
+
+# Сводка доставки уведомлений о Записях в основной Лаборатории (этап 1, решение 20) — только агрегаты, без данных
+# Клиентов. Вручную (Actions → Lab stats → Run workflow) и на PR, который меняет сам скрипт или этот файл.
+# Только чтение базы athletics кластера Лаборатории; боевую базу (hoster.kz) скрипт не знает.
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "С какого момента, ISO (UTC)"
+        required: false
+        default: "2026-11-10T00:00:00Z"
+  pull_request:
+    paths:
+      - scripts/lab/delivery-stats.ts
+      - .github/workflows/lab-stats.yml
+
+permissions:
+  contents: read
+
+jobs:
+  delivery:
+    name: Delivery of notifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LAB_DATABASE_URL: ${{ secrets.LAB_DATABASE_URL }}
+      FROM: ${{ github.event.inputs.from || '2026-11-10T00:00:00Z' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Delivery stats
+        run: npx tsx scripts/lab/delivery-stats.ts "$FROM"
