@@ -51,7 +51,7 @@ export async function trainerBusy(trainerId: string, now: Date = new Date()): Pr
 }
 
 async function findByKey(clientId: string, idempotencyKey: string): Promise<CreatedBooking | null> {
-  const row = await db.booking.findUnique({ where: { idempotencyKey }, select: { ...bookingFields, clientId: true } });
+  const row = await db.booking.findFirst({ where: { idempotencyKey }, select: { ...bookingFields, clientId: true } });
   if (!row || row.clientId !== clientId) return null;
   return { id: row.id, trainerId: row.trainerId, hallId: row.hallId, startAt: row.startAt, endAt: row.endAt };
 }

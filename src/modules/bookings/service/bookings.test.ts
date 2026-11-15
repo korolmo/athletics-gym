@@ -38,10 +38,6 @@ const { state, db, mocks } = vi.hoisted(() => {
       const r = state.rows.find((x) => match(x, where));
       return r ? pick(r, select) : null;
     }),
-    findUnique: vi.fn(async ({ where, select }: { where: { idempotencyKey: string }; select?: Record<string, boolean> }) => {
-      const r = state.rows.find((x) => x.idempotencyKey === where.idempotencyKey);
-      return r ? pick(r, select) : null;
-    }),
     count: vi.fn(async ({ where }: { where: Record<string, unknown> }) => state.rows.filter((r) => match(r, where)).length),
     create: vi.fn(async ({ data, select }: { data: Omit<Row, "id" | "status" | "cancelledAt" | "cancelledBy">; select?: Record<string, boolean> }) => {
       if (state.rows.some((r) => r.idempotencyKey === data.idempotencyKey)) throw p2002(["idempotencyKey"]);

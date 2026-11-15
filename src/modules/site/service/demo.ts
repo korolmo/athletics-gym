@@ -1,3 +1,4 @@
+import { CLUB_ID } from "@/modules/club/client";
 import "server-only";
 import { db } from "@/lib/db";
 // Суточный сброс демо-админки Лаборатории (этап П1, ADR 0019): снимок того, что может менять Гость, и возврат к нему.
@@ -19,5 +20,5 @@ export async function demoSnapshot(): Promise<Snapshot> {
 
 export async function demoRestore(s: Snapshot): Promise<void> {
   if (s.settings) await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: s.settings });
-  for (const { position, ...card } of s.cards) await db.aboutCard.update({ where: { position }, data: card });
+  for (const { position, ...card } of s.cards) await db.aboutCard.update({ where: { clubId_position: { clubId: CLUB_ID, position } }, data: card });
 }

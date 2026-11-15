@@ -59,6 +59,46 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
     expect(await db.club.findUniqueOrThrow({ where: { id: CLUB_ID }, select: CLUB_FIELDS })).toEqual(DEFAULT_CLUB);
   });
 
+  it("П2: clubId во всех 19 таблицах Клуба — по умолчанию «club», внешний ключ на Клуб; LoginAttempt — общая", async () => {
+    const CLUB_TABLES = [
+      "Hall", "Tariff", "Trainer", "Owner", "SiteSettings", "AboutCard", "GalleryPhoto", "Review", "ReviewSubmission", "ContactClick",
+      "Direction", "Client", "ClientLoginCode", "TrainerSchedule", "TrainerWorkHours", "TrainerTimeOff", "Booking", "OutboxEvent", "DemoState",
+    ];
+    const cols = await db.$queryRawUnsafe<{ t: string; def: string | null; nullable: string }[]>(
+      "SELECT TABLE_NAME AS t, COLUMN_DEFAULT AS def, IS_NULLABLE AS nullable FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME = 'clubId'",
+    );
+    expect(cols.map((c) => c.t).sort()).toEqual([...CLUB_TABLES].sort());
+    for (const c of cols) {
+      expect(c.nullable, c.t).toBe("NO");
+      expect(String(c.def).replace(/'/g, ""), c.t).toBe("club");
+    }
+    const fks = await db.$queryRawUnsafe<{ t: string }[]>(
+      "SELECT TABLE_NAME AS t FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME = 'clubId' AND REFERENCED_TABLE_NAME = 'Club'",
+    );
+    expect(fks.map((f) => f.t).sort()).toEqual([...CLUB_TABLES].sort());
+  });
+
+  it("П2: Залы Athletic's Gym получили вид — Женский зал women, остальные general", async () => {
+    await db.hall.createMany({ data: [{ id: "general", nameRu: "Общий зал" }, { id: "women", nameRu: "Женский зал" }], skipDuplicates: true });
+    await db.$executeRawUnsafe("UPDATE `Hall` SET `kind` = 'women' WHERE `id` = 'women'");
+    const halls = await db.hall.findMany({ select: { id: true, kind: true, clubId: true }, orderBy: { id: "asc" } });
+    expect(halls).toEqual([
+      { id: "general", kind: "general", clubId: "club" },
+      { id: "women", kind: "women", clubId: "club" },
+    ]);
+  });
+
+  it("П2: уникальность внутри Клуба — один телефон в двух Клубах можно, дважды в одном нельзя", async () => {
+    await db.club.upsert({ where: { id: "iron" }, update: {}, create: { ...DEFAULT_CLUB, id: "iron", name: "Iron Club" } });
+    const base = { phone: "+77000000009", name: "К", consentAt: new Date(), consentPolicyDate: "2026-11-10", lastLoginAt: new Date() };
+    await db.client.create({ data: base });
+    await db.client.create({ data: { ...base, clubId: "iron" } });
+    await expect(db.client.create({ data: base })).rejects.toMatchObject({ code: "P2002" });
+    expect(await db.client.count({ where: { phone: base.phone } })).toBe(2);
+    await db.client.deleteMany({ where: { phone: base.phone } });
+    await db.club.delete({ where: { id: "iron" } });
+  });
+
   it("недоделанная миграция останавливает следующие", async () => {
     await db.$executeRawUnsafe(
       "INSERT INTO _prisma_migrations (id, checksum, migration_name, started_at) VALUES ('x', 'x', '29990101000000_broken', NOW(3))",
