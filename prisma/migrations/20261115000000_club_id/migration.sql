@@ -20,10 +20,27 @@ ALTER TABLE `Owner` ADD COLUMN `clubId` VARCHAR(191) NOT NULL DEFAULT 'club';
 -- AlterTable
 ALTER TABLE `SiteSettings` ADD COLUMN `clubId` VARCHAR(191) NOT NULL DEFAULT 'club';
 
--- AlterTable
-ALTER TABLE `AboutCard` DROP PRIMARY KEY,
-    ADD COLUMN `clubId` VARCHAR(191) NOT NULL DEFAULT 'club',
-    ADD PRIMARY KEY (`clubId`, `position`);
+-- AboutCard: ключ становится (clubId, position). TiDB (Лаборатория) не умеет менять кластерный первичный ключ
+-- (ошибка 8200 «Unsupported drop primary key»), поэтому таблицу пересобираем — одинаково на MariaDB и TiDB.
+CREATE TABLE `AboutCard_p2` (
+    `position` INTEGER NOT NULL,
+    `kickerRu` VARCHAR(191) NOT NULL,
+    `kickerKk` VARCHAR(191) NULL,
+    `titleRu` VARCHAR(191) NOT NULL,
+    `titleKk` VARCHAR(191) NULL,
+    `textRu` TEXT NOT NULL,
+    `textKk` TEXT NULL,
+    `clubId` VARCHAR(191) NOT NULL DEFAULT 'club',
+
+    PRIMARY KEY (`clubId`, `position`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+INSERT INTO `AboutCard_p2` (`position`, `kickerRu`, `kickerKk`, `titleRu`, `titleKk`, `textRu`, `textKk`)
+    SELECT `position`, `kickerRu`, `kickerKk`, `titleRu`, `titleKk`, `textRu`, `textKk` FROM `AboutCard`;
+
+DROP TABLE `AboutCard`;
+
+RENAME TABLE `AboutCard_p2` TO `AboutCard`;
 
 -- AlterTable
 ALTER TABLE `GalleryPhoto` ADD COLUMN `clubId` VARCHAR(191) NOT NULL DEFAULT 'club';
