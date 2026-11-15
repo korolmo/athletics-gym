@@ -116,10 +116,11 @@ export async function createBookingFor(
   } catch (e) {
     const target = uniqueTarget(e);
     if (target === null) throw e;
-    if (target.includes("idempotencyKey")) {
-      const same = await findByKey(clientId, idempotencyKey);
-      return same ? { ok: true, booking: same, repeated: true } : { ok: false, error: "badRequest" };
-    }
+    // Повтор той же формы нарушает сразу два индекса — ключ повтора и «одно Окно — одна Запись»; база называет тот,
+    // что проверила первым (зависит от порядка индексов, П2 его поменял). Поэтому сначала ищем Запись с этим ключом.
+    const same = await findByKey(clientId, idempotencyKey);
+    if (same) return { ok: true, booking: same, repeated: true };
+    if (target.includes("idempotencyKey")) return { ok: false, error: "badRequest" };
     return { ok: false, error: "taken" };
   }
 }
