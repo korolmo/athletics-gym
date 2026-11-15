@@ -1,1 +1,546 @@
-[]
+[
+  {
+    "type": "dependency",
+    "from": "src/modules/bookings/service/bookings.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/clients/service/for-modules.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/clients/service/login.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/clients/service/profile.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/clients/service/session-cookie.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/club/service/club.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/club/service/demo.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/club/service/edit.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/contacts/service/contacts.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/demo/service/reset.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/directions/service/demo.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/directions/service/directions.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/directions/service/photo-slot.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/notifications/service/outbox.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/photos/service/demo.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/photos/service/photos.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/reviews/service/demo.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/reviews/service/reviews.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/schedule/service/schedule.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/site/service/demo.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/site/service/photo-slots.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/site/service/public-photos.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/site/service/settings.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/site/service/site-settings.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/tariffs/service/demo.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/tariffs/service/price-poster.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/tariffs/service/public.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/tariffs/service/tariffs.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/trainers/service/demo.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/trainers/service/poster.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/trainers/service/public.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/modules/trainers/service/trainers.ts",
+    "to": "src/lib/db.ts",
+    "unresolvedTo": "@/lib/db",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "club-data-via-dbFor"
+    }
+  }
+]
