@@ -49,14 +49,24 @@ module.exports = {
       name: "db-only-in-services",
       severity: "error",
       comment: "К Prisma ходят только сервисы (лимит попыток входа — тоже сервис, модуль Аккаунт Владельца).",
-      from: { pathNot: ["^src/lib/services/", "^src/modules/[^/]+/service", "^src/lib/db\\.ts$"] },
+      from: { pathNot: ["^src/lib/services/", "^src/modules/[^/]+/service", "^src/lib/db\\.ts$", "^src/lib/tenant-db\\.ts$"] },
+      to: { path: "^src/lib/db\\.ts$" },
+    },
+    {
+      name: "club-data-via-dbFor",
+      severity: "error",
+      comment:
+        "Таблицы Клуба — только через клиент Клуба dbFor из src/lib/tenant-db.ts (этап П2, ADR 0020, решение 19): он сам " +
+        "ставит clubId в условие и в новые строки. Голый db — только tenant-db, модуль owner (общая LoginAttempt) и " +
+        "проверка готовности (SELECT 1). Сервисы, ещё не переведённые на dbFor, — в известных нарушениях; их число только убывает.",
+      from: { path: "^src/", pathNot: ["^src/lib/db\\.ts$", "^src/lib/tenant-db\\.ts$", "^src/modules/owner/service/", "^src/lib/services/health\\.ts$"] },
       to: { path: "^src/lib/db\\.ts$" },
     },
     {
       name: "prisma-only-in-db",
       severity: "error",
-      comment: "Клиент Prisma создаётся в одном месте — src/lib/db.ts.",
-      from: { path: "^src/", pathNot: "^src/lib/db\\.ts$" },
+      comment: "Клиент Prisma создаётся в одном месте — src/lib/db.ts; схему моделей читает и клиент Клуба (tenant-db.ts).",
+      from: { path: "^src/", pathNot: ["^src/lib/db\\.ts$", "^src/lib/tenant-db\\.ts$"] },
       to: { path: "@prisma/client", dependencyTypesNot: ["type-only"] },
     },
     {

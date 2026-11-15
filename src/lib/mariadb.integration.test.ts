@@ -7,6 +7,7 @@ import { isNotFound } from "@/lib/admin/db-errors";
 import { settingsFromRow, settingsToRow } from "@/modules/site/client";
 import { DEFAULT_SETTINGS } from "@/modules/site/client";
 import { CLUB_FIELDS, CLUB_ID, DEFAULT_CLUB } from "@/modules/club/client";
+import { scopeToClub } from "@/lib/tenant-db";
 
 // Проверки на настоящей MariaDB 10.4 (ADR 0004): миграции нашим скриптом, типы колонок, кодировка, даты.
 // База должна быть отдельной — тест удаляет в ней все таблицы. В CI — сервис mariadb:10.4 (.github/workflows/ci.yml),
@@ -93,6 +94,34 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
     await expect(db.client.create({ data: base })).rejects.toMatchObject({ code: "P2002" });
     expect(await db.client.count({ where: { phone: base.phone } })).toBe(2);
     await db.client.deleteMany({ where: { phone: base.phone } });
+    await db.club.delete({ where: { id: "iron" } });
+  });
+
+  it("П2: клиент Клуба (dbFor) — видит, правит и пишет только свой Клуб, в том числе в транзакции", async () => {
+    await db.club.upsert({ where: { id: "iron" }, update: {}, create: { ...DEFAULT_CLUB, id: "iron", name: "Iron Club" } });
+    const club = scopeToClub(db, "club");
+    const iron = scopeToClub(db, "iron");
+    await club.hall.create({ data: { id: "p2-a", nameRu: "Зал A" } });
+    await iron.hall.create({ data: { id: "p2-b", nameRu: "Зал B" } });
+    expect(await db.hall.findUniqueOrThrow({ where: { id: "p2-b" }, select: { clubId: true } })).toEqual({ clubId: "iron" });
+
+    // чтение: чужой Зал не найти даже по id
+    expect((await iron.hall.findMany({ where: { id: { startsWith: "p2-" } } })).map((h) => h.id)).toEqual(["p2-b"]);
+    expect(await iron.hall.findUnique({ where: { id: "p2-a" } })).toBeNull();
+    // правка и удаление чужого — не находят строку
+    await expect(iron.hall.update({ where: { id: "p2-a" }, data: { nameRu: "взлом" } })).rejects.toMatchObject({ code: "P2025" });
+    expect(await iron.hall.deleteMany({ where: { id: "p2-a" } })).toEqual({ count: 0 });
+
+    // создание со связью (hall: connect): Клуб ставится тоже связью — Prisma не смешивает её со скаляром clubId
+    const t = await iron.tariff.create({ data: { hall: { connect: { id: "p2-b" } }, category: "SINGLE", price: 1000 }, select: { clubId: true } });
+    expect(t).toEqual({ clubId: "iron" });
+
+    // интерактивная транзакция идёт тем же клиентом Клуба
+    const inTx = await iron.$transaction(async (tx) => [await tx.hall.count({ where: { id: { startsWith: "p2-" } } }), await tx.tariff.count()]);
+    expect(inTx).toEqual([1, 1]);
+
+    await db.tariff.deleteMany({ where: { hallId: "p2-b" } });
+    await db.hall.deleteMany({ where: { id: { in: ["p2-a", "p2-b"] } } });
     await db.club.delete({ where: { id: "iron" } });
   });
 
