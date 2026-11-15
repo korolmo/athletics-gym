@@ -129,7 +129,7 @@ async function main() {
     create: { id: "site", ...settingsToRow(DEFAULT_SETTINGS) },
   });
   for (const { position, ...card } of DEFAULT_ABOUT_CARDS) {
-    await db.aboutCard.upsert({ where: { clubId_position: { clubId: CLUB_ID, position } }, update: card, create: { position, ...card } });
+    await db.aboutCard.upsert({ where: { clubId_position: { clubId: CLUB_ID, position } }, update: card, create: { clubId: CLUB_ID, position, ...card } });
   }
 
   // Направления Владелец ведёт сам: seed заводит начальные, только если их нет вовсе

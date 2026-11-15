@@ -63,7 +63,7 @@ export async function saveAbout(input: AboutInput): Promise<void> {
       db.aboutCard.upsert({
         where: { clubId_position: { clubId: CLUB_ID, position: i + 1 } },
         update: card,
-        create: { position: i + 1, ...card },
+        create: { clubId: CLUB_ID, position: i + 1, ...card },
       }),
     ),
   );

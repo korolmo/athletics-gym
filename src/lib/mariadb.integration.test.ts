@@ -78,14 +78,11 @@ describe.skipIf(!URL_)("MariaDB: схема и данные", () => {
     expect(fks.map((f) => f.t).sort()).toEqual([...CLUB_TABLES].sort());
   });
 
-  it("П2: Залы Athletic's Gym получили вид — Женский зал women, остальные general", async () => {
-    await db.hall.createMany({ data: [{ id: "general", nameRu: "Общий зал" }, { id: "women", nameRu: "Женский зал" }], skipDuplicates: true });
-    await db.$executeRawUnsafe("UPDATE `Hall` SET `kind` = 'women' WHERE `id` = 'women'");
-    const halls = await db.hall.findMany({ select: { id: true, kind: true, clubId: true }, orderBy: { id: "asc" } });
-    expect(halls).toEqual([
-      { id: "general", kind: "general", clubId: "club" },
-      { id: "women", kind: "women", clubId: "club" },
-    ]);
+  it("П2: новый Зал — вид general и Клуб «club» по умолчанию (так ведёт себя и прежний код)", async () => {
+    // Свои id: остальные тесты файла заводят Залы general и women
+    await db.hall.create({ data: { id: "p2-hall", nameRu: "Зал" } });
+    expect(await db.hall.findUniqueOrThrow({ where: { id: "p2-hall" }, select: { kind: true, clubId: true } })).toEqual({ kind: "general", clubId: "club" });
+    await db.hall.delete({ where: { id: "p2-hall" } });
   });
 
   it("П2: уникальность внутри Клуба — один телефон в двух Клубах можно, дважды в одном нельзя", async () => {
