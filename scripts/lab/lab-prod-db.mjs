@@ -24,8 +24,48 @@ const DEFAULT_HOURS = [1, 2, 3, 4, 5, 6].flatMap((weekday) => [
   { weekday, startMin: 15 * 60, endMin: 21 * 60 },
 ]);
 
+/**
+ * Разовая починка (15 ноября 2026): первая редакция миграции 20261115000000_club_id упала на TiDB на AboutCard
+ * (ошибка 8200 — нельзя сбросить кластерный первичный ключ), успев добавить clubId (и kind у Hall) в пять таблиц.
+ * DDL в MySQL-совместимых базах не откатывается, а незаконченная строка в _prisma_migrations останавливает
+ * migrate.cjs. Здесь — снять частичные колонки и строку; исправленная миграция применится заново целиком.
+ * Срабатывает только при незаконченной строке этой миграции. Удалить после того, как Лаборатория её применит.
+ */
+const BROKEN = "20261115000000_club_id";
+const PARTIAL = [
+  ["Hall", "clubId"],
+  ["Hall", "kind"],
+  ["Tariff", "clubId"],
+  ["Trainer", "clubId"],
+  ["Owner", "clubId"],
+  ["SiteSettings", "clubId"],
+];
+
+async function repairBrokenClubId() {
+  const db = new PrismaClient({ datasourceUrl: url });
+  try {
+    await withConnectRetry(() => db.$queryRawUnsafe("SELECT 1"));
+    const [table] = await db.$queryRawUnsafe(
+      "SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '_prisma_migrations'",
+    );
+    if (Number(table.n) === 0) return;
+    const [row] = await db.$queryRawUnsafe(
+      "SELECT COUNT(*) AS n FROM _prisma_migrations WHERE migration_name = ? AND finished_at IS NULL AND rolled_back_at IS NULL",
+      BROKEN,
+    );
+    if (Number(row.n) === 0) return;
+    for (const [t, c] of PARTIAL) await db.$executeRawUnsafe(`ALTER TABLE \`${t}\` DROP COLUMN IF EXISTS \`${c}\``);
+    await db.$executeRawUnsafe("DROP TABLE IF EXISTS `AboutCard_p2`");
+    await db.$executeRawUnsafe("DELETE FROM _prisma_migrations WHERE migration_name = ? AND finished_at IS NULL", BROKEN);
+    console.log(`Лаборатория: незаконченная миграция ${BROKEN} снята, частичные колонки удалены — применяю заново.`);
+  } finally {
+    await db.$disconnect();
+  }
+}
+
 async function main() {
-  const migrate = spawnSync(process.execPath, ["scripts/standalone/migrate.cjs"], { env: { ...process.env, DATABASE_URL: url }, stdio: "inherit" });
+  await repairBrokenClubId();
+  const migrate =spawnSync(process.execPath, ["scripts/standalone/migrate.cjs"], { env: { ...process.env, DATABASE_URL: url }, stdio: "inherit" });
   if (migrate.status !== 0) throw new Error(`Миграции Лаборатории не применились (код ${migrate.status}).`);
 
   const db = new PrismaClient({ datasourceUrl: url });
