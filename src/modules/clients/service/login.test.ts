@@ -48,7 +48,7 @@ const { state, db } = vi.hoisted(() => {
         state.clients = state.clients.filter((c) => !(c.lastLoginAt < where.lastLoginAt.lt));
         return { count: before - state.clients.length };
       }),
-      findUnique: vi.fn(async ({ where }: { where: { phone: string } }) => {
+      findFirst: vi.fn(async ({ where }: { where: { phone: string } }) => {
         const row = state.clients.find((c) => c.phone === where.phone);
         return row ? { id: row.id, sessionVersion: row.sessionVersion } : null;
       }),

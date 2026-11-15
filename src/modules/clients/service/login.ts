@@ -96,7 +96,7 @@ export async function verifyLoginCode(input: CodeVerifyInput, policyDate: string
     return attemptsLeft <= 0 ? { ok: false, reason: "tooManyAttempts" } : { ok: false, reason: "wrongCode", attemptsLeft };
   }
 
-  const existing = await db.client.findUnique({ where: { phone }, select: { id: true, sessionVersion: true } });
+  const existing = await db.client.findFirst({ where: { phone }, select: { id: true, sessionVersion: true } });
   if (!existing && !profile) return { ok: false, reason: "needsProfile" };
 
   // Код одноразовый: расходует его тот, чьё удаление сработало

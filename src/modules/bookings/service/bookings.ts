@@ -51,7 +51,7 @@ export async function trainerBusy(trainerId: string, now: Date = new Date()): Pr
 }
 
 async function findByKey(clientId: string, idempotencyKey: string): Promise<CreatedBooking | null> {
-  const row = await db.booking.findUnique({ where: { idempotencyKey }, select: { ...bookingFields, clientId: true } });
+  const row = await db.booking.findFirst({ where: { idempotencyKey }, select: { ...bookingFields, clientId: true } });
   if (!row || row.clientId !== clientId) return null;
   return { id: row.id, trainerId: row.trainerId, hallId: row.hallId, startAt: row.startAt, endAt: row.endAt };
 }
@@ -116,10 +116,11 @@ export async function createBookingFor(
   } catch (e) {
     const target = uniqueTarget(e);
     if (target === null) throw e;
-    if (target.includes("idempotencyKey")) {
-      const same = await findByKey(clientId, idempotencyKey);
-      return same ? { ok: true, booking: same, repeated: true } : { ok: false, error: "badRequest" };
-    }
+    // Повтор той же формы нарушает сразу два индекса — ключ повтора и «одно Окно — одна Запись»; база называет тот,
+    // что проверила первым (зависит от порядка индексов, П2 его поменял). Поэтому сначала ищем Запись с этим ключом.
+    const same = await findByKey(clientId, idempotencyKey);
+    if (same) return { ok: true, booking: same, repeated: true };
+    if (target.includes("idempotencyKey")) return { ok: false, error: "badRequest" };
     return { ok: false, error: "taken" };
   }
 }

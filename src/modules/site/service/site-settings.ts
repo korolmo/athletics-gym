@@ -1,3 +1,4 @@
+import { CLUB_ID } from "@/modules/club/client";
 import "server-only";
 import { db } from "@/lib/db";
 import { requireOwner } from "@/modules/owner";
@@ -60,9 +61,9 @@ export async function saveAbout(input: AboutInput): Promise<void> {
   await db.$transaction(
     input.cards.map((card, i) =>
       db.aboutCard.upsert({
-        where: { position: i + 1 },
+        where: { clubId_position: { clubId: CLUB_ID, position: i + 1 } },
         update: card,
-        create: { position: i + 1, ...card },
+        create: { clubId: CLUB_ID, position: i + 1, ...card },
       }),
     ),
   );

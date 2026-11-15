@@ -46,6 +46,11 @@ enum Audience {
 model Hall {
   /// "general" | "women"
   id          String    @id
+  /// Вид Зала: general (Общий) или women (Женский) — код опирается на него, а не на id (этап П2, решение 11)
+  kind        String    @default("general")
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId      String    @default("club")
+  club        Club      @relation(fields: [clubId], references: [id])
   nameRu      String
   nameKk      String?
   sortOrder   Int       @default(0)
@@ -56,11 +61,16 @@ model Hall {
   tariffs     Tariff[]
   trainers    Trainer[]
   reviews     Review[]
+
+  @@index([clubId])
 }
 
 /// Тариф — позиция прайса Зала или Тренера (для персональных тренировок)
 model Tariff {
   id             String         @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId         String         @default("club")
+  club           Club           @relation(fields: [clubId], references: [id])
   hall           Hall           @relation(fields: [hallId], references: [id])
   hallId         String
   /// Только для PERSONAL: чей это Тариф; пусто — общая позиция прайса Зала
@@ -87,22 +97,26 @@ model Tariff {
 
   @@index([hallId, category])
   @@index([trainerId])
+  @@index([clubId])
 }
 
 /// Тренер — сотрудник одного Зала, проводит персональные тренировки по своим Тарифам
 model Trainer {
-  id            String   @id @default(cuid())
+  id            String             @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId        String             @default("club")
+  club          Club               @relation(fields: [clubId], references: [id])
   name          String
-  hall          Hall     @relation(fields: [hallId], references: [id])
+  hall          Hall               @relation(fields: [hallId], references: [id])
   hallId        String
   /// Путь к карточке-плакату; до этапа 2 — файл из public/trainers/
   photo         String?
   /// Плакат Тренера, загруженный Владельцем: путь к Фото в хранилище. Если задан — показываем его, а не photo
   uploadedPhoto String?
-  descriptionRu String? @db.Text
-  descriptionKk String? @db.Text
-  sortOrder     Int      @default(0)
-  isVisible     Boolean  @default(true)
+  descriptionRu String?            @db.Text
+  descriptionKk String?            @db.Text
+  sortOrder     Int                @default(0)
+  isVisible     Boolean            @default(true)
   tariffs       Tariff[]
   /// Часы работы, исключения и длительность тренировки — модуль schedule (этап 1)
   schedule      TrainerSchedule?
@@ -111,6 +125,7 @@ model Trainer {
   bookings      Booking[]
 
   @@index([hallId])
+  @@index([clubId])
 }
 
 /// Неудачная попытка входа в админку. Нужна для ограничения перебора пароля;
@@ -127,35 +142,43 @@ model LoginAttempt {
 /// Создаётся при первом входе из ADMIN_LOGIN / ADMIN_PASSWORD, дальше пароль живёт только здесь.
 model Owner {
   id             String   @id @default("owner")
-  login          String   @unique
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId         String   @default("club")
+  club           Club     @relation(fields: [clubId], references: [id])
+  login          String
   /// bcrypt
   passwordHash   String
   /// Версия сессии: смена пароля и «Выйти на всех устройствах» увеличивают её — старые куки перестают подходить
   sessionVersion Int      @default(1)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@unique([clubId, login])
 }
 
 /// Настройки сайта — единственная запись (id = "site"): тексты и контакты, которые Владелец меняет сам.
 /// RU обязателен, KZ необязателен: пусто → на /kk показываем RU.
 model SiteSettings {
   id             String   @id @default("site")
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId         String   @default("club")
+  club           Club     @relation(fields: [clubId], references: [id])
   /// Первый экран: девиз и подзаголовок
   heroTitleRu    String
   heroTitleKk    String?
-  heroSubtitleRu String @db.Text
-  heroSubtitleKk String? @db.Text
+  heroSubtitleRu String   @db.Text
+  heroSubtitleKk String?  @db.Text
   /// Фон первого экрана: путь к Фото в хранилище; пусто — картинка из public/
   heroPhoto      String?
   /// Женский зал
-  womenTextRu    String @db.Text
-  womenTextKk    String? @db.Text
+  womenTextRu    String   @db.Text
+  womenTextKk    String?  @db.Text
   womenInstagram String
   /// Фото Женского зала: путь в хранилище; пусто — показываем логотип Женского зала
   womenPhoto     String?
   /// Контакты
-  addressRu      String @db.Text
-  addressKk      String? @db.Text
+  addressRu      String   @db.Text
+  addressKk      String?  @db.Text
   hoursRu        String
   hoursKk        String?
   /// Телефон: +7 и десять цифр, например +77714846344
@@ -171,12 +194,12 @@ model SiteSettings {
   legalName      String?
   /// ИИН/БИН: ровно 12 цифр
   legalBin       String?
-  legalAddress   String? @db.Text
+  legalAddress   String?  @db.Text
   /// Email для обращений о персональных данных
   privacyEmail   String?
   /// Место хранения данных — продолжение фразы «Данные хранятся …» в Политике конфиденциальности; пусто — текст по умолчанию из кода
-  dataLocationRu String? @db.Text
-  dataLocationKk String? @db.Text
+  dataLocationRu String?  @db.Text
+  dataLocationKk String?  @db.Text
   /// Бегущая строка: пункты по порядку. Списки одной длины; пустая строка в казахском — «как на русском»
   /// Хранятся как JSON-массив строк в тексте: у MariaDB нет массивов, а её JSON — тот же LONGTEXT
   marqueeRu      String   @db.Text
@@ -192,30 +215,41 @@ model SiteSettings {
   showContacts   Boolean  @default(true)
   showReviews    Boolean  @default(true)
   updatedAt      DateTime @updatedAt
+
+  @@unique([clubId])
 }
 
 /// Карточка блока «О зале»: их всегда четыре, место (1–4) задаёт иконку и порядок.
 model AboutCard {
-  position Int     @id
+  position Int
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId   String  @default("club")
+  club     Club    @relation(fields: [clubId], references: [id])
   kickerRu String
   kickerKk String?
   titleRu  String
   titleKk  String?
-  textRu   String @db.Text
+  textRu   String  @db.Text
   textKk   String? @db.Text
+
+  @@id([clubId, position])
 }
 
 /// Фото Галереи: загружает и упорядочивает Владелец. В базе — только путь к файлу в хранилище.
 model GalleryPhoto {
   id        String   @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId    String   @default("club")
+  club      Club     @relation(fields: [clubId], references: [id])
   /// Путь к файлу в хранилище (бакет media), например gallery/<uuid>.webp
-  path      String   @unique
+  path      String
   captionRu String?
   captionKk String?
   isVisible Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 
+  @@unique([clubId, path])
   @@index([sortOrder])
 }
 
@@ -239,45 +273,56 @@ enum ReviewStatus {
 
 /// Отзыв — реальное мнение клиента о зале. Придуманных Отзывов и демо-данных здесь нет.
 model Review {
-  id          String       @id @default(cuid())
-  authorName  String
+  id                String       @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId            String       @default("club")
+  club              Club         @relation(fields: [clubId], references: [id])
+  authorName        String
   /// Как написан: без перевода и без правок, показывается на обоих языках сайта
-  text        String @db.Text
+  text              String       @db.Text
   /// Оценка от 1 до 5
-  rating      Int
-  hall        Hall?        @relation(fields: [hallId], references: [id], onDelete: SetNull)
-  hallId      String?
-  source      ReviewSource
+  rating            Int
+  hall              Hall?        @relation(fields: [hallId], references: [id], onDelete: SetNull)
+  hallId            String?
+  source            ReviewSource
   /// Ссылка на оригинал Отзыва — только https
-  sourceUrl   String? @db.Text
+  sourceUrl         String?      @db.Text
   /// Дата Отзыва: когда он был написан (у Отзывов с сайта — день отправки)
-  reviewedAt  DateTime
-  status      ReviewStatus @default(NEW)
+  reviewedAt        DateTime
+  status            ReviewStatus @default(NEW)
   /// Оставлен Посетителем через форму сайта: его текст Владелец не правит — только публикует, скрывает или удаляет
-  fromVisitor Boolean      @default(false)
+  fromVisitor       Boolean      @default(false)
   /// Согласие на обработку данных: когда Посетитель его дал. У Отзывов, добавленных Владельцем, пусто
-  consentAt   DateTime?
+  consentAt         DateTime?
   /// Дата редакции Политики конфиденциальности, с которой Посетитель согласился («2026-10-11»)
   consentPolicyDate String?
-  createdAt   DateTime     @default(now())
+  createdAt         DateTime     @default(now())
 
   @@index([status, reviewedAt])
+  @@index([clubId])
 }
 
 /// Принятая отправка Отзыва с сайта. Нужна для лимита отправок с одного адреса;
 /// IP хранится только в виде хэша, как в LoginAttempt.
 model ReviewSubmission {
   id        String   @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId    String   @default("club")
+  club      Club     @relation(fields: [clubId], references: [id])
   ipHash    String
   createdAt DateTime @default(now())
 
   @@index([ipHash, createdAt])
+  @@index([clubId])
 }
 
 /// Обращение — нажатие Посетителя на кнопку связи с залом. Персональных данных нет:
 /// только Канал, место на сайте, язык страницы и время. IP и cookies не храним.
 model ContactClick {
   id        String   @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId    String   @default("club")
+  club      Club     @relation(fields: [clubId], references: [id])
   /// Канал обращения: whatsapp | phone | instagram
   channel   String
   /// Источник обращения — место на сайте: hero, prices, trainer, contacts, mobile-bar и т. д.
@@ -287,16 +332,20 @@ model ContactClick {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@index([clubId])
 }
 
 /// Направление — с чем помогают Тренеры зала. Список ведёт Владелец.
 model Direction {
   id            String   @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId        String   @default("club")
+  club          Club     @relation(fields: [clubId], references: [id])
   titleRu       String
   titleKk       String?
   /// Короткое описание, до 200 символов
-  descriptionRu String? @db.Text
-  descriptionKk String? @db.Text
+  descriptionRu String?  @db.Text
+  descriptionKk String?  @db.Text
   /// Иконка из набора — ключ из src/modules/directions/domain/direction.ts
   icon          String   @default("exercise")
   /// Своё Фото вместо иконки: путь к файлу в хранилище
@@ -306,26 +355,31 @@ model Direction {
   createdAt     DateTime @default(now())
 
   @@index([sortOrder])
+  @@index([clubId])
 }
 
 /// Клиент — человек со своим входом в личный кабинет (этап 1, ADR 0016). Храним минимум: телефон (он же логин),
 /// имя и Согласие на обработку данных. Удаление аккаунта удаляет запись целиком.
 model Client {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId            String    @default("club")
+  club              Club      @relation(fields: [clubId], references: [id])
   /// Телефон в виде +77XXXXXXXXX — логин Клиента
-  phone             String   @unique
+  phone             String
   name              String
   /// Версия сессии: «Выйти на всех устройствах» увеличивает её — старые куки перестают подходить
-  sessionVersion    Int      @default(1)
+  sessionVersion    Int       @default(1)
   /// Согласие на обработку данных: когда дано и с какой редакцией Политики («2026-11-07»)
   consentAt         DateTime
   consentPolicyDate String
   /// Последний вход: аккаунт без входа дольше срока из правил удаляется
   lastLoginAt       DateTime
   bookings          Booking[]
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
+  @@unique([clubId, phone])
   @@index([lastLoginAt])
 }
 
@@ -333,6 +387,9 @@ model Client {
 /// и чистится через сутки. IP — только хэш, для лимита запросов кода.
 model ClientLoginCode {
   id        String   @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId    String   @default("club")
+  club      Club     @relation(fields: [clubId], references: [id])
   phone     String
   codeHash  String
   ipHash    String
@@ -343,21 +400,30 @@ model ClientLoginCode {
 
   @@index([phone, createdAt])
   @@index([ipHash, createdAt])
+  @@index([clubId])
 }
 
 /// Настройки записи к Тренеру (этап 1, ADR 0017): длительность одной тренировки. Окна не хранятся —
 /// их вычисляет модуль schedule из часов работы и исключений.
 model TrainerSchedule {
   trainerId      String   @id
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId         String   @default("club")
+  club           Club     @relation(fields: [clubId], references: [id])
   trainer        Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   /// Длительность тренировки в минутах: 30–180, шаг 15
   sessionMinutes Int      @default(60)
   updatedAt      DateTime @updatedAt
+
+  @@index([clubId])
 }
 
 /// Интервал работы Тренера в один из дней недели, в поясе Клуба: минуты от полуночи, конец не включается
 model TrainerWorkHours {
   id        String  @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId    String  @default("club")
+  club      Club    @relation(fields: [clubId], references: [id])
   trainer   Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   trainerId String
   /// 1 — понедельник … 7 — воскресенье
@@ -366,11 +432,15 @@ model TrainerWorkHours {
   endMin    Int
 
   @@index([trainerId])
+  @@index([clubId])
 }
 
 /// Исключение: дни (включительно, в поясе Клуба), когда Тренер не принимает записи — выходной, отпуск
 model TrainerTimeOff {
   id        String   @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId    String   @default("club")
+  club      Club     @relation(fields: [clubId], references: [id])
   trainer   Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   trainerId String
   /// «2026-11-15»
@@ -381,6 +451,7 @@ model TrainerTimeOff {
   createdAt DateTime @default(now())
 
   @@index([trainerId, toDay])
+  @@index([clubId])
 }
 
 /// Статус Записи: прошедшая действующая Запись остаётся ACTIVE — «прошла» считается по времени
@@ -394,6 +465,9 @@ enum BookingStatus {
 /// activeTrainerId = trainerId, у отменённой — NULL (частичных индексов в MariaDB 10.4 нет, а NULL не мешает уникальности).
 model Booking {
   id              String        @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId          String        @default("club")
+  club            Club          @relation(fields: [clubId], references: [id])
   /// Клиент; удалил аккаунт — Запись остаётся без его данных
   client          Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
   clientId        String?
@@ -407,13 +481,14 @@ model Booking {
   status          BookingStatus @default(ACTIVE)
   activeTrainerId String?
   /// Ключ повтора из формы: повторная отправка возвращает ту же Запись
-  idempotencyKey  String?       @unique
+  idempotencyKey  String?
   cancelledAt     DateTime?
   /// Кто отменил: client | owner
   cancelledBy     String?
   createdAt       DateTime      @default(now())
 
   @@unique([activeTrainerId, startAt])
+  @@unique([clubId, idempotencyKey])
   @@index([clientId, status, startAt])
   @@index([trainerId, startAt])
   @@index([startAt])
@@ -435,6 +510,9 @@ enum OutboxStatus {
 /// и по расписанию с повторами. Доставка «хотя бы один раз»: повтор сообщения Владелец узнает по номеру события.
 model OutboxEvent {
   id            String       @id @default(cuid())
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId        String       @default("club")
+  club          Club         @relation(fields: [clubId], references: [id])
   /// booking.created | booking.cancelled
   type          String
   /// Данные события (JSON): что показать в сообщении
@@ -448,46 +526,73 @@ model OutboxEvent {
   sentAt        DateTime?
 
   @@index([status, nextAttemptAt])
+  @@index([clubId])
 }
 
 /// Клуб (этап П1, ADR 0018): название, город, бренд и пояс — данные, а не код. Пока одна строка (id «club»);
 /// на П2 строк станет больше, а остальные сущности получат ссылку на Клуб. Начальные значения — Athletic's Gym,
 /// их вносит миграция один в один с прежними константами кода.
 model Club {
-  id               String   @id @default("club")
-  name             String
-  cityRu           String
-  cityKk           String?
+  id                String             @id @default("club")
+  name              String
+  cityRu            String
+  cityKk            String?
   /// «В каком городе» для заголовков: «в Кызылорде», «Қызылордадағы» — склонение не вычисляем
-  cityInRu         String   @default("")
-  cityInKk         String?
+  cityInRu          String             @default("")
+  cityInKk          String?
   /// Описание для поисковиков и превью ссылок
-  seoDescriptionRu String   @db.Text
-  seoDescriptionKk String?  @db.Text
+  seoDescriptionRu  String             @db.Text
+  seoDescriptionKk  String?            @db.Text
   /// Год открытия — для подписи «С 2022 года»; пусто — подпись без года
-  foundedYear      Int?
+  foundedYear       Int?
   /// Цвет акцента, #rrggbb; цвет текста на нём выбирает правило домена
-  accentColor      String
+  accentColor       String
   /// Логотип: «/…» — файл из public/, «gallery/…» — загруженное Фото, пусто — монограмма из названия
-  logo             String?
-  twoGisUrl        String?
-  twoGisReviewsUrl String?
-  twoGisRouteUrl   String?  @db.Text
-  latitude         Float?
-  longitude        Float?
+  logo              String?
+  twoGisUrl         String?
+  twoGisReviewsUrl  String?
+  twoGisRouteUrl    String?            @db.Text
+  latitude          Float?
+  longitude         Float?
   /// IANA-пояс; в админке не меняется — смена пояса сдвигает Записи (П2)
-  timeZone         String
-  updatedAt        DateTime @updatedAt
+  timeZone          String
+  updatedAt         DateTime           @updatedAt
+  /// Чат Telegram Владельца этого Клуба (этап П2, решение 15); пусто у «club» — TELEGRAM_CHAT_ID
+  telegramChatId    String?
+  halls             Hall[]
+  tariffs           Tariff[]
+  trainers          Trainer[]
+  owners            Owner[]
+  siteSettingss     SiteSettings[]
+  aboutCards        AboutCard[]
+  galleryPhotos     GalleryPhoto[]
+  reviews           Review[]
+  reviewSubmissions ReviewSubmission[]
+  contactClicks     ContactClick[]
+  directions        Direction[]
+  clients           Client[]
+  clientLoginCodes  ClientLoginCode[]
+  trainerSchedules  TrainerSchedule[]
+  trainerWorkHourss TrainerWorkHours[]
+  trainerTimeOffs   TrainerTimeOff[]
+  bookings          Booking[]
+  outboxEvents      OutboxEvent[]
+  demoStates        DemoState[]
 }
 
 /// Суточный сброс демо-админки Лаборатории (этап П1, ADR 0019). Одна строка («lab»): снимок исходного состояния
 /// того, что может менять Гость (JSON по модулям), последний сброс и блокировка от двух сбросов одновременно.
 model DemoState {
   id          String    @id @default("lab")
+  /// Клуб (этап П2, ADR 0020): все строки — своего Клуба; до второго Клуба — «club»
+  clubId      String    @default("club")
+  club        Club      @relation(fields: [clubId], references: [id])
   snapshot    String?   @db.LongText
   snapshotAt  DateTime?
   lastResetAt DateTime?
   /// Сколько шёл последний сброс, мс — измерение этапа П1
   lastResetMs Int?
   lockedUntil DateTime?
+
+  @@unique([clubId])
 }

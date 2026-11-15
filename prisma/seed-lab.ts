@@ -1,3 +1,4 @@
+import { CLUB_ID } from "../src/modules/club/domain/club";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/modules/owner/service/password";
 import { decideSeed } from "../src/lib/db-guard/production";
@@ -172,7 +173,7 @@ async function seed(login: string, password: string) {
   };
   await db.siteSettings.upsert({ where: { id: "site" }, update: settings, create: { id: "site", ...settings } });
   for (const { position, ...card } of DEFAULT_ABOUT_CARDS) {
-    await db.aboutCard.upsert({ where: { position }, update: card, create: { position, ...card } });
+    await db.aboutCard.upsert({ where: { clubId_position: { clubId: CLUB_ID, position } }, update: card, create: { clubId: CLUB_ID, position, ...card } });
   }
   if ((await db.direction.count()) === 0) {
     await db.direction.createMany({ data: DEFAULT_DIRECTIONS.map((d, i) => ({ ...d, sortOrder: i })) });
