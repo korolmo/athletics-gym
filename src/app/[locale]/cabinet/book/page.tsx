@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { notFound } from "next/navigation";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { getCabinetTexts, getClubOnce } from "@/app/brand";
@@ -19,7 +20,7 @@ export default async function CabinetBookPage({ params }: { params: Promise<{ lo
     getCabinetTexts(locale),
     listVisibleTrainersWithTariffs(),
     listMyBookings(),
-    getSiteSettings(),
+    getSiteSettings(await currentClub()),
   ]);
   const names = Object.fromEntries(trainers.map((tr) => [tr.id, tr.name]));
   const upcoming = bookings

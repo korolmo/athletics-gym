@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
 import { getCabinetTexts, getLogos } from "@/app/brand";
@@ -13,7 +14,7 @@ export default async function CabinetLoginPage({ params }: { params: Promise<{ l
   if (!isLocale(locale)) notFound();
   if (await currentClient()) redirect(`/${locale}/cabinet`);
   const [t, logos] = await Promise.all([getCabinetTexts(locale), getLogos()]);
-  const { settings } = await getSiteSettings();
+  const { settings } = await getSiteSettings(await currentClub());
   const demo = resolveCodeChannel()?.name === "demo";
   const phones = `${formatPhone(DEMO_PHONES[0])} … ${DEMO_PHONES[DEMO_PHONES.length - 1].slice(-2)}`;
   return (

@@ -18,6 +18,7 @@ import type { Parsed } from "@/lib/validation/shared";
 import * as settings from "@/modules/site";
 import { parseClubForm, saveClub as storeClub } from "@/modules/club";
 import { takeDemoSnapshot } from "@/modules/demo";
+import { currentClub } from "@/app/current-club";
 
 // Действия — тонкие: права → валидация → сервис → обновить страницы и вернуть Владельца в список
 
@@ -27,7 +28,7 @@ export type SettingsFormState = { error: string; values: Record<string, string> 
 async function save<T>(
   fd: FormData,
   parse: (fd: FormData) => Parsed<T>,
-  store: (data: T) => Promise<void>,
+  store: (clubId: string, data: T) => Promise<void>,
   guard: () => Promise<void> = requireOwner,
 ): Promise<SettingsFormState> {
   await guard();
@@ -36,7 +37,7 @@ async function save<T>(
     const values = Object.fromEntries([...fd].filter((e): e is [string, string] => typeof e[1] === "string"));
     return { error: parsed.error, values };
   }
-  await store(parsed.data);
+  await store(await currentClub(), parsed.data);
   revalidateSite();
   redirect("/admin/site?saved=1");
 }
@@ -78,13 +79,13 @@ export async function saveClub(_prev: SettingsFormState, fd: FormData): Promise<
 export async function toggleBlock(fd: FormData): Promise<void> {
   await requireOwner();
   const block = text(fd, "block");
-  if (isBlock(block)) await settings.toggleBlock(block);
+  if (isBlock(block)) await settings.toggleBlock(await currentClub(), block);
   revalidateSite();
 }
 
 /** «Сделать текущее состояние исходным» для суточного сброса демо Лаборатории (этап П1) — только Владелец. */
 export async function takeDemoSnapshotAction(): Promise<void> {
   await requireRealOwner();
-  await takeDemoSnapshot(requireRealOwner);
+  await takeDemoSnapshot(await currentClub(), requireRealOwner);
   redirect("/admin/site?snapshot=1");
 }

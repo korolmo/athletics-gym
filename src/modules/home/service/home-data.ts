@@ -17,7 +17,7 @@ export async function getPriceListAndTrainers() {
  * Фото, загруженные Владельцем, — готовыми ссылками. Пусто (null) значит «не загружено»:
  * секция показывает картинку из public/, как до этапа 2.
  */
-export async function getSitePhotos() {
-  const [{ hero, women }, posters, gallery] = await Promise.all([getSettingsPhotoUrls(), listPricePosterUrls(), listVisibleGallery()]);
+export async function getSitePhotos(clubId: string) {
+  const [{ hero, women }, posters, gallery] = await Promise.all([getSettingsPhotoUrls(clubId), listPricePosterUrls(), listVisibleGallery(clubId)]);
   return { hero, women, posters, gallery };
 }

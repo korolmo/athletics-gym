@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getGalleryPhoto } from "@/modules/photos";
@@ -7,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EditGalleryPhotoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const photo = await getGalleryPhoto(id);
+  const photo = await getGalleryPhoto(await currentClub(), id);
   if (!photo) notFound();
 
   return (

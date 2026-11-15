@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { getSettingsForEdit } from "@/modules/site";
 import { getClubForEdit } from "@/modules/club";
@@ -39,9 +40,9 @@ export default async function SitePage({ searchParams }: { searchParams: Promise
   const { saved, snapshot } = await searchParams;
   const demo = guestLoginEnabled();
   const [{ settings }, club, demoStatus, guest] = await Promise.all([
-    getSettingsForEdit(),
-    getClubForEdit(),
-    demo ? getDemoStatus(requireOwner) : null,
+    getSettingsForEdit(await currentClub()),
+    getClubForEdit(await currentClub()),
+    demo ? getDemoStatus(await currentClub(), requireOwner) : null,
     isGuest(),
   ]);
   const fmt = (d: Date | null) =>

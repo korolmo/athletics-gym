@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { notFound } from "next/navigation";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { getCabinetTexts, getClubOnce } from "@/app/brand";
@@ -14,7 +15,7 @@ export default async function CabinetHomePage({ params }: { params: Promise<{ lo
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const client = await requireClient(`/${locale}/cabinet/login`);
-  const [t, bookings, { settings }] = await Promise.all([getCabinetTexts(locale), listMyBookings(), getSiteSettings()]);
+  const [t, bookings, { settings }] = await Promise.all([getCabinetTexts(locale), listMyBookings(), getSiteSettings(await currentClub())]);
   const names = await getTrainerNames(bookings.flatMap((b) => (b.trainerId ? [b.trainerId] : [])));
   return (
     <CabinetShell locale={locale} t={t} tab="bookings">

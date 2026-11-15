@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LegalPage } from "@/components/site/legal/LegalPage";
@@ -27,7 +28,7 @@ export async function LegalRoute({ page, params }: { page: LegalPageId; params: 
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const [t, logos] = await Promise.all([getSiteDictionary(locale), getLogos()]);
-  const { settings, cards } = await getSiteSettings();
+  const { settings, cards } = await getSiteSettings(await currentClub());
   const s = toSiteContent(locale, settings, cards);
   // Разделы о личном кабинете — только там, где он работает (Лаборатория)
   const cabinet = resolveCodeChannel() !== null;

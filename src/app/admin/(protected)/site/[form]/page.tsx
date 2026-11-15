@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSettingsForEdit } from "@/modules/site";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function EditSettingsPage({ params }: { params: Promise<{ form: string }> }) {
   const { form } = await params;
   if (!isSettingsForm(form)) notFound();
-  const { settings, cards } = await getSettingsForEdit();
+  const { settings, cards } = await getSettingsForEdit(await currentClub());
 
   return (
     <div className="mx-auto max-w-2xl">

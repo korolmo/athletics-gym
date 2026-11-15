@@ -1,18 +1,18 @@
 import "server-only";
-import { db } from "@/lib/db";
+import { dbFor } from "@/lib/tenant-db";
 import { requireOwner } from "@/modules/owner";
 import { mediaUrl, type PhotoSlot } from "@/modules/photos";
-import { SETTINGS_ID } from "./settings";
 
 // Фото первого экрана и Женского зала — места для Фото, которые ведёт модуль Сайт (этап 6, ADR 0015,
 // «Места для Фото»). Пути хранятся в Настройках сайта (heroPhoto, womenPhoto); файлы ведёт модуль Фото.
-// У этих мест нет id: Настройки одни на сайт.
+// У этих мест нет id: Настройки одни на Клуб.
 
 type Column = "heroPhoto" | "womenPhoto";
 
-function settingsPhotoSlot(kind: "hero" | "women", column: Column): PhotoSlot {
+function settingsPhotoSlot(clubId: string, kind: "hero" | "women", column: Column): PhotoSlot {
+  const db = dbFor(clubId);
   const read = async () =>
-    ((await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { [column]: true } })) as Record<Column, string | null> | null)?.[column] ??
+    ((await db.siteSettings.findUnique({ where: { clubId }, select: { [column]: true } })) as Record<Column, string | null> | null)?.[column] ??
     null;
   return {
     kind,
@@ -21,12 +21,12 @@ function settingsPhotoSlot(kind: "hero" | "women", column: Column): PhotoSlot {
     },
     async set(_id, path) {
       const previous = await read();
-      await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: { [column]: path } });
+      await db.siteSettings.update({ where: { clubId }, data: { [column]: path } });
       return previous;
     },
     async clear() {
       const previous = await read();
-      if (previous) await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: { [column]: null } });
+      if (previous) await db.siteSettings.update({ where: { clubId }, data: { [column]: null } });
       return previous;
     },
     async paths() {
@@ -35,12 +35,12 @@ function settingsPhotoSlot(kind: "hero" | "women", column: Column): PhotoSlot {
   };
 }
 
-export const heroPhotoSlot = settingsPhotoSlot("hero", "heroPhoto");
-export const womenPhotoSlot = settingsPhotoSlot("women", "womenPhoto");
+export const heroPhotoSlot = (clubId: string) => settingsPhotoSlot(clubId, "hero", "heroPhoto");
+export const womenPhotoSlot = (clubId: string) => settingsPhotoSlot(clubId, "women", "womenPhoto");
 
 /** Фото первого экрана и Женского зала — ссылками, для раздела «Фото» в админке. */
-export async function getSettingsPhotos(): Promise<{ hero: string | null; women: string | null }> {
+export async function getSettingsPhotos(clubId: string): Promise<{ hero: string | null; women: string | null }> {
   await requireOwner();
-  const s = await db.siteSettings.findUnique({ where: { id: SETTINGS_ID }, select: { heroPhoto: true, womenPhoto: true } });
+  const s = await dbFor(clubId).siteSettings.findUnique({ where: { clubId }, select: { heroPhoto: true, womenPhoto: true } });
   return { hero: mediaUrl(s?.heroPhoto), women: mediaUrl(s?.womenPhoto) };
 }

@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { notFound } from "next/navigation";
@@ -34,7 +35,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
   // База недоступна — рисуем с начальными Клубом и адресом: превью ссылки не должно ломаться
   const club = await getClubOnce().catch(() => DEFAULT_CLUB);
   const t = fillBrand(getDictionary(locale), brandVarsFor(club, locale));
-  const { settings, cards } = await getSiteSettings().catch(() => ({ settings: DEFAULT_SETTINGS, cards: DEFAULT_ABOUT_CARDS }));
+  const { settings, cards } = await getSiteSettings(await currentClub()).catch(() => ({ settings: DEFAULT_SETTINGS, cards: DEFAULT_ABOUT_CARDS }));
   const s = toSiteContent(locale, settings, cards);
 
   const [bold, medium] = await Promise.all([asset("src/assets/fonts/Onest-ExtraBold.ttf"), asset("src/assets/fonts/Onest-Medium.ttf")]);

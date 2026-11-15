@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { getClubForEdit } from "@/modules/club";
 import { mediaUrl } from "@/modules/photos";
@@ -11,7 +12,7 @@ import { PhotoSlot } from "../../photos/PhotoSlot";
 export const dynamic = "force-dynamic";
 
 export default async function ClubSettingsPage() {
-  const club = await getClubForEdit();
+  const club = await getClubForEdit(await currentClub());
   const src = logoSource(club.logo);
   return (
     <div className="mx-auto max-w-2xl">

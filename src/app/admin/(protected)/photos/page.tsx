@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { isGuest } from "@/modules/owner";
 import Image from "next/image";
 import Link from "next/link";
@@ -34,8 +35,8 @@ function SectionHead({ n, title, note }: { n: number; title: string; note: strin
 export default async function PhotosPage({ searchParams }: { searchParams: Promise<{ saved?: string; deleted?: string }> }) {
   const { saved, deleted } = await searchParams;
   const [single, gallery, posters, status, general, women] = await Promise.all([
-    getSettingsPhotos(),
-    listGallery(),
+    getSettingsPhotos(await currentClub()),
+    listGallery(await currentClub()),
     listPricePosters(),
     mediaStatus().catch((): Record<string, unknown> => ({})),
     listTrainers("general"),
