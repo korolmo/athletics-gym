@@ -1,24 +1,26 @@
-import { CLUB_ID } from "@/modules/club/client";
 import "server-only";
-import { db } from "@/lib/db";
+import { dbFor } from "@/lib/tenant-db";
 // Суточный сброс демо-админки Лаборатории (этап П1, ADR 0019): снимок того, что может менять Гость, и возврат к нему.
 // Своё делает сам модуль — его таблицы никто, кроме него, не трогает; собирает всё модуль demo.
 
-import { SETTINGS_ID } from "./settings";
 
 // Фото первого экрана и Женского зала Гость не загружает — их снимок не трогает (загрузки Владельца остаются)
 type SettingsRow = Record<string, unknown>;
 type Snapshot = { settings: SettingsRow | null; cards: { position: number; [k: string]: unknown }[] };
 
-export async function demoSnapshot(): Promise<Snapshot> {
-  const [row, cards] = await Promise.all([db.siteSettings.findUnique({ where: { id: SETTINGS_ID } }), db.aboutCard.findMany({ orderBy: { position: "asc" } })]);
+export async function demoSnapshot(clubId: string): Promise<Snapshot> {
+  const [row, cards] = await Promise.all([dbFor(clubId).siteSettings.findUnique({ where: { clubId } }), dbFor(clubId).aboutCard.findMany({ orderBy: { position: "asc" } })]);
   if (!row) return { settings: null, cards };
   const settings: SettingsRow = { ...row };
-  for (const key of ["id", "heroPhoto", "womenPhoto"]) delete settings[key];
+  for (const key of ["id", "clubId", "heroPhoto", "womenPhoto"]) delete settings[key];
   return { settings, cards };
 }
 
-export async function demoRestore(s: Snapshot): Promise<void> {
-  if (s.settings) await db.siteSettings.update({ where: { id: SETTINGS_ID }, data: s.settings });
-  for (const { position, ...card } of s.cards) await db.aboutCard.update({ where: { clubId_position: { clubId: CLUB_ID, position } }, data: card });
+export async function demoRestore(clubId: string, s: Snapshot): Promise<void> {
+  if (s.settings) await dbFor(clubId).siteSettings.update({ where: { clubId }, data: s.settings });
+  for (const { position, ...card } of s.cards) {
+    // Клуб строки не меняется: в снимке его может не быть (снимки до П2) или он тот же
+    delete card.clubId;
+    await dbFor(clubId).aboutCard.update({ where: { clubId_position: { clubId, position } }, data: card });
+  }
 }

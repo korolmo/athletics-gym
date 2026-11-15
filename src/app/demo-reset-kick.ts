@@ -2,6 +2,7 @@ import "server-only";
 import { after } from "next/server";
 import { guestLoginEnabled } from "@/modules/owner";
 import { runDailyDemoReset } from "@/modules/demo";
+import { CLUB_ID } from "@/modules/club/client";
 import { revalidateSite } from "@/app/admin/revalidate";
 import { logError } from "@/lib/observability/log";
 
@@ -19,7 +20,8 @@ export function kickDemoReset({ now = Date.now(), env = process.env }: { now?: n
   lastKick = now;
   after(async () => {
     try {
-      const r = await runDailyDemoReset();
+      // Сброс — у каждого Клуба свой (решение 16); до второго Клуба — Клуб по умолчанию
+      const r = await runDailyDemoReset(CLUB_ID);
       // Сайт статический с ревалидацией: без этого сброшенный бренд появился бы только через час
       if (r.ran && !r.snapshotTaken) revalidateSite();
     } catch (e) {

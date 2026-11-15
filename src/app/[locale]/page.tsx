@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { notFound } from "next/navigation";
 import { getPriceListAndTrainers, getSitePhotos } from "@/modules/home";
 import { getSiteSettings } from "@/modules/site";
@@ -73,8 +74,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos, publishedReviews, directionRows] = await Promise.all([
     getPriceListAndTrainers(),
-    getSiteSettings(),
-    getSitePhotos(),
+    getSiteSettings(await currentClub()),
+    getSitePhotos(await currentClub()),
     listPublishedReviews(),
     listVisibleDirections(),
   ]);

@@ -20,7 +20,7 @@ const { state, db, requireOwner } = vi.hoisted(() => {
   return { state, db, requireOwner: vi.fn(async () => {}) };
 });
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ db }));
+vi.mock("@/lib/tenant-db", () => ({ dbFor: () => db }));
 vi.mock("@/modules/owner", () => ({ requireOwner }));
 
 const { saveClub, setLogoPhoto, clearLogoPhoto, readLogoPhoto } = await import("./edit");
@@ -36,19 +36,19 @@ beforeEach(() => {
 
 describe("сохранение Клуба", () => {
   it("исходный файл, монограмма; «Фото» без загруженного Фото — логотип не меняется", async () => {
-    await saveClub({ ...base, logoMode: "file" });
+    await saveClub("club", { ...base, logoMode: "file" });
     expect(state.logo).toBe(DEFAULT_CLUB.logo);
-    await saveClub({ ...base, logoMode: "monogram" });
+    await saveClub("club", { ...base, logoMode: "monogram" });
     expect(state.logo).toBeNull();
     state.logo = "/logo.png?v=2";
-    await saveClub({ ...base, logoMode: "photo" });
+    await saveClub("club", { ...base, logoMode: "photo" });
     expect(state.logo).toBe("/logo.png?v=2");
     expect(requireOwner).toHaveBeenCalledTimes(3);
   });
 
   it("загруженное Фото остаётся при «Фото»; пояс формой не меняется", async () => {
     state.logo = "logo/a.webp";
-    await saveClub({ ...base, logoMode: "photo" });
+    await saveClub("club", { ...base, logoMode: "photo" });
     expect(state.logo).toBe("logo/a.webp");
     expect(state.saved).not.toHaveProperty("timeZone");
   });
@@ -57,18 +57,18 @@ describe("сохранение Клуба", () => {
 describe("место для Фото «logo»", () => {
   it("загрузка ставит Фото логотипом и отдаёт прежнее Фото; файл и монограмма — не Фото", async () => {
     state.logo = "/logo.png?v=2";
-    expect(await readLogoPhoto()).toBeNull();
-    expect(await setLogoPhoto("logo/a.webp")).toBeNull();
-    expect(await setLogoPhoto("logo/b.webp")).toBe("logo/a.webp");
+    expect(await readLogoPhoto("club")).toBeNull();
+    expect(await setLogoPhoto("club", "logo/a.webp")).toBeNull();
+    expect(await setLogoPhoto("club", "logo/b.webp")).toBe("logo/a.webp");
     expect(state.logo).toBe("logo/b.webp");
   });
 
   it("удаление Фото — монограмма; исходный файл удаление не трогает", async () => {
     state.logo = "logo/b.webp";
-    expect(await clearLogoPhoto()).toBe("logo/b.webp");
+    expect(await clearLogoPhoto("club")).toBe("logo/b.webp");
     expect(state.logo).toBeNull();
     state.logo = "/logo.png?v=2";
-    expect(await clearLogoPhoto()).toBeNull();
+    expect(await clearLogoPhoto("club")).toBeNull();
     expect(state.logo).toBe("/logo.png?v=2");
   });
 });

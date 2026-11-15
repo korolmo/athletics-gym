@@ -86,75 +86,7 @@
   },
   {
     "type": "dependency",
-    "from": "src/modules/club/service/club.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/club/service/demo.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/club/service/edit.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/modules/contacts/service/contacts.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/demo/service/reset.ts",
     "to": "src/lib/db.ts",
     "unresolvedTo": "@/lib/db",
     "dependencyTypes": [
@@ -239,40 +171,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/modules/photos/service/demo.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/photos/service/photos.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/modules/reviews/service/demo.ts",
     "to": "src/lib/db.ts",
     "unresolvedTo": "@/lib/db",
@@ -308,91 +206,6 @@
   {
     "type": "dependency",
     "from": "src/modules/schedule/service/schedule.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/site/service/demo.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/site/service/photo-slots.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/site/service/public-photos.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/site/service/settings.ts",
-    "to": "src/lib/db.ts",
-    "unresolvedTo": "@/lib/db",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "club-data-via-dbFor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/modules/site/service/site-settings.ts",
     "to": "src/lib/db.ts",
     "unresolvedTo": "@/lib/db",
     "dependencyTypes": [

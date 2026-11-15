@@ -1,5 +1,6 @@
 "use server";
 
+import { currentClub } from "@/app/current-club";
 import { revalidatePath } from "next/cache";
 import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
@@ -10,7 +11,7 @@ import { getClub } from "@/modules/club";
 export async function retryEventAction(fd: FormData): Promise<void> {
   await requireRealOwner();
   await retryEvent(text(fd, "id"), requireOwner);
-  await deliverPending(resolveSender(), (await getClub()).timeZone);
+  await deliverPending(resolveSender(), (await getClub(await currentClub())).timeZone);
   revalidatePath("/admin", "layout");
 }
 

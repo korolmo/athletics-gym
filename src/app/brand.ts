@@ -3,6 +3,7 @@ import { cache } from "react";
 import { getCabinetDictionary, getDictionary, type Locale } from "@/lib/i18n";
 import { fillBrand } from "@/lib/brand-text";
 import { getClub } from "@/modules/club";
+import { currentClub } from "@/app/current-club";
 import { DEFAULT_CLUB, accentCssVars, accentPalette, clubTextVars, logoSource, monogramSvg, monogramText, svgDataUrl, type ClubData, type LogoView } from "@/modules/club/client";
 import { mediaUrl } from "@/modules/photos";
 import { listHallLogos } from "@/modules/tariffs";
@@ -13,7 +14,7 @@ import type { CSSProperties } from "react";
 // модули не импортирует, поэтому Клуб со словарём сводит слой приложения. Страницы без базы (ошибки) — brand-static.ts.
 
 /** Клуб — один запрос на запрос страницы, сколько бы раз его ни спросили. */
-export const getClubOnce = cache(getClub);
+export const getClubOnce = cache(async () => getClub(await currentClub()));
 
 export function brandVarsFor(club: ClubData, locale: Locale) {
   return clubTextVars(club, locale, getDictionary(locale).brand.since);

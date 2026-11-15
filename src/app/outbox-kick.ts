@@ -1,7 +1,7 @@
 import "server-only";
 import { after } from "next/server";
 import { deliverPending, resolveSender } from "@/modules/notifications";
-import { getClub } from "@/modules/club";
+import { CLUB_ID, getClub } from "@/modules/club";
 import { logError } from "@/lib/observability/log";
 
 // Попутная отправка очереди уведомлений (ADR 0017, уточнено 10 ноября). Cron GitHub для повторов ненадёжен:
@@ -22,7 +22,7 @@ export function kickOutbox({ force = false, now = Date.now() }: { force?: boolea
   after(async () => {
     try {
       // Время в сообщении — в поясе Клуба; сбой чтения Клуба ловится так же, как сбой отправки
-      await deliverPending(sender, (await getClub()).timeZone);
+      await deliverPending(sender, (await getClub(CLUB_ID)).timeZone);
     } catch (e) {
       logError("Очередь уведомлений: попутная отправка не удалась.", e);
     }

@@ -7,17 +7,25 @@ import { heroPhotoSlot, womenPhotoSlot } from "@/modules/site";
 import { clearLogoPhoto, readLogoPhoto, setLogoPhoto } from "@/modules/club";
 
 /** Логотип Клуба (этап П1): Клуб — базовый модуль и о Фото не знает, поэтому его место собирается здесь. */
-const logoPhotoSlot: PhotoSlots[number] = {
+const logoPhotoSlot = (clubId: string): PhotoSlots[number] => ({
   kind: "logo",
   exists: async (id) => id === undefined,
-  set: async (_id, path) => setLogoPhoto(path),
-  clear: async () => clearLogoPhoto(),
-  paths: async () => [await readLogoPhoto()],
-};
+  set: async (_id, path) => setLogoPhoto(clubId, path),
+  clear: async () => clearLogoPhoto(clubId),
+  paths: async () => [await readLogoPhoto(clubId)],
+});
 
 /**
  * Места для Фото, которые ведут модули-владельцы (этап 6, ADR 0015, «Места для Фото»). Фото о владельцах
  * не знает — их места собирает слой приложения и передаёт сервису Фото. Новый модуль-владелец добавляет
  * своё место сюда; без него загрузка в это место не принимается, а уборка файлов пропускается.
+ * Места — Клуба (этап П2): Настройки и логотип уже берут его id; прайс, Тренеры и Направления — со следующим PR.
  */
-export const photoSlots: PhotoSlots = [pricePosterSlot, trainerPosterSlot, directionPhotoSlot, heroPhotoSlot, womenPhotoSlot, logoPhotoSlot];
+export const photoSlots = (clubId: string): PhotoSlots => [
+  pricePosterSlot,
+  trainerPosterSlot,
+  directionPhotoSlot,
+  heroPhotoSlot(clubId),
+  womenPhotoSlot(clubId),
+  logoPhotoSlot(clubId),
+];

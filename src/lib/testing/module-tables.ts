@@ -13,11 +13,14 @@ function sources(root: string): string[] {
   });
 }
 
-/** Модели Prisma, к которым обращаются файлы модуля (`db.<модель>.…`), по алфавиту. */
+/**
+ * Модели Prisma, к которым обращаются файлы модуля, по алфавиту: `db.<модель>.…` и клиент Клуба
+ * `dbFor(clubId).<модель>.…` (этап П2).
+ */
 export function tablesUsedBy(moduleDir: string): string[] {
   const used = new Set<string>();
   for (const file of sources(moduleDir)) {
-    for (const m of fs.readFileSync(file, "utf8").matchAll(/\bdb\.(?!\$)(\w+)\./g)) used.add(m[1]);
+    for (const m of fs.readFileSync(file, "utf8").matchAll(/(?:\bdb|\bdbFor\([^()]*\))\.(?!\$)(\w+)\./g)) used.add(m[1]);
   }
   return [...used].sort();
 }

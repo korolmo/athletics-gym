@@ -105,7 +105,7 @@ const { state, db, storage, requireOwner } = vi.hoisted(() => {
 });
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ db }));
+vi.mock("@/lib/tenant-db", () => ({ dbFor: () => db }));
 vi.mock("../storage/client", () => storage);
 vi.mock("@/modules/owner", () => ({ requireOwner }));
 
@@ -174,11 +174,11 @@ const logoSlot: photos.PhotoSlot = { kind: "logo", exists: async (id) => id === 
 const slots = [hallSlot, trainerSlot, directionSlot, settingsSlot("hero", "heroPhoto"), settingsSlot("women", "womenPhoto"), logoSlot];
 /** Сервис так, как его вызывают действия админки: со всеми местами владельцев. */
 const withSlots = {
-  requestUpload: (t: string, type: string, sizes: number[]) => photos.requestUpload(t, type, sizes, slots),
-  attachPhoto: (t: string, path: string) => photos.attachPhoto(t, path, slots),
-  discardUpload: (path: string) => photos.discardUpload(path, slots),
-  removePhoto: (t: string) => photos.removePhoto(t, slots),
-  sweepOrphans: () => photos.sweepOrphans(slots),
+  requestUpload: (t: string, type: string, sizes: number[]) => photos.requestUpload("club", t, type, sizes, slots),
+  attachPhoto: (t: string, path: string) => photos.attachPhoto("club", t, path, slots),
+  discardUpload: (path: string) => photos.discardUpload("club", path, slots),
+  removePhoto: (t: string) => photos.removePhoto("club", t, slots),
+  sweepOrphans: () => photos.sweepOrphans("club", slots),
 };
 
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -374,7 +374,7 @@ describe("удаление Фото", () => {
       uploaded(`gallery/${uuid(n)}.webp`);
       await withSlots.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
     }
-    await photos.deleteGalleryPhoto("g1");
+    await photos.deleteGalleryPhoto("club", "g1");
     expect(state.gallery.map((g) => g.id)).toEqual(["g2"]);
     expect([...state.files.keys()]).toEqual([`gallery/${uuid(2)}.webp`]);
   });
@@ -399,36 +399,36 @@ describe("Галерея: порядок и показ", () => {
       await withSlots.attachPhoto("gallery", `gallery/${uuid(n)}.webp`);
     }
   });
-  const order = async () => (await photos.listGallery()).map((g) => g.id);
+  const order = async () => (await photos.listGallery("club")).map((g) => g.id);
 
   it("фото сдвигается на одно место вверх и вниз", async () => {
-    await photos.moveGalleryPhoto("g3", "up");
+    await photos.moveGalleryPhoto("club", "g3", "up");
     expect(await order()).toEqual(["g1", "g3", "g2"]);
-    await photos.moveGalleryPhoto("g1", "down");
+    await photos.moveGalleryPhoto("club", "g1", "down");
     expect(await order()).toEqual(["g3", "g1", "g2"]);
   });
 
   it("первое некуда поднимать, последнее некуда опускать", async () => {
-    await photos.moveGalleryPhoto("g1", "up");
-    await photos.moveGalleryPhoto("g3", "down");
-    await photos.moveGalleryPhoto("ghost", "up");
+    await photos.moveGalleryPhoto("club", "g1", "up");
+    await photos.moveGalleryPhoto("club", "g3", "down");
+    await photos.moveGalleryPhoto("club", "ghost", "up");
     expect(await order()).toEqual(["g1", "g2", "g3"]);
   });
 
   it("скрыть и показать; подпись сохраняется", async () => {
-    await photos.toggleGalleryPhoto("g2");
+    await photos.toggleGalleryPhoto("club", "g2");
     expect(state.gallery.find((g) => g.id === "g2")?.isVisible).toBe(false);
-    await photos.toggleGalleryPhoto("g2");
+    await photos.toggleGalleryPhoto("club", "g2");
     expect(state.gallery.find((g) => g.id === "g2")?.isVisible).toBe(true);
 
-    expect(await photos.saveGalleryCaption({ id: "g2", captionRu: "Кардиозона", captionKk: null, isVisible: true })).toEqual({ ok: true });
+    expect(await photos.saveGalleryCaption("club", { id: "g2", captionRu: "Кардиозона", captionKk: null, isVisible: true })).toEqual({ ok: true });
     expect(state.gallery.find((g) => g.id === "g2")?.captionRu).toBe("Кардиозона");
-    const gone = await photos.saveGalleryCaption({ id: "ghost", captionRu: null, captionKk: null, isVisible: true });
+    const gone = await photos.saveGalleryCaption("club", { id: "ghost", captionRu: null, captionKk: null, isVisible: true });
     expect(gone.ok).toBe(false);
   });
 
   it("в списке — ссылки на файлы хранилища", async () => {
-    expect((await photos.listGallery())[0].url).toBe(`https://storage.test/gallery/${uuid(1)}.webp`);
+    expect((await photos.listGallery("club"))[0].url).toBe(`https://storage.test/gallery/${uuid(1)}.webp`);
   });
 });
 
@@ -471,12 +471,12 @@ describe("права: без сессии Владельца — отказ", ()
     ["attachPhoto", () => withSlots.attachPhoto("gallery", g1)],
     ["discardUpload", () => withSlots.discardUpload(g1)],
     ["removePhoto", () => withSlots.removePhoto("hero")],
-    ["listGallery", () => photos.listGallery()],
-    ["getGalleryPhoto", () => photos.getGalleryPhoto("g1")],
-    ["saveGalleryCaption", () => photos.saveGalleryCaption({ id: "g1", captionRu: "x", captionKk: null, isVisible: true })],
-    ["toggleGalleryPhoto", () => photos.toggleGalleryPhoto("g1")],
-    ["moveGalleryPhoto", () => photos.moveGalleryPhoto("g1", "down")],
-    ["deleteGalleryPhoto", () => photos.deleteGalleryPhoto("g1")],
+    ["listGallery", () => photos.listGallery("club")],
+    ["getGalleryPhoto", () => photos.getGalleryPhoto("club", "g1")],
+    ["saveGalleryCaption", () => photos.saveGalleryCaption("club", { id: "g1", captionRu: "x", captionKk: null, isVisible: true })],
+    ["toggleGalleryPhoto", () => photos.toggleGalleryPhoto("club", "g1")],
+    ["moveGalleryPhoto", () => photos.moveGalleryPhoto("club", "g1", "down")],
+    ["deleteGalleryPhoto", () => photos.deleteGalleryPhoto("club", "g1")],
     ["sweepOrphans", () => withSlots.sweepOrphans()],
   ];
 
@@ -497,7 +497,7 @@ describe("права: без сессии Владельца — отказ", ()
       { id: "g1", path: g1, sortOrder: 0, isVisible: true, captionRu: "a", captionKk: null, createdAt: new Date() },
       { id: "g2", path: `gallery/${uuid(3)}.webp`, sortOrder: 1, isVisible: false, captionRu: null, captionKk: null, createdAt: new Date() },
     );
-    expect((await photos.listVisibleGallery()).map((g) => g.id)).toEqual(["g1"]);
+    expect((await photos.listVisibleGallery("club")).map((g) => g.id)).toEqual(["g1"]);
   });
 
   it.each(calls)("%s: ни база, ни хранилище не тронуты", async (_name, call) => {
@@ -523,9 +523,9 @@ describe("места для Фото, которые ведут модули-в�
   it("без места Зала загрузка Плаката прайса не принимается, а база не меняется", async () => {
     const path = `hall/${uuid(7)}.webp`;
     uploaded(path);
-    expect(await photos.requestUpload("hall:general", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
-    expect(await photos.attachPhoto("hall:general", path)).toMatchObject({ ok: false });
-    expect(await photos.removePhoto("hall:general")).toMatchObject({ ok: false });
+    expect(await photos.requestUpload("club", "hall:general", "image/webp", [1000, 1000, 1000])).toMatchObject({ ok: false });
+    expect(await photos.attachPhoto("club", "hall:general", path)).toMatchObject({ ok: false });
+    expect(await photos.removePhoto("club", "hall:general")).toMatchObject({ ok: false });
     expect(db.hall.update).not.toHaveBeenCalled();
   });
 
@@ -541,7 +541,7 @@ describe("места для Фото, которые ведут модули-в�
     const poster = `hall/${uuid(5)}.webp`;
     uploaded(poster, 5 * HOUR);
     await withSlots.attachPhoto("hall:general", poster);
-    expect(await photos.sweepOrphans()).toBe(0);
+    expect(await photos.sweepOrphans("club")).toBe(0);
     expect(state.files.has(poster)).toBe(true);
     expect(await withSlots.sweepOrphans()).toBe(0);
     expect(state.files.has(poster)).toBe(true);

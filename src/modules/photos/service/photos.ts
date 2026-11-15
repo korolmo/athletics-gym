@@ -1,6 +1,6 @@
 import "server-only";
 import crypto from "node:crypto";
-import { db } from "@/lib/db";
+import { dbFor } from "@/lib/tenant-db";
 import { requireOwner } from "@/modules/owner";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import {
@@ -81,7 +81,7 @@ async function targetExists(target: PhotoTarget, slots: PhotoSlots): Promise<boo
  * самого Фото и его уменьшенных копий (`sizes` — в порядке photoFiles: Фото, потом копии от меньшей к большей).
  * Путь и имя файла задаёт сервер.
  */
-export async function requestUpload(
+export async function requestUpload(clubId: string, 
   targetRaw: string,
   type: string,
   sizes: number[],
@@ -112,14 +112,14 @@ export async function requestUpload(
 }
 
 /** Записывает путь в базу и возвращает путь, который был там раньше. */
-async function saveToTarget(target: PhotoTarget, path: string, slots: PhotoSlots): Promise<string | null> {
+async function saveToTarget(clubId: string, target: PhotoTarget, path: string, slots: PhotoSlots): Promise<string | null> {
   const slot = slotFor(target, slots);
   if (slot) return slot.set(targetId(target), path);
   // Остальные места ведут модули-владельцы; сюда попадаем, только если место не передали — attachPhoto это отсекает
   if (target.kind !== "gallery") throw new Error(`Место «${target.kind}» ведёт модуль-владелец: передайте его в slots`);
   // Новое фото встаёт в конец Галереи
-  const last = await db.galleryPhoto.aggregate({ _max: { sortOrder: true } });
-  await db.galleryPhoto.create({ data: { path, sortOrder: (last._max.sortOrder ?? -1) + 1 } });
+  const last = await dbFor(clubId).galleryPhoto.aggregate({ _max: { sortOrder: true } });
+  await dbFor(clubId).galleryPhoto.create({ data: { path, sortOrder: (last._max.sortOrder ?? -1) + 1 } });
   return null;
 }
 
@@ -127,7 +127,7 @@ async function saveToTarget(target: PhotoTarget, path: string, slots: PhotoSlots
  * Шаг 2 загрузки. Привязывает загруженный файл к месту на сайте.
  * Прежний файл этого места удаляется из хранилища. Если запись в базу не удалась — удаляется новый файл.
  */
-export async function attachPhoto(targetRaw: string, path: string, slots: PhotoSlots = []): Promise<ServiceResult<object>> {
+export async function attachPhoto(clubId: string, targetRaw: string, path: string, slots: PhotoSlots = []): Promise<ServiceResult<object>> {
   await requireOwner();
   const target = parsePhotoTarget(targetRaw);
   if (!target) return { ok: false, error: BAD_TARGET };
@@ -152,27 +152,27 @@ export async function attachPhoto(targetRaw: string, path: string, slots: PhotoS
 
   let previous: string | null;
   try {
-    previous = await saveToTarget(target, path, slots);
+    previous = await saveToTarget(clubId, target, path, slots);
   } catch (e) {
     await removeQuietly([path]);
     if (isNotFound(e)) return { ok: false, error: NOT_FOUND_MESSAGE };
     throw e;
   }
   if (previous !== path) await removeQuietly([previous]);
-  await sweepOrphans(slots);
+  await sweepOrphans(clubId, slots);
   return { ok: true };
 }
 
 /** Загрузка сорвалась на стороне браузера: убираем файл, если он успел появиться и ни к чему не привязан. */
-export async function discardUpload(path: string, slots: PhotoSlots = []): Promise<void> {
+export async function discardUpload(clubId: string, path: string, slots: PhotoSlots = []): Promise<void> {
   await requireOwner();
   if (!isPhotoPath(path)) return;
-  if ((await referencedPaths(slots)).has(path)) return;
+  if ((await referencedPaths(clubId, slots)).has(path)) return;
   await removeQuietly([path]);
 }
 
 /** Убирает Фото с места (кроме Галереи): на сайте снова покажется картинка из public/. Файл удаляется из хранилища. */
-export async function removePhoto(targetRaw: string, slots: PhotoSlots = []): Promise<ServiceResult<object>> {
+export async function removePhoto(clubId: string, targetRaw: string, slots: PhotoSlots = []): Promise<ServiceResult<object>> {
   await requireOwner();
   const target = parsePhotoTarget(targetRaw);
   if (!target || target.kind === "gallery") return { ok: false, error: BAD_TARGET };
@@ -196,8 +196,8 @@ export async function removePhoto(targetRaw: string, slots: PhotoSlots = []): Pr
 const galleryOrder = [{ sortOrder: "asc" as const }, { createdAt: "asc" as const }];
 
 /** Видимые фото Галереи для публичного сайта — без проверки сессии; файлы без ссылки пропускаем. */
-export async function listVisibleGallery(): Promise<{ id: string; url: string; captionRu: string | null; captionKk: string | null }[]> {
-  const photos = await db.galleryPhoto.findMany({ where: { isVisible: true }, orderBy: galleryOrder });
+export async function listVisibleGallery(clubId: string): Promise<{ id: string; url: string; captionRu: string | null; captionKk: string | null }[]> {
+  const photos = await dbFor(clubId).galleryPhoto.findMany({ where: { isVisible: true }, orderBy: galleryOrder });
   return photos.flatMap((g) => {
     const url = storage.mediaUrl(g.path);
     return url ? [{ id: g.id, url, captionRu: g.captionRu, captionKk: g.captionKk }] : [];
@@ -205,23 +205,23 @@ export async function listVisibleGallery(): Promise<{ id: string; url: string; c
 }
 
 /** Все фото Галереи, включая скрытые, со ссылками для показа в админке. */
-export async function listGallery() {
+export async function listGallery(clubId: string) {
   await requireOwner();
-  const photos = await db.galleryPhoto.findMany({ orderBy: galleryOrder });
+  const photos = await dbFor(clubId).galleryPhoto.findMany({ orderBy: galleryOrder });
   return photos.map((p) => ({ ...p, url: storage.mediaUrl(p.path) }));
 }
 
-export async function getGalleryPhoto(id: string) {
+export async function getGalleryPhoto(clubId: string, id: string) {
   await requireOwner();
-  const photo = await db.galleryPhoto.findUnique({ where: { id } });
+  const photo = await dbFor(clubId).galleryPhoto.findUnique({ where: { id } });
   return photo ? { ...photo, url: storage.mediaUrl(photo.path) } : null;
 }
 
-export async function saveGalleryCaption(input: GalleryCaptionInput): Promise<ServiceResult<object>> {
+export async function saveGalleryCaption(clubId: string, input: GalleryCaptionInput): Promise<ServiceResult<object>> {
   await requireOwner();
   const { id, ...data } = input;
   try {
-    await db.galleryPhoto.update({ where: { id }, data });
+    await dbFor(clubId).galleryPhoto.update({ where: { id }, data });
   } catch (e) {
     if (isNotFound(e)) return { ok: false, error: NOT_FOUND_MESSAGE };
     throw e;
@@ -229,31 +229,32 @@ export async function saveGalleryCaption(input: GalleryCaptionInput): Promise<Se
   return { ok: true };
 }
 
-export async function toggleGalleryPhoto(id: string): Promise<void> {
+export async function toggleGalleryPhoto(clubId: string, id: string): Promise<void> {
   await requireOwner();
-  const photo = await db.galleryPhoto.findUnique({ where: { id } });
-  if (photo) await db.galleryPhoto.updateMany({ where: { id }, data: { isVisible: !photo.isVisible } });
+  const photo = await dbFor(clubId).galleryPhoto.findUnique({ where: { id } });
+  if (photo) await dbFor(clubId).galleryPhoto.updateMany({ where: { id }, data: { isVisible: !photo.isVisible } });
 }
 
 /** Сдвигает фото на одно место вверх или вниз; порядок всех фото записывается заново, без пропусков и повторов. */
-export async function moveGalleryPhoto(id: string, direction: "up" | "down"): Promise<void> {
+export async function moveGalleryPhoto(clubId: string, id: string, direction: "up" | "down"): Promise<void> {
   await requireOwner();
-  const photos = await db.galleryPhoto.findMany({ orderBy: galleryOrder, select: { id: true, sortOrder: true } });
+  const photos = await dbFor(clubId).galleryPhoto.findMany({ orderBy: galleryOrder, select: { id: true, sortOrder: true } });
   const from = photos.findIndex((p) => p.id === id);
   const to = direction === "up" ? from - 1 : from + 1;
   if (from < 0 || to < 0 || to >= photos.length) return;
   [photos[from], photos[to]] = [photos[to], photos[from]];
   // Пишем только те строки, у которых место изменилось: обычно это две
   const changed = photos.flatMap((p, i) => (p.sortOrder === i ? [] : [{ id: p.id, sortOrder: i }]));
+  const db = dbFor(clubId);
   await db.$transaction(changed.map((p) => db.galleryPhoto.update({ where: { id: p.id }, data: { sortOrder: p.sortOrder } })));
 }
 
 /** Удаляет фото Галереи: запись — из базы, файл — из хранилища. */
-export async function deleteGalleryPhoto(id: string): Promise<void> {
+export async function deleteGalleryPhoto(clubId: string, id: string): Promise<void> {
   await requireOwner();
-  const photo = id ? await db.galleryPhoto.findUnique({ where: { id } }) : null;
+  const photo = id ? await dbFor(clubId).galleryPhoto.findUnique({ where: { id } }) : null;
   if (!photo) return;
-  await db.galleryPhoto.deleteMany({ where: { id } });
+  await dbFor(clubId).galleryPhoto.deleteMany({ where: { id } });
   await removeQuietly([photo.path]);
 }
 
@@ -263,9 +264,9 @@ export async function deleteGalleryPhoto(id: string): Promise<void> {
  * Все пути к Фото, на которые ссылается база: Галерея и места владельцев.
  * Если место владельца не передали, его файлы считались бы брошенными — поэтому без всех мест уборка не идёт.
  */
-async function referencedPaths(slots: PhotoSlots): Promise<Set<string>> {
+async function referencedPaths(clubId: string, slots: PhotoSlots): Promise<Set<string>> {
   const [gallery, owned] = await Promise.all([
-    db.galleryPhoto.findMany({ select: { path: true } }),
+    dbFor(clubId).galleryPhoto.findMany({ select: { path: true } }),
     Promise.all(slots.map((s) => s.paths())),
   ]);
   const all = [...gallery.map((g) => g.path), ...owned.flat()];
@@ -279,15 +280,17 @@ const allOwnedSlots = (slots: PhotoSlots) => OWNED_KINDS.every((k) => slots.some
  * Уборка: удаляет из хранилища файлы старше часа, на которые не ссылается база, —
  * загрузки, брошенные на полпути (закрыли вкладку, пропала связь). Запускается после каждой успешной загрузки.
  * Ошибка уборки основному действию не мешает.
+ * П2: пока файлы всех Клубов лежат в общих папках, уборка сверяет их с путями одного Клуба — с двумя Клубами в одном
+ * хранилище её включать нельзя до папок по Клубу (PR 5 этапа П2, решение 13).
  */
-export async function sweepOrphans(slots: PhotoSlots = []): Promise<number> {
+export async function sweepOrphans(clubId: string, slots: PhotoSlots = []): Promise<number> {
   await requireOwner();
   if (!allOwnedSlots(slots)) {
     logError("Хранилище фото: уборка пропущена — переданы не все места для Фото (slots).", new Error(OWNED_KINDS.join(", ")));
     return 0;
   }
   try {
-    const orphans = findOrphans(await storage.listObjects(), await referencedPaths(slots), new Date());
+    const orphans = findOrphans(await storage.listObjects(), await referencedPaths(clubId, slots), new Date());
     await storage.removeObjects(orphans);
     return orphans.length;
   } catch (e) {

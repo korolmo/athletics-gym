@@ -5,7 +5,7 @@ import "server-only";
 
 export * from "./client";
 export * from "./validation/site-settings";
-export { SETTINGS_ID, getSiteSettings } from "./service/settings";
+export { getSiteSettings } from "./service/settings";
 export {
   getSettingsForEdit,
   saveAbout,
