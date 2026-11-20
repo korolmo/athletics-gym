@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getReview } from "@/modules/reviews";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const r = await getReview(id);
+  const r = await getReview(await currentClub(), id);
   if (!r) notFound();
 
   return (

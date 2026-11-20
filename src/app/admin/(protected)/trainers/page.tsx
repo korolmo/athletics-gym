@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Image from "next/image";
 import Link from "next/link";
 import { listTrainers } from "@/modules/trainers";
@@ -29,7 +30,7 @@ function daysLabel(weekdays: number[]): string {
 export default async function TrainersPage({ searchParams }: { searchParams: Promise<{ hall?: string; deleted?: string }> }) {
   const { hall: rawHall, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
-  const trainers = await listTrainers(hall);
+  const trainers = await listTrainers(await currentClub(), hall);
   const { timeZone } = await getClubOnce();
   const schedules = await Promise.all(trainers.map((t) => getScheduleForAdmin(t.id, timeZone)));
   const visible = trainers.filter((t) => t.isVisible).length;

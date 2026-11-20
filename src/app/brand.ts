@@ -91,6 +91,6 @@ export function logosFor(club: ClubData, hallLogos: Record<string, string | null
 
 /** Логотипы для страницы; база недоступна — начальные (страница не должна падать из-за логотипа). */
 export async function getLogos(): Promise<SiteLogos> {
-  const [club, halls] = await Promise.all([getClubOnce().catch(() => DEFAULT_CLUB), listHallLogos().catch(() => ({}))]);
+  const [club, halls] = await Promise.all([getClubOnce().catch(() => DEFAULT_CLUB), listHallLogos(await currentClub()).catch(() => ({}))]);
   return logosFor(club, halls);
 }

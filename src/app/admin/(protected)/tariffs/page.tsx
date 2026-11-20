@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { listHallTariffs } from "@/modules/tariffs";
 import { HALL_CATEGORIES, isHall } from "@/modules/tariffs/client";
@@ -19,7 +20,7 @@ export default async function TariffsPage({
   const { hall: rawHall, saved, deleted } = await searchParams;
   const hall = rawHall && isHall(rawHall) ? rawHall : "general";
   // Позиции прайса Зала; Тарифы Тренеров правятся в разделе «Тренеры»
-  const { tariffs, trainerTariffCount } = await listHallTariffs(hall);
+  const { tariffs, trainerTariffCount } = await listHallTariffs(await currentClub(), hall);
 
   return (
     <>

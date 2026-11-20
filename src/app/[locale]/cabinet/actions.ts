@@ -1,5 +1,6 @@
 "use server";
 
+import { currentClub } from "@/app/current-club";
 import { redirect } from "next/navigation";
 import { currentIpHash } from "@/lib/ip-hash";
 import { getCabinetDictionary, isLocale, type Locale } from "@/lib/i18n";
@@ -133,7 +134,7 @@ export type WindowsResult = { sessionMinutes: number; windows: { start: string; 
 /** Свободные Окна Тренера на 14 дней — для экрана записи. Только для вошедшего Клиента. */
 export async function windowsAction(locale: Locale, trainerId: string): Promise<WindowsResult> {
   await requireClient(loginPath(isLocale(locale) ? locale : "ru"));
-  if (!(await getBookableTrainer(trainerId))) return { sessionMinutes: 60, windows: [] };
+  if (!(await getBookableTrainer(await currentClub(), trainerId))) return { sessionMinutes: 60, windows: [] };
   const now = new Date();
   const { timeZone } = await getClubOnce();
   const [windows, sessionMinutes] = await Promise.all([listWindows(trainerId, await trainerBusy(trainerId, now), timeZone, now), sessionMinutesOf(trainerId)]);

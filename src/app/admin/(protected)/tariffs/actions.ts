@@ -1,5 +1,6 @@
 "use server";
 
+import { currentClub } from "@/app/current-club";
 import { redirect } from "next/navigation";
 import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
@@ -23,7 +24,8 @@ export async function saveTariff(_prev: TariffFormState, fd: FormData): Promise<
   const parsed = parseTariffForm(fd);
   if (!parsed.ok) return { error: parsed.error };
 
-  const result = await tariffs.saveTariff(parsed.data, trainerHall);
+  const clubId = await currentClub();
+  const result = await tariffs.saveTariff(clubId, parsed.data, (trainerId) => trainerHall(clubId, trainerId));
   if (!result.ok) return { error: result.error };
 
   revalidateSite();
@@ -32,13 +34,13 @@ export async function saveTariff(_prev: TariffFormState, fd: FormData): Promise<
 
 export async function deleteTariff(fd: FormData): Promise<void> {
   await requireRealOwner();
-  const place = await tariffs.deleteTariff(text(fd, "id"));
+  const place = await tariffs.deleteTariff(await currentClub(), text(fd, "id"));
   revalidateSite();
   redirect(backTo(place, "deleted"));
 }
 
 export async function toggleTariff(fd: FormData): Promise<void> {
   await requireOwner();
-  await tariffs.toggleTariffVisibility(text(fd, "id"));
+  await tariffs.toggleTariffVisibility(await currentClub(), text(fd, "id"));
   revalidateSite();
 }

@@ -71,7 +71,7 @@ const { state, db, requireOwner } = vi.hoisted(() => {
 });
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ db }));
+vi.mock("@/lib/tenant-db", () => ({ dbFor: () => db }));
 vi.mock("@/modules/owner", () => ({ requireOwner }));
 
 import { LEGAL_UPDATED } from "@/modules/legal/client";
@@ -106,8 +106,8 @@ beforeEach(() => {
 
 describe("отзыв Посетителя с сайта", () => {
   it("принятый отзыв — «Новый», источник «сайт», помечен как отзыв Посетителя; дата — сегодня в зале", async () => {
-    expect(await reviews.checkVisitorSubmission(human(), NOW)).toEqual({ verdict: "accept" });
-    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    expect(await reviews.checkVisitorSubmission("club", human(), NOW)).toEqual({ verdict: "accept" });
+    await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.reviews).toHaveLength(1);
     expect(state.reviews[0]).toMatchObject({
       ...written,
@@ -120,7 +120,7 @@ describe("отзыв Посетителя с сайта", () => {
   });
 
   it("вместе с отзывом записаны время Согласия на обработку данных и дата редакции политики; самой галочки в записи нет", async () => {
-    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.reviews[0].consentAt).toEqual(NOW);
     expect(state.reviews[0].consentPolicyDate).toBe(LEGAL_UPDATED.privacy);
     expect(state.reviews[0]).not.toHaveProperty("consent");
@@ -131,24 +131,24 @@ describe("отзыв Посетителя с сайта", () => {
     ["согласие — не «да»", { ...written, consent: false }],
     ["согласие строкой", { ...written, consent: "on" }],
   ])("без Согласия отзыв не сохраняется: %s", async (_name, input) => {
-    await expect(reviews.createVisitorReview(input as typeof visitor, "ip-1", LEGAL_UPDATED.privacy, NOW)).rejects.toThrow(/согласия/);
+    await expect(reviews.createVisitorReview("club", input as typeof visitor, "ip-1", LEGAL_UPDATED.privacy, NOW)).rejects.toThrow(/согласия/);
     expect(state.reviews).toEqual([]);
     expect(state.submissions).toEqual([]);
     expect(db.review.create).not.toHaveBeenCalled();
   });
 
   it("у отзыва, добавленного Владельцем, Согласия нет", async () => {
-    await reviews.saveOwnerReview(manual);
+    await reviews.saveOwnerReview("club", manual);
     expect(state.reviews[0].consentAt ?? null).toBeNull();
   });
 
   it("до одобрения на сайте его нет", async () => {
-    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
-    expect(await reviews.listPublishedReviews()).toEqual([]);
+    await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    expect(await reviews.listPublishedReviews("club")).toEqual([]);
   });
 
   it("ловушка сработала — в базу не ходим и ничего не пишем", async () => {
-    const check = await reviews.checkVisitorSubmission({ honeypot: "http://spam.example", elapsedMs: 20_000, ipHash: "ip-1" }, NOW);
+    const check = await reviews.checkVisitorSubmission("club", { honeypot: "http://spam.example", elapsedMs: 20_000, ipHash: "ip-1" }, NOW);
     expect(check).toEqual({ verdict: "trap" });
     expect(db.reviewSubmission.findMany).not.toHaveBeenCalled();
     expect(db.review.create).not.toHaveBeenCalled();
@@ -157,119 +157,119 @@ describe("отзыв Посетителя с сайта", () => {
   });
 
   it("быстрее трёх секунд или без метки времени — не принимаем", async () => {
-    expect(await reviews.checkVisitorSubmission({ ...human(), elapsedMs: 1_500 }, NOW)).toEqual({ verdict: "too-fast" });
-    expect(await reviews.checkVisitorSubmission({ ...human(), elapsedMs: null }, NOW)).toEqual({ verdict: "stale" });
+    expect(await reviews.checkVisitorSubmission("club", { ...human(), elapsedMs: 1_500 }, NOW)).toEqual({ verdict: "too-fast" });
+    expect(await reviews.checkVisitorSubmission("club", { ...human(), elapsedMs: null }, NOW)).toEqual({ verdict: "stale" });
   });
 
   it("лимит: три отзыва с одного адреса за сутки, четвёртый — отказ; с другого адреса — можно", async () => {
     for (let i = 0; i < 3; i++) {
-      expect(await reviews.checkVisitorSubmission(human(), NOW)).toEqual({ verdict: "accept" });
-      await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+      expect(await reviews.checkVisitorSubmission("club", human(), NOW)).toEqual({ verdict: "accept" });
+      await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     }
-    expect(await reviews.checkVisitorSubmission(human(), NOW)).toEqual({ verdict: "limit" });
-    expect(await reviews.checkVisitorSubmission(human("ip-2"), NOW)).toEqual({ verdict: "accept" });
+    expect(await reviews.checkVisitorSubmission("club", human(), NOW)).toEqual({ verdict: "limit" });
+    expect(await reviews.checkVisitorSubmission("club", human("ip-2"), NOW)).toEqual({ verdict: "accept" });
     expect(state.reviews).toHaveLength(3);
   });
 
   it("через сутки лимит снова свободен", async () => {
-    for (let i = 0; i < 3; i++) await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    for (let i = 0; i < 3; i++) await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     const tomorrow = new Date(NOW.getTime() + 25 * HOUR);
-    expect(await reviews.checkVisitorSubmission(human(), tomorrow)).toEqual({ verdict: "accept" });
+    expect(await reviews.checkVisitorSubmission("club", human(), tomorrow)).toEqual({ verdict: "accept" });
   });
 
   it("в записи об отправке — только хэш адреса", async () => {
-    await reviews.createVisitorReview(visitor, "ip-hash-abc", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview("club", visitor, "ip-hash-abc", LEGAL_UPDATED.privacy, NOW);
     expect(state.submissions).toEqual([{ ipHash: "ip-hash-abc", createdAt: NOW }]);
     expect(JSON.stringify(state.reviews)).not.toContain("ip-hash-abc");
   });
 
   it("старые записи об отправках вычищаются", async () => {
     state.submissions.push({ ipHash: "old", createdAt: new Date(NOW.getTime() - 72 * HOUR) });
-    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.submissions.map((s) => s.ipHash)).toEqual(["ip-1"]);
   });
 });
 
 describe("на сайте видны только опубликованные", () => {
   beforeEach(async () => {
-    await reviews.saveOwnerReview({ ...manual, authorName: "Опубликован" });
-    await reviews.saveOwnerReview({ ...manual, authorName: "Скрыт", status: "HIDDEN" });
-    await reviews.createVisitorReview({ ...visitor, authorName: "Новый" }, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.saveOwnerReview("club", { ...manual, authorName: "Опубликован" });
+    await reviews.saveOwnerReview("club", { ...manual, authorName: "Скрыт", status: "HIDDEN" });
+    await reviews.createVisitorReview("club", { ...visitor, authorName: "Новый" }, "ip-1", LEGAL_UPDATED.privacy, NOW);
   });
 
   it("новые и скрытые не попадают в выдачу сайта", async () => {
-    const shown = await reviews.listPublishedReviews();
+    const shown = await reviews.listPublishedReviews("club");
     expect(shown.map((r) => r.authorName)).toEqual(["Опубликован"]);
     expect(db.review.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: { status: "PUBLISHED" } }));
   });
 
   it("сайту не отдаются служебные поля", async () => {
-    const [shown] = await reviews.listPublishedReviews();
+    const [shown] = await reviews.listPublishedReviews("club");
     // Время Согласия на сайт не уходит: оно нужно только Владельцу
     expect(Object.keys(shown).sort()).toEqual(["authorName", "id", "rating", "reviewedAt", "source", "sourceUrl", "text"]);
   });
 
   it("опубликовали отзыв Посетителя — появился; скрыли — пропал", async () => {
     const fresh = state.reviews.find((r) => r.authorName === "Новый")!;
-    await reviews.setReviewStatus(fresh.id, "PUBLISHED");
-    expect((await reviews.listPublishedReviews()).map((r) => r.authorName).sort()).toEqual(["Новый", "Опубликован"]);
-    await reviews.setReviewStatus(fresh.id, "HIDDEN");
-    expect((await reviews.listPublishedReviews()).map((r) => r.authorName)).toEqual(["Опубликован"]);
+    await reviews.setReviewStatus("club", fresh.id, "PUBLISHED");
+    expect((await reviews.listPublishedReviews("club")).map((r) => r.authorName).sort()).toEqual(["Новый", "Опубликован"]);
+    await reviews.setReviewStatus("club", fresh.id, "HIDDEN");
+    expect((await reviews.listPublishedReviews("club")).map((r) => r.authorName)).toEqual(["Опубликован"]);
   });
 
   it("удалённый отзыв пропадает", async () => {
-    await reviews.deleteReview(state.reviews.find((r) => r.authorName === "Опубликован")!.id);
-    expect(await reviews.listPublishedReviews()).toEqual([]);
+    await reviews.deleteReview("club", state.reviews.find((r) => r.authorName === "Опубликован")!.id);
+    expect(await reviews.listPublishedReviews("club")).toEqual([]);
   });
 });
 
 describe("админка", () => {
   it("ручной отзыв сразу опубликован и не считается отзывом Посетителя", async () => {
-    const r = await reviews.saveOwnerReview(manual);
+    const r = await reviews.saveOwnerReview("club", manual);
     expect(r.ok).toBe(true);
     expect(state.reviews[0]).toMatchObject({ status: "PUBLISHED", fromVisitor: false, source: "TWOGIS" });
   });
 
   it("ручной отзыв можно править", async () => {
-    const created = await reviews.saveOwnerReview(manual);
+    const created = await reviews.saveOwnerReview("club", manual);
     if (!created.ok) throw new Error(created.error);
-    expect(await reviews.saveOwnerReview({ ...manual, id: created.id, text: "Топ зал, советую!", rating: 4 })).toEqual({ ok: true, id: created.id });
+    expect(await reviews.saveOwnerReview("club", { ...manual, id: created.id, text: "Топ зал, советую!", rating: 4 })).toEqual({ ok: true, id: created.id });
     expect(state.reviews[0]).toMatchObject({ text: "Топ зал, советую!", rating: 4 });
   });
 
   it("текст отзыва Посетителя править нельзя — ни текст, ни имя, ни оценку", async () => {
-    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     const id = state.reviews[0].id;
-    const r = await reviews.saveOwnerReview({ ...manual, id, text: "Исправленный текст", authorName: "Другой", rating: 1 });
+    const r = await reviews.saveOwnerReview("club", { ...manual, id, text: "Исправленный текст", authorName: "Другой", rating: 1 });
     expect(r.ok === false && r.error).toMatch(/править нельзя/);
     expect(state.reviews[0]).toMatchObject({ ...written, status: "NEW", fromVisitor: true });
     expect(db.review.update).not.toHaveBeenCalled();
   });
 
   it("правка удалённого отзыва — понятная ошибка", async () => {
-    const r = await reviews.saveOwnerReview({ ...manual, id: "ghost" });
+    const r = await reviews.saveOwnerReview("club", { ...manual, id: "ghost" });
     expect(r.ok === false && r.error).toMatch(/не найдена/);
   });
 
   it("новые идут первыми, дальше — по времени добавления", async () => {
-    await reviews.saveOwnerReview({ ...manual, authorName: "ручной-1" });
-    await reviews.createVisitorReview({ ...visitor, authorName: "новый-1" }, "ip-1", LEGAL_UPDATED.privacy, NOW);
-    await reviews.saveOwnerReview({ ...manual, authorName: "ручной-2" });
-    await reviews.createVisitorReview({ ...visitor, authorName: "новый-2" }, "ip-2", LEGAL_UPDATED.privacy, NOW);
-    expect((await reviews.listReviews()).map((r) => r.authorName)).toEqual(["новый-2", "новый-1", "ручной-2", "ручной-1"]);
+    await reviews.saveOwnerReview("club", { ...manual, authorName: "ручной-1" });
+    await reviews.createVisitorReview("club", { ...visitor, authorName: "новый-1" }, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.saveOwnerReview("club", { ...manual, authorName: "ручной-2" });
+    await reviews.createVisitorReview("club", { ...visitor, authorName: "новый-2" }, "ip-2", LEGAL_UPDATED.privacy, NOW);
+    expect((await reviews.listReviews("club")).map((r) => r.authorName)).toEqual(["новый-2", "новый-1", "ручной-2", "ручной-1"]);
   });
 
   it("фильтр по статусу и счётчики; счётчик новых — для меню", async () => {
-    await reviews.saveOwnerReview(manual);
-    await reviews.saveOwnerReview({ ...manual, status: "HIDDEN" });
-    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
-    await reviews.createVisitorReview(visitor, "ip-2", LEGAL_UPDATED.privacy, NOW);
-    expect((await reviews.listReviews("NEW")).every((r) => r.status === "NEW")).toBe(true);
-    expect(await reviews.listReviews("HIDDEN")).toHaveLength(1);
-    expect(await reviews.countReviewsByStatus()).toEqual({ NEW: 2, PUBLISHED: 1, HIDDEN: 1 });
-    expect(await reviews.countNewReviews()).toBe(2);
-    await reviews.setReviewStatus(state.reviews.find((r) => r.status === "NEW")!.id, "PUBLISHED");
-    expect(await reviews.countNewReviews()).toBe(1);
+    await reviews.saveOwnerReview("club", manual);
+    await reviews.saveOwnerReview("club", { ...manual, status: "HIDDEN" });
+    await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview("club", visitor, "ip-2", LEGAL_UPDATED.privacy, NOW);
+    expect((await reviews.listReviews("club", "NEW")).every((r) => r.status === "NEW")).toBe(true);
+    expect(await reviews.listReviews("club", "HIDDEN")).toHaveLength(1);
+    expect(await reviews.countReviewsByStatus("club")).toEqual({ NEW: 2, PUBLISHED: 1, HIDDEN: 1 });
+    expect(await reviews.countNewReviews("club")).toBe(2);
+    await reviews.setReviewStatus("club", state.reviews.find((r) => r.status === "NEW")!.id, "PUBLISHED");
+    expect(await reviews.countNewReviews("club")).toBe(1);
   });
 });
 
@@ -277,13 +277,13 @@ describe("права: без сессии Владельца нельзя одо
   const NO_SESSION = new Error("NEXT_REDIRECT;/admin/login");
 
   const owner: [string, () => Promise<unknown>][] = [
-    ["listReviews", () => reviews.listReviews()],
-    ["countReviewsByStatus", () => reviews.countReviewsByStatus()],
-    ["countNewReviews", () => reviews.countNewReviews()],
-    ["getReview", () => reviews.getReview("r1")],
-    ["saveOwnerReview", () => reviews.saveOwnerReview({ ...manual, id: "r1", text: "подмена" })],
-    ["setReviewStatus", () => reviews.setReviewStatus("r1", "PUBLISHED")],
-    ["deleteReview", () => reviews.deleteReview("r1")],
+    ["listReviews", () => reviews.listReviews("club")],
+    ["countReviewsByStatus", () => reviews.countReviewsByStatus("club")],
+    ["countNewReviews", () => reviews.countNewReviews("club")],
+    ["getReview", () => reviews.getReview("club", "r1")],
+    ["saveOwnerReview", () => reviews.saveOwnerReview("club", { ...manual, id: "r1", text: "подмена" })],
+    ["setReviewStatus", () => reviews.setReviewStatus("club", "r1", "PUBLISHED")],
+    ["deleteReview", () => reviews.deleteReview("club", "r1")],
   ];
   // Эти три — для сайта: работают без сессии, но ничего, кроме приёма «Нового» отзыва и чтения опубликованных, не умеют
   const publicFunctions = ["listPublishedReviews", "checkVisitorSubmission", "createVisitorReview"];
@@ -294,7 +294,7 @@ describe("права: без сессии Владельца нельзя одо
   });
 
   it.each(owner)("%s: отказ, база не тронута", async (_name, call) => {
-    await reviews.createVisitorReview(visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview("club", visitor, "ip-1", LEGAL_UPDATED.privacy, NOW);
     const before = JSON.stringify(state.reviews);
     vi.clearAllMocks();
     requireOwner.mockRejectedValue(NO_SESSION);
@@ -308,9 +308,9 @@ describe("права: без сессии Владельца нельзя одо
 
   it("функции сайта сессию не спрашивают, но опубликовать отзыв через них нельзя", async () => {
     requireOwner.mockRejectedValue(NO_SESSION);
-    await reviews.createVisitorReview({ ...visitor, ...({ status: "PUBLISHED", fromVisitor: false } as object) }, "ip-1", LEGAL_UPDATED.privacy, NOW);
+    await reviews.createVisitorReview("club", { ...visitor, ...({ status: "PUBLISHED", fromVisitor: false } as object) }, "ip-1", LEGAL_UPDATED.privacy, NOW);
     expect(state.reviews[0]).toMatchObject({ status: "NEW", fromVisitor: true, source: "SITE" });
-    expect(await reviews.listPublishedReviews()).toEqual([]);
+    expect(await reviews.listPublishedReviews("club")).toEqual([]);
     expect(requireOwner).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
 "use server";
 
+import { currentClub } from "@/app/current-club";
 import { redirect } from "next/navigation";
 import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
@@ -18,7 +19,7 @@ export async function saveDirection(_prev: DirectionFormState, fd: FormData): Pr
   const parsed = parseDirectionForm(fd);
   if (!parsed.ok) return { error: parsed.error, values };
 
-  const result = await directions.saveDirection(parsed.data);
+  const result = await directions.saveDirection(await currentClub(), parsed.data);
   if (!result.ok) return { error: result.error, values };
 
   revalidateSite();
@@ -28,20 +29,20 @@ export async function saveDirection(_prev: DirectionFormState, fd: FormData): Pr
 
 export async function toggleDirection(fd: FormData): Promise<void> {
   await requireOwner();
-  await directions.toggleDirection(text(fd, "id"));
+  await directions.toggleDirection(await currentClub(), text(fd, "id"));
   revalidateSite();
 }
 
 export async function moveDirection(fd: FormData): Promise<void> {
   await requireOwner();
   const direction = text(fd, "direction");
-  if (direction === "up" || direction === "down") await directions.moveDirection(text(fd, "id"), direction);
+  if (direction === "up" || direction === "down") await directions.moveDirection(await currentClub(), text(fd, "id"), direction);
   revalidateSite();
 }
 
 export async function deleteDirection(fd: FormData): Promise<void> {
   await requireRealOwner();
-  await directions.deleteDirection(text(fd, "id"));
+  await directions.deleteDirection(await currentClub(), text(fd, "id"));
   revalidateSite();
   redirect("/admin/directions?deleted=1");
 }

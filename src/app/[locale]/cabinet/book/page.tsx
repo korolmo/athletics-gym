@@ -18,7 +18,7 @@ export default async function CabinetBookPage({ params }: { params: Promise<{ lo
   await requireClient(`/${locale}/cabinet/login`);
   const [t, trainers, bookings, { settings }] = await Promise.all([
     getCabinetTexts(locale),
-    listVisibleTrainersWithTariffs(),
+    listVisibleTrainersWithTariffs(await currentClub()),
     listMyBookings(),
     getSiteSettings(await currentClub()),
   ]);

@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { isAuthed } from "@/modules/owner";
@@ -17,7 +18,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   kickDemoReset();
   // Счётчик в меню — не повод ронять всю админку, если запрос не удался
   const [newReviews, undelivered, club, guest] = await Promise.all([
-    countNewReviews().catch(() => 0),
+    countNewReviews(await currentClub()).catch(() => 0),
     countDead(requireOwner).catch(() => 0),
     getClubOnce().catch(() => DEFAULT_CLUB),
     isGuest(),

@@ -1,5 +1,6 @@
 "use server";
 
+import { currentClub } from "@/app/current-club";
 import { currentIpHash } from "@/lib/ip-hash";
 import { issueFormToken, readFormToken } from "@/modules/reviews";
 import { parseVisitorReview, type VisitorReviewError } from "@/modules/reviews";
@@ -33,7 +34,7 @@ export async function submitReview(_prev: ReviewFormState, fd: FormData): Promis
 
   try {
     const ipHash = await currentIpHash();
-    const check = await checkVisitorSubmission({
+    const check = await checkVisitorSubmission(await currentClub(), {
       // «website» — поле-ловушка: человеку оно не видно, заполняют его только роботы
       honeypot: field("website"),
       elapsedMs: readFormToken(field("formToken"), process.env.AUTH_SECRET),
@@ -48,7 +49,7 @@ export async function submitReview(_prev: ReviewFormState, fd: FormData): Promis
     const parsed = parseVisitorReview(fd);
     if (!parsed.ok) return fail(parsed.error);
 
-    await createVisitorReview(parsed.data, ipHash, LEGAL_UPDATED.privacy);
+    await createVisitorReview(await currentClub(), parsed.data, ipHash, LEGAL_UPDATED.privacy);
     return { status: "sent" };
   } catch (e) {
     logError("Отзыв с сайта: не удалось принять.", e);

@@ -301,7 +301,7 @@ describe("политика говорит то же, что делает код"
     expect(build("privacy", "kk").updated).toBe(LEGAL_UPDATED.privacy);
     // Дату для Согласия Отзывы получают от действия сайта, а оно — из той же константы; своей копии нет нигде
     const action = fs.readFileSync("src/app/[locale]/actions.ts", "utf8");
-    expect(action).toContain("createVisitorReview(parsed.data, ipHash, LEGAL_UPDATED.privacy)");
+    expect(action).toContain("createVisitorReview(await currentClub(), parsed.data, ipHash, LEGAL_UPDATED.privacy)");
     expect(fs.readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts")).filter((f) => /"2026-11-10"/.test(fs.readFileSync(`src/${f}`, "utf8"))).map((f) => f.replace(/\\/g, "/"))).toEqual(["modules/legal/meta.ts"]);
   });
 

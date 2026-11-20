@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Image from "next/image";
 import Link from "next/link";
 import { listDirections } from "@/modules/directions";
@@ -17,7 +18,7 @@ const square =
 
 export default async function DirectionsPage({ searchParams }: { searchParams: Promise<{ saved?: string; deleted?: string }> }) {
   const { saved, deleted } = await searchParams;
-  const directions = await listDirections();
+  const directions = await listDirections(await currentClub());
   const visible = directions.filter((d) => d.isVisible).length;
 
   return (

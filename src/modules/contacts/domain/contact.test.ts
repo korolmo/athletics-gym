@@ -14,7 +14,7 @@ const { rows, db, requireOwner } = vi.hoisted(() => {
   return { rows, db, requireOwner: vi.fn(async () => {}) };
 });
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ db }));
+vi.mock("@/lib/tenant-db", () => ({ dbFor: () => db }));
 vi.mock("@/modules/owner", () => ({ requireOwner }));
 
 import { getContactStats, recordContact } from "../service/contacts";
@@ -150,7 +150,7 @@ describe("приём Обращения", () => {
   });
 
   it("в базу уходит только канал, источник и язык — хэш адреса не сохраняется", async () => {
-    await acceptContact({ ...ok, ip: "1.2.3.4" }, deps({ ipHash: "secret-hash", save: recordContact }));
+    await acceptContact({ ...ok, ip: "1.2.3.4" }, deps({ ipHash: "secret-hash", save: (input) => recordContact("club", input) }));
     expect(rows).toHaveLength(1);
     expect(Object.keys(db.contactClick.create.mock.calls[0][0].data).sort()).toEqual(["channel", "locale", "source"]);
     expect(JSON.stringify(rows)).not.toContain("secret-hash");
@@ -228,14 +228,14 @@ describe("подсчёт за периоды", () => {
 
   it("сводка в админке: только с сессией Владельца; из базы берутся записи за 30 дней", async () => {
     rows.push({ ...at("2026-10-10T09:00:00Z"), locale: "ru" }, { ...at("2026-08-01T09:00:00Z"), locale: "ru" });
-    const stats = await getContactStats(NOW);
+    const stats = await getContactStats("club", NOW);
     expect([stats.today, stats.month]).toEqual([1, 1]);
     expect(db.contactClick.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { createdAt: { gte: statsSince(NOW) } } }));
 
     vi.clearAllMocks();
     const NO_SESSION = new Error("NEXT_REDIRECT;/admin/login");
     requireOwner.mockRejectedValue(NO_SESSION);
-    await expect(getContactStats(NOW)).rejects.toBe(NO_SESSION);
+    await expect(getContactStats("club", NOW)).rejects.toBe(NO_SESSION);
     expect(db.contactClick.findMany).not.toHaveBeenCalled();
   });
 });

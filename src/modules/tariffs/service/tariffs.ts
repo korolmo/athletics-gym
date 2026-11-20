@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/lib/db";
+import { dbFor } from "@/lib/tenant-db";
 import { requireOwner } from "@/modules/owner";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import type { HallId } from "../domain/tariff";
@@ -15,18 +15,18 @@ const byOrder = [{ sortOrder: "asc" as const }, { price: "asc" as const }];
 export type TariffPlace = { hallId: string; trainerId: string | null };
 
 /** Позиции прайса Зала и число Тарифов у Тренеров этого Зала (они правятся в карточках Тренеров). */
-export async function listHallTariffs(hallId: HallId) {
+export async function listHallTariffs(clubId: string, hallId: HallId) {
   await requireOwner();
   const [tariffs, trainerTariffCount] = await Promise.all([
-    db.tariff.findMany({ where: { hallId, trainerId: null }, orderBy: byOrder }),
-    db.tariff.count({ where: { hallId, trainerId: { not: null } } }),
+    dbFor(clubId).tariff.findMany({ where: { hallId, trainerId: null }, orderBy: byOrder }),
+    dbFor(clubId).tariff.count({ where: { hallId, trainerId: { not: null } } }),
   ]);
   return { tariffs, trainerTariffCount };
 }
 
-export async function getTariff(id: string) {
+export async function getTariff(clubId: string, id: string) {
   await requireOwner();
-  return db.tariff.findUnique({ where: { id } });
+  return dbFor(clubId).tariff.findUnique({ where: { id } });
 }
 
 /**
@@ -39,7 +39,7 @@ export type TrainerHallLookup = (trainerId: string) => Promise<string | null>;
  * Создаёт или обновляет Тариф.
  * Правило: Тариф Тренера всегда лежит в Зале Тренера, что бы ни пришло из формы.
  */
-export async function saveTariff(input: TariffInput, trainerHall: TrainerHallLookup): Promise<ServiceResult<TariffPlace>> {
+export async function saveTariff(clubId: string, input: TariffInput, trainerHall: TrainerHallLookup): Promise<ServiceResult<TariffPlace>> {
   await requireOwner();
   const { id, ...fields } = input;
 
@@ -53,7 +53,7 @@ export async function saveTariff(input: TariffInput, trainerHall: TrainerHallLoo
 
   if (id) {
     try {
-      await db.tariff.update({ where: { id }, data });
+      await dbFor(clubId).tariff.update({ where: { id }, data });
     } catch (e) {
       // Тариф могли удалить в другой вкладке — сообщаем, а не падаем с ошибкой сервера
       if (isNotFound(e)) return { ok: false, error: NOT_FOUND_MESSAGE };
@@ -61,8 +61,8 @@ export async function saveTariff(input: TariffInput, trainerHall: TrainerHallLoo
     }
   } else {
     // Новый Тариф встаёт в конец своего списка
-    const last = await db.tariff.aggregate({ where: { hallId, trainerId: data.trainerId }, _max: { sortOrder: true } });
-    await db.tariff.create({ data: { ...data, sortOrder: (last._max.sortOrder ?? -1) + 1 } });
+    const last = await dbFor(clubId).tariff.aggregate({ where: { hallId, trainerId: data.trainerId }, _max: { sortOrder: true } });
+    await dbFor(clubId).tariff.create({ data: { ...data, sortOrder: (last._max.sortOrder ?? -1) + 1 } });
   }
 
   return { ok: true, hallId, trainerId: data.trainerId };
@@ -72,23 +72,23 @@ export async function saveTariff(input: TariffInput, trainerHall: TrainerHallLoo
  * Тарифы Тренера переезжают в его новый Зал. Возвращает запрос Prisma, не выполняя его: модуль Тренеры
  * кладёт его в одну транзакцию со сменой Зала Тренера — таблицу Тарифов при этом пишет только этот модуль.
  */
-export function moveTrainerTariffs(trainerId: string, hallId: string) {
-  return db.tariff.updateMany({ where: { trainerId }, data: { hallId } });
+export function moveTrainerTariffs(clubId: string, trainerId: string, hallId: string) {
+  return dbFor(clubId).tariff.updateMany({ where: { trainerId }, data: { hallId } });
 }
 
 /** Удаляет Тариф; если его уже нет — ничего не делает. Возвращает, где он был. */
-export async function deleteTariff(id: string): Promise<TariffPlace | null> {
+export async function deleteTariff(clubId: string, id: string): Promise<TariffPlace | null> {
   await requireOwner();
-  const tariff = id ? await db.tariff.findUnique({ where: { id } }) : null;
+  const tariff = id ? await dbFor(clubId).tariff.findUnique({ where: { id } }) : null;
   if (!tariff) return null;
-  await db.tariff.deleteMany({ where: { id } });
+  await dbFor(clubId).tariff.deleteMany({ where: { id } });
   return { hallId: tariff.hallId, trainerId: tariff.trainerId };
 }
 
-export async function toggleTariffVisibility(id: string): Promise<void> {
+export async function toggleTariffVisibility(clubId: string, id: string): Promise<void> {
   await requireOwner();
-  const tariff = await db.tariff.findUnique({ where: { id } });
+  const tariff = await dbFor(clubId).tariff.findUnique({ where: { id } });
   if (tariff) {
-    await db.tariff.updateMany({ where: { id }, data: { isVisible: !tariff.isVisible } });
+    await dbFor(clubId).tariff.updateMany({ where: { id }, data: { isVisible: !tariff.isVisible } });
   }
 }
