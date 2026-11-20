@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { getContactStats } from "@/modules/contacts";
 import { CONTACT_CHANNEL_LABEL_RU, contactSourceLabelRu, formatDayRu } from "@/modules/contacts/client";
 import { CallSym, ChatSym, PhotoCameraSym, ScheduleSym } from "@/components/symbols";
@@ -31,7 +32,7 @@ function pct(part: number, total: number): string {
 
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ locked?: string }> }) {
   const { locked } = await searchParams;
-  const stats = await getContactStats();
+  const stats = await getContactStats(await currentClub());
   const peak = Math.max(1, ...stats.days.map((d) => d.count));
   const yesterday = stats.days.at(-2)?.count ?? 0;
   const diff = stats.today - yesterday;

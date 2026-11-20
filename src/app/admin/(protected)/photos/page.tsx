@@ -37,10 +37,10 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
   const [single, gallery, posters, status, general, women] = await Promise.all([
     getSettingsPhotos(await currentClub()),
     listGallery(await currentClub()),
-    listPricePosters(),
+    listPricePosters(await currentClub()),
     mediaStatus().catch((): Record<string, unknown> => ({})),
-    listTrainers("general"),
-    listTrainers("women"),
+    listTrainers(await currentClub(), "general"),
+    listTrainers(await currentClub(), "women"),
   ]);
   // Хранилище не настроено или вошёл Гость демо-админки (этап П1): загрузка закрыта
   const off = !isStorageConfigured() || (await isGuest());

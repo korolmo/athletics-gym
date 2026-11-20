@@ -19,12 +19,12 @@ const logoPhotoSlot = (clubId: string): PhotoSlots[number] => ({
  * Места для Фото, которые ведут модули-владельцы (этап 6, ADR 0015, «Места для Фото»). Фото о владельцах
  * не знает — их места собирает слой приложения и передаёт сервису Фото. Новый модуль-владелец добавляет
  * своё место сюда; без него загрузка в это место не принимается, а уборка файлов пропускается.
- * Места — Клуба (этап П2): Настройки и логотип уже берут его id; прайс, Тренеры и Направления — со следующим PR.
+ * Места — Клуба (этап П2): каждое ищет и пишет строки только своего Клуба.
  */
 export const photoSlots = (clubId: string): PhotoSlots => [
-  pricePosterSlot,
-  trainerPosterSlot,
-  directionPhotoSlot,
+  pricePosterSlot(clubId),
+  trainerPosterSlot(clubId),
+  directionPhotoSlot(clubId),
   heroPhotoSlot(clubId),
   womenPhotoSlot(clubId),
   logoPhotoSlot(clubId),

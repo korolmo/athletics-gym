@@ -1,5 +1,6 @@
 "use server";
 
+import { currentClub } from "@/app/current-club";
 import { redirect } from "next/navigation";
 import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
@@ -19,7 +20,7 @@ export async function saveReview(_prev: ReviewFormState, fd: FormData): Promise<
   const parsed = parseOwnerReviewForm(fd);
   if (!parsed.ok) return { error: parsed.error, values };
 
-  const result = await reviews.saveOwnerReview(parsed.data);
+  const result = await reviews.saveOwnerReview(await currentClub(), parsed.data);
   if (!result.ok) return { error: result.error, values };
 
   revalidateSite();
@@ -30,13 +31,13 @@ export async function saveReview(_prev: ReviewFormState, fd: FormData): Promise<
 export async function setReviewStatus(fd: FormData): Promise<void> {
   await requireOwner();
   const status = text(fd, "status");
-  if (isOwnerStatus(status)) await reviews.setReviewStatus(text(fd, "id"), status);
+  if (isOwnerStatus(status)) await reviews.setReviewStatus(await currentClub(), text(fd, "id"), status);
   revalidateSite();
 }
 
 export async function deleteReview(fd: FormData): Promise<void> {
   await requireRealOwner();
-  await reviews.deleteReview(text(fd, "id"));
+  await reviews.deleteReview(await currentClub(), text(fd, "id"));
   revalidateSite();
   redirect("/admin/reviews?deleted=1");
 }

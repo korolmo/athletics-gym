@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { countReviewsByStatus, listReviews } from "@/modules/reviews";
 import { REVIEW_STATUSES, isReviewStatus } from "@/modules/reviews/client";
@@ -25,7 +26,7 @@ function initials(name: string): string {
 export default async function ReviewsPage({ searchParams }: { searchParams: Promise<{ status?: string; saved?: string; deleted?: string }> }) {
   const { status: rawStatus, saved, deleted } = await searchParams;
   const status = rawStatus && isReviewStatus(rawStatus) ? rawStatus : undefined;
-  const [reviews, counts] = await Promise.all([listReviews(status), countReviewsByStatus()]);
+  const [reviews, counts] = await Promise.all([listReviews(await currentClub(), status), countReviewsByStatus(await currentClub())]);
   const total = counts.NEW + counts.PUBLISHED + counts.HIDDEN;
 
   const tab = (href: string, label: string, count: number, active: boolean) => (

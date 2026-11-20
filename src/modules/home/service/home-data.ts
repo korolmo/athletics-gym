@@ -8,8 +8,8 @@ import { listVisibleTrainersWithTariffs } from "@/modules/trainers";
 // через публичные функции модулей-владельцев, в чужие таблицы не ходит. Без проверки сессии.
 
 /** Позиции прайса Залов и Тренеры с их персональными Тарифами. */
-export async function getPriceListAndTrainers() {
-  const [hallTariffs, trainers] = await Promise.all([listVisibleHallTariffs(), listVisibleTrainersWithTariffs()]);
+export async function getPriceListAndTrainers(clubId: string) {
+  const [hallTariffs, trainers] = await Promise.all([listVisibleHallTariffs(clubId), listVisibleTrainersWithTariffs(clubId)]);
   return { hallTariffs, trainers };
 }
 
@@ -18,6 +18,6 @@ export async function getPriceListAndTrainers() {
  * секция показывает картинку из public/, как до этапа 2.
  */
 export async function getSitePhotos(clubId: string) {
-  const [{ hero, women }, posters, gallery] = await Promise.all([getSettingsPhotoUrls(clubId), listPricePosterUrls(), listVisibleGallery(clubId)]);
+  const [{ hero, women }, posters, gallery] = await Promise.all([getSettingsPhotoUrls(clubId), listPricePosterUrls(clubId), listVisibleGallery(clubId)]);
   return { hero, women, posters, gallery };
 }

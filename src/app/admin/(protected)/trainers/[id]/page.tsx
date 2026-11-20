@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTrainerWithTariffs } from "@/modules/trainers";
@@ -27,7 +28,7 @@ export default async function EditTrainerPage({
 }) {
   const { id } = await params;
   const { saved, deleted } = await searchParams;
-  const tr = await getTrainerWithTariffs(id);
+  const tr = await getTrainerWithTariffs(await currentClub(), id);
   if (!tr || !isHall(tr.hallId)) notFound();
   const schedule = await getScheduleForAdmin(tr.id, (await getClubOnce()).timeZone);
 

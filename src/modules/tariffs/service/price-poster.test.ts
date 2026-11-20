@@ -22,7 +22,7 @@ const { halls, db } = vi.hoisted(() => {
   return { halls, db };
 });
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ db }));
+vi.mock("@/lib/tenant-db", () => ({ dbFor: () => db }));
 vi.mock("@/modules/owner", () => ({ requireOwner: vi.fn(async () => {}) }));
 vi.mock("@/modules/photos", () => ({ mediaUrl: (p: string | null) => (p ? `/media/${p}` : null) }));
 
@@ -35,23 +35,23 @@ beforeEach(() => {
 
 describe("место «Плакат прайса»", () => {
   it("есть только у Залов из списка: чужой id в базу не идёт", async () => {
-    expect(await pricePosterSlot.exists("general")).toBe(true);
-    expect(await pricePosterSlot.exists("vip")).toBe(false);
-    expect(await pricePosterSlot.exists(undefined)).toBe(false);
+    expect(await pricePosterSlot("club").exists("general")).toBe(true);
+    expect(await pricePosterSlot("club").exists("vip")).toBe(false);
+    expect(await pricePosterSlot("club").exists(undefined)).toBe(false);
     expect(db.hall.count).toHaveBeenCalledTimes(1);
   });
 
   it("записывает путь и отдаёт прежний; снятие отдаёт прежний и очищает", async () => {
-    expect(await pricePosterSlot.set("women", "hall/a.webp")).toBeNull();
-    expect(await pricePosterSlot.set("women", "hall/b.webp")).toBe("hall/a.webp");
-    expect(await pricePosterSlot.paths()).toEqual([null, "hall/b.webp"]);
-    expect(await pricePosterSlot.clear("women")).toBe("hall/b.webp");
-    expect(await pricePosterSlot.clear("women")).toBeNull();
+    expect(await pricePosterSlot("club").set("women", "hall/a.webp")).toBeNull();
+    expect(await pricePosterSlot("club").set("women", "hall/b.webp")).toBe("hall/a.webp");
+    expect(await pricePosterSlot("club").paths()).toEqual([null, "hall/b.webp"]);
+    expect(await pricePosterSlot("club").clear("women")).toBe("hall/b.webp");
+    expect(await pricePosterSlot("club").clear("women")).toBeNull();
     expect(halls[1].pricePoster).toBeNull();
   });
 
   it("список для админки — по всем Залам, со ссылками", async () => {
-    await pricePosterSlot.set("general", "hall/c.webp");
-    expect(await listPricePosters()).toEqual({ general: "/media/hall/c.webp", women: null });
+    await pricePosterSlot("club").set("general", "hall/c.webp");
+    expect(await listPricePosters("club")).toEqual({ general: "/media/hall/c.webp", women: null });
   });
 });

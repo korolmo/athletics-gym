@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { notFound } from "next/navigation";
 import { getDirection } from "@/modules/directions";
 import { DIRECTION_ICONS, isDirectionIcon } from "@/modules/directions/client";
@@ -16,7 +17,7 @@ export default async function EditDirectionPage({
 }) {
   const { id } = await params;
   const { created } = await searchParams;
-  const d = await getDirection(id);
+  const d = await getDirection(await currentClub(), id);
   if (!d) notFound();
 
   return (

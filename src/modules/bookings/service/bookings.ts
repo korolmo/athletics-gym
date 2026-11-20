@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireOwner } from "@/modules/owner";
 import { lockClient, requireClient } from "@/modules/clients";
 import { getBookableTrainer, getTrainerNames } from "@/modules/trainers";
+import { CLUB_ID } from "@/modules/club/client";
 import { enqueue } from "@/modules/notifications";
 import { HALL_LABEL_RU, isHall } from "@/modules/tariffs/client";
 import { BOOKING_HORIZON_DAYS, isWindowFree, sessionMinutesOf, type Busy } from "@/modules/schedule";
@@ -73,7 +74,7 @@ export async function createBookingFor(
   const repeated = await findByKey(clientId, idempotencyKey);
   if (repeated) return { ok: true, booking: repeated, repeated: true };
 
-  const trainer = await getBookableTrainer(trainerId);
+  const trainer = await getBookableTrainer(CLUB_ID, trainerId); // Клуб Записи — с переводом Записей на dbFor (П2, PR 3в)
   if (!trainer) return { ok: false, error: "noTrainer" };
   if (!(await isWindowFree(trainerId, startAt, await trainerBusy(trainerId, now), timeZone, now))) return { ok: false, error: "taken" };
   const endAt = new Date(startAt.getTime() + (await sessionMinutesOf(trainerId)) * 60_000);
@@ -156,7 +157,7 @@ export async function cancelMyBooking(bookingId: string, now: Date = new Date())
   });
   if (!row) return { ok: false, error: "notFound" };
   if (!canClientCancel(row, now)) return { ok: false, error: "tooLate" };
-  const trainerName = (row.trainerId && (await getTrainerNames([row.trainerId]))[row.trainerId]) || "Тренер";
+  const trainerName = (row.trainerId && (await getTrainerNames(CLUB_ID, [row.trainerId]))[row.trainerId]) || "Тренер";
   // Отмена и уведомление Владельцу — одной транзакцией: отменилось — значит, Владелец узнает
   const count = await db.$transaction(async (tx) => {
     const { count } = await tx.booking.updateMany({

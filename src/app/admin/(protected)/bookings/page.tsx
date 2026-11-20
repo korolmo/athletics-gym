@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import Link from "next/link";
 import { isGuest, requireOwner } from "@/modules/owner";
 import { listBookingsForOwner } from "@/modules/bookings";
@@ -43,8 +44,8 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const guest = await isGuest();
   const [contacts, names, trainers] = await Promise.all([
     getClientContacts(bookings.flatMap((b) => (b.clientId ? [b.clientId] : [])), requireOwner),
-    getTrainerNames(bookings.flatMap((b) => (b.trainerId ? [b.trainerId] : []))),
-    listTrainers(hall),
+    getTrainerNames(await currentClub(), bookings.flatMap((b) => (b.trainerId ? [b.trainerId] : []))),
+    listTrainers(await currentClub(), hall),
   ]);
   const byClient = new Map(contacts.map((c) => [c.id, c]));
   const now = new Date();

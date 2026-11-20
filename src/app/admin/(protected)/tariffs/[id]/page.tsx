@@ -1,3 +1,4 @@
+import { currentClub } from "@/app/current-club";
 import { notFound } from "next/navigation";
 import { getTariff } from "@/modules/tariffs";
 import { getTrainer } from "@/modules/trainers";
@@ -10,10 +11,10 @@ export const dynamic = "force-dynamic";
 
 export default async function EditTariffPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const t = await getTariff(id);
+  const t = await getTariff(await currentClub(), id);
   if (!t || !isCategory(t.category) || !isHall(t.hallId) || !isAccess(t.access) || !isAudience(t.audience)) notFound();
   // Тарифы о Тренерах не знают: имя Тренера берём у модуля Тренеры
-  const trainer = t.trainerId ? await getTrainer(t.trainerId) : null;
+  const trainer = t.trainerId ? await getTrainer(await currentClub(), t.trainerId) : null;
 
   return (
     <div className="mx-auto max-w-2xl">

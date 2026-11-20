@@ -22,11 +22,10 @@ const stateRowId = (clubId: string) => (clubId === CLUB_ID ? "lab" : `lab-${club
 const PARTS: [string, (clubId: string) => Promise<unknown>, (clubId: string, data: never) => Promise<void>][] = [
   ["club", snapshotClubDemo, restoreClubDemo],
   ["site", snapshotSiteDemo, restoreSiteDemo],
-  // Тренеры, Тарифы, Направления и Отзывы Клуб пока не принимают — их перевод на dbFor идёт следующим PR (П2, PR 3б)
-  ["trainers", snapshotTrainersDemo, (_c, data) => restoreTrainersDemo(data)],
-  ["tariffs", snapshotTariffsDemo, (_c, data) => restoreTariffsDemo(data)],
-  ["directions", snapshotDirectionsDemo, (_c, data) => restoreDirectionsDemo(data)],
-  ["reviews", snapshotReviewsDemo, (_c, data) => restoreReviewsDemo(data)],
+  ["trainers", snapshotTrainersDemo, restoreTrainersDemo],
+  ["tariffs", snapshotTariffsDemo, restoreTariffsDemo],
+  ["directions", snapshotDirectionsDemo, restoreDirectionsDemo],
+  ["reviews", snapshotReviewsDemo, restoreReviewsDemo],
   ["gallery", snapshotPhotosDemo, restorePhotosDemo],
 ];
 

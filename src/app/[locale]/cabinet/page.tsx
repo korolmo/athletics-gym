@@ -16,7 +16,7 @@ export default async function CabinetHomePage({ params }: { params: Promise<{ lo
   if (!isLocale(locale)) notFound();
   const client = await requireClient(`/${locale}/cabinet/login`);
   const [t, bookings, { settings }] = await Promise.all([getCabinetTexts(locale), listMyBookings(), getSiteSettings(await currentClub())]);
-  const names = await getTrainerNames(bookings.flatMap((b) => (b.trainerId ? [b.trainerId] : [])));
+  const names = await getTrainerNames(await currentClub(), bookings.flatMap((b) => (b.trainerId ? [b.trainerId] : [])));
   return (
     <CabinetShell locale={locale} t={t} tab="bookings">
       <BookingsView

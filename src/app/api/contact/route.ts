@@ -2,6 +2,7 @@ import { isAuthed } from "@/modules/owner";
 import { currentIpHash } from "@/lib/ip-hash";
 import { CONTACT_RATE, acceptContact, createRateLimiter } from "@/modules/contacts/client";
 import { recordContact } from "@/modules/contacts";
+import { currentClub } from "@/app/current-club";
 import { logError } from "@/lib/observability/log";
 
 // Счётчик Обращений: сайт сообщает сюда о нажатии на кнопку связи (navigator.sendBeacon).
@@ -22,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
       now: Date.now(),
       limiter,
       isOwner: isAuthed,
-      save: recordContact,
+      save: async (input) => recordContact(await currentClub(), input),
     });
   } catch (e) {
     // Невалидный JSON или недоступная база — нажатие просто не посчитано

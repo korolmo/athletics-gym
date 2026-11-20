@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/lib/db";
+import { dbFor } from "@/lib/tenant-db";
 import { requireOwner } from "@/modules/owner";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import {
@@ -21,8 +21,8 @@ import type { ServiceResult } from "@/lib/services/result";
 // ——— Сайт ———
 
 /** Отзывы для сайта: только опубликованные, свежие первыми. */
-export async function listPublishedReviews() {
-  return db.review.findMany({
+export async function listPublishedReviews(clubId: string) {
+  return dbFor(clubId).review.findMany({
     where: { status: "PUBLISHED" },
     orderBy: [{ reviewedAt: "desc" }, { createdAt: "desc" }],
     select: { id: true, authorName: true, text: true, rating: true, source: true, sourceUrl: true, reviewedAt: true },
@@ -33,13 +33,13 @@ export async function listPublishedReviews() {
  * Проверка отправки до разбора текста: ловушка, время заполнения, лимит с адреса.
  * `ipHash` — хэш адреса Посетителя; сам адрес в базу не попадает.
  */
-export async function checkVisitorSubmission(
+export async function checkVisitorSubmission(clubId: string, 
   meta: { honeypot: string; elapsedMs: number | null; ipHash: string },
   now: Date = new Date(),
 ): Promise<SubmissionCheck> {
   // При сработавшей ловушке в базу не ходим вовсе
   if (meta.honeypot.trim() !== "") return { verdict: "trap" };
-  const recent = await db.reviewSubmission.findMany({
+  const recent = await dbFor(clubId).reviewSubmission.findMany({
     where: { ipHash: meta.ipHash, createdAt: { gt: new Date(now.getTime() - SUBMISSION_WINDOW_MS) } },
     select: { createdAt: true },
   });
@@ -56,7 +56,7 @@ export async function checkVisitorSubmission(
  * Дата редакции Политики, на которую Посетитель дал Согласие, — аргумент: юридические документы — модуль поверх
  * Отзывов (ADR 0015), Отзывы о нём не знают. Действие сайта передаёт LEGAL_UPDATED.privacy из модуля legal.
  */
-export async function createVisitorReview(
+export async function createVisitorReview(clubId: string, 
   input: VisitorReviewInput,
   ipHash: string,
   policyDate: string,
@@ -64,8 +64,8 @@ export async function createVisitorReview(
 ): Promise<void> {
   const { consent, ...review } = input;
   if (consent !== true) throw new Error("Отзыв без согласия на обработку данных не принимается.");
-  await db.$transaction([
-    db.review.create({
+  await dbFor(clubId).$transaction([
+    dbFor(clubId).review.create({
       data: {
         ...review,
         source: "SITE",
@@ -77,60 +77,60 @@ export async function createVisitorReview(
         consentPolicyDate: policyDate,
       },
     }),
-    db.reviewSubmission.create({ data: { ipHash } }),
-    db.reviewSubmission.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - SUBMISSION_KEEP_MS) } } }),
+    dbFor(clubId).reviewSubmission.create({ data: { ipHash } }),
+    dbFor(clubId).reviewSubmission.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - SUBMISSION_KEEP_MS) } } }),
   ]);
 }
 
 // ——— Админка ———
 
 /** Отзывы для раздела «Отзывы»: новые первыми, дальше — по дате добавления. Можно отобрать по статусу. */
-export async function listReviews(status?: ReviewStatus) {
+export async function listReviews(clubId: string, status?: ReviewStatus) {
   await requireOwner();
-  const reviews = await db.review.findMany({ where: status ? { status } : undefined, orderBy: { createdAt: "desc" } });
+  const reviews = await dbFor(clubId).review.findMany({ where: status ? { status } : undefined, orderBy: { createdAt: "desc" } });
   return [...reviews.filter((r) => r.status === "NEW"), ...reviews.filter((r) => r.status !== "NEW")];
 }
 
 /** Сколько Отзывов в каждом статусе — для фильтра. */
-export async function countReviewsByStatus(): Promise<Record<ReviewStatus, number>> {
+export async function countReviewsByStatus(clubId: string): Promise<Record<ReviewStatus, number>> {
   await requireOwner();
-  const groups = await db.review.groupBy({ by: ["status"], _count: { _all: true } });
+  const groups = await dbFor(clubId).review.groupBy({ by: ["status"], _count: { _all: true } });
   const counts: Record<ReviewStatus, number> = { NEW: 0, PUBLISHED: 0, HIDDEN: 0 };
   for (const g of groups) counts[g.status] = g._count._all;
   return counts;
 }
 
 /** Счётчик новых Отзывов для меню админки. */
-export async function countNewReviews(): Promise<number> {
+export async function countNewReviews(clubId: string): Promise<number> {
   await requireOwner();
-  return db.review.count({ where: { status: "NEW" } });
+  return dbFor(clubId).review.count({ where: { status: "NEW" } });
 }
 
-export async function getReview(id: string) {
+export async function getReview(clubId: string, id: string) {
   await requireOwner();
-  return db.review.findUnique({ where: { id } });
+  return dbFor(clubId).review.findUnique({ where: { id } });
 }
 
 /**
  * Создаёт или правит Отзыв, добавленный Владельцем вручную.
  * Отзыв Посетителя так править нельзя: его текст остаётся таким, каким был отправлен.
  */
-export async function saveOwnerReview(input: OwnerReviewInput): Promise<ServiceResult<{ id: string }>> {
+export async function saveOwnerReview(clubId: string, input: OwnerReviewInput): Promise<ServiceResult<{ id: string }>> {
   await requireOwner();
   const { id, ...data } = input;
 
   if (!id) {
-    const created = await db.review.create({ data: { ...data, fromVisitor: false } });
+    const created = await dbFor(clubId).review.create({ data: { ...data, fromVisitor: false } });
     return { ok: true, id: created.id };
   }
 
-  const existing = await db.review.findUnique({ where: { id }, select: { fromVisitor: true } });
+  const existing = await dbFor(clubId).review.findUnique({ where: { id }, select: { fromVisitor: true } });
   if (!existing) return { ok: false, error: NOT_FOUND_MESSAGE };
   if (existing.fromVisitor) {
     return { ok: false, error: "Отзыв посетителя править нельзя: его можно опубликовать, скрыть или удалить." };
   }
   try {
-    await db.review.update({ where: { id }, data });
+    await dbFor(clubId).review.update({ where: { id }, data });
   } catch (e) {
     if (isNotFound(e)) return { ok: false, error: NOT_FOUND_MESSAGE };
     throw e;
@@ -139,12 +139,12 @@ export async function saveOwnerReview(input: OwnerReviewInput): Promise<ServiceR
 }
 
 /** «Опубликовать» или «Скрыть» — для любого Отзыва, и ручного, и от Посетителя. */
-export async function setReviewStatus(id: string, status: OwnerStatus): Promise<void> {
+export async function setReviewStatus(clubId: string, id: string, status: OwnerStatus): Promise<void> {
   await requireOwner();
-  await db.review.updateMany({ where: { id }, data: { status } });
+  await dbFor(clubId).review.updateMany({ where: { id }, data: { status } });
 }
 
-export async function deleteReview(id: string): Promise<void> {
+export async function deleteReview(clubId: string, id: string): Promise<void> {
   await requireOwner();
-  if (id) await db.review.deleteMany({ where: { id } });
+  if (id) await dbFor(clubId).review.deleteMany({ where: { id } });
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { currentClub } from "@/app/current-club";
 import { redirect } from "next/navigation";
 import { requireOwner, requireRealOwner } from "@/modules/owner";
 import { text } from "@/lib/admin/form";
@@ -16,7 +17,7 @@ export async function saveTrainer(_prev: TrainerFormState, fd: FormData): Promis
   const parsed = parseTrainerForm(fd);
   if (!parsed.ok) return { error: parsed.error };
 
-  const result = await trainers.saveTrainer(parsed.data);
+  const result = await trainers.saveTrainer(await currentClub(), parsed.data);
   if (!result.ok) return { error: result.error };
 
   revalidateSite();
@@ -25,13 +26,13 @@ export async function saveTrainer(_prev: TrainerFormState, fd: FormData): Promis
 
 export async function deleteTrainer(fd: FormData): Promise<void> {
   await requireRealOwner();
-  const place = await trainers.deleteTrainer(text(fd, "id"));
+  const place = await trainers.deleteTrainer(await currentClub(), text(fd, "id"));
   revalidateSite();
   redirect(`/admin/trainers?hall=${place?.hallId ?? "general"}&deleted=1`);
 }
 
 export async function toggleTrainer(fd: FormData): Promise<void> {
   await requireOwner();
-  await trainers.toggleTrainerVisibility(text(fd, "id"));
+  await trainers.toggleTrainerVisibility(await currentClub(), text(fd, "id"));
   revalidateSite();
 }

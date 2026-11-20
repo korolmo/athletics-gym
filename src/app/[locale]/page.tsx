@@ -73,11 +73,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const [t, club] = await Promise.all([getSiteDictionary(locale), getClubOnce()]);
 
   const [{ hallTariffs, trainers: trainerRows }, { settings, cards }, photos, publishedReviews, directionRows] = await Promise.all([
-    getPriceListAndTrainers(),
+    getPriceListAndTrainers(await currentClub()),
     getSiteSettings(await currentClub()),
     getSitePhotos(await currentClub()),
-    listPublishedReviews(),
-    listVisibleDirections(),
+    listPublishedReviews(await currentClub()),
+    listVisibleDirections(await currentClub()),
   ]);
   // Настройки сайта на языке страницы: тексты, контакты и какие Блоки показывать
   const s = toSiteContent(locale, settings, cards);
@@ -93,7 +93,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     tariffs: tr.tariffs.map((x) => toTariffView(locale, x)),
   }));
 
-  const logos = logosFor(club, await listHallLogos());
+  const logos = logosFor(club, await listHallLogos(await currentClub()));
   const props = { locale, t, s, logos };
   // Кнопка «Кабинет» — только где вход работает (Лаборатория); на боевом сайте канала доставки кода нет
   const cabinet = resolveCodeChannel() !== null;

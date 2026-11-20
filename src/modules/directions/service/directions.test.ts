@@ -53,7 +53,7 @@ const { state, db, storage, requireOwner } = vi.hoisted(() => {
   return { state, db, storage, requireOwner: vi.fn(async () => {}) };
 });
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ db }));
+vi.mock("@/lib/tenant-db", () => ({ dbFor: () => db }));
 // Модуль Фото: правила — настоящие (client.ts без хранилища), хранилище — подмена
 vi.mock("@/modules/photos", async () => ({ ...(await vi.importActual<object>("@/modules/photos/client")), ...storage }));
 vi.mock("@/modules/owner", () => ({ requireOwner }));
@@ -69,7 +69,7 @@ const input = { id: null, titleRu: "Бег", titleKk: null, descriptionRu: null,
 const PHOTO = "direction/3f2b8c1e-9a4d-4e7b-8c21-0a1b2c3d4e5f.webp";
 const media = (path: string | null) => (path ? `https://storage.test/${path}` : null);
 const add = async (titleRu: string, over: Partial<typeof input> = {}) => {
-  const r = await directions.saveDirection({ ...input, titleRu, ...over });
+  const r = await directions.saveDirection("club", { ...input, titleRu, ...over });
   if (!r.ok) throw new Error(r.error);
   return r.id;
 };
@@ -136,28 +136,28 @@ describe("на сайте — только не скрытые и в задан�
     await add("Первое");
     const second = await add("Второе");
     await add("Третье");
-    await directions.toggleDirection(second);
+    await directions.toggleDirection("club", second);
 
-    const rows = await directions.listVisibleDirections();
+    const rows = await directions.listVisibleDirections("club");
     expect(db.direction.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: { isVisible: true } }));
     expect(toDirectionViews("ru", rows, media).map((d) => d.title)).toEqual(["Первое", "Третье"]);
 
-    await directions.toggleDirection(second);
-    expect(toDirectionViews("ru", await directions.listVisibleDirections(), media).map((d) => d.title)).toEqual(["Первое", "Второе", "Третье"]);
+    await directions.toggleDirection("club", second);
+    expect(toDirectionViews("ru", await directions.listVisibleDirections("club"), media).map((d) => d.title)).toEqual(["Первое", "Второе", "Третье"]);
   });
 
   it("кнопки «выше» и «ниже» меняют порядок на сайте; крайние двигать некуда", async () => {
     const a = await add("А");
     await add("Б");
     const c = await add("В");
-    const order = async () => toDirectionViews("ru", await directions.listVisibleDirections(), media).map((d) => d.title);
+    const order = async () => toDirectionViews("ru", await directions.listVisibleDirections("club"), media).map((d) => d.title);
 
-    await directions.moveDirection(c, "up");
+    await directions.moveDirection("club", c, "up");
     expect(await order()).toEqual(["А", "В", "Б"]);
-    await directions.moveDirection(a, "down");
+    await directions.moveDirection("club", a, "down");
     expect(await order()).toEqual(["В", "А", "Б"]);
-    await directions.moveDirection(c, "up");
-    await directions.moveDirection("ghost", "down");
+    await directions.moveDirection("club", c, "up");
+    await directions.moveDirection("club", "ghost", "down");
     expect(await order()).toEqual(["В", "А", "Б"]);
     expect(state.rows.map((r) => r.sortOrder).sort()).toEqual([0, 1, 2]);
   });
@@ -180,10 +180,10 @@ describe("на сайте — только не скрытые и в задан�
   });
 
   it("Направлений нет или все скрыты — показывать нечего (блок на сайте не выводится)", async () => {
-    expect(toDirectionViews("ru", await directions.listVisibleDirections(), media)).toEqual([]);
+    expect(toDirectionViews("ru", await directions.listVisibleDirections("club"), media)).toEqual([]);
     const id = await add("Одно");
-    await directions.toggleDirection(id);
-    expect(toDirectionViews("ru", await directions.listVisibleDirections(), media)).toEqual([]);
+    await directions.toggleDirection("club", id);
+    expect(toDirectionViews("ru", await directions.listVisibleDirections("club"), media)).toEqual([]);
   });
 });
 
@@ -192,19 +192,19 @@ describe("админка", () => {
     await add("Первое");
     const id = await add("Второе");
     state.rows[1].photo = PHOTO;
-    expect(await directions.saveDirection({ ...input, id, titleRu: "Второе, новое", descriptionRu: "Описание", icon: "cardio" })).toEqual({ ok: true, id });
+    expect(await directions.saveDirection("club", { ...input, id, titleRu: "Второе, новое", descriptionRu: "Описание", icon: "cardio" })).toEqual({ ok: true, id });
     expect(state.rows[1]).toMatchObject({ titleRu: "Второе, новое", descriptionRu: "Описание", icon: "cardio", sortOrder: 1, photo: PHOTO });
   });
 
   it("правка удалённого Направления — понятная ошибка", async () => {
-    const r = await directions.saveDirection({ ...input, id: "ghost" });
+    const r = await directions.saveDirection("club", { ...input, id: "ghost" });
     expect(error(r)).toMatch(/не найдена/);
   });
 
   it("в списке админки — все, включая скрытые, со ссылкой на Фото", async () => {
     const id = await add("Скрытое", { isVisible: false });
     state.rows[0].photo = PHOTO;
-    expect(await directions.listDirections()).toMatchObject([{ id, isVisible: false, photoUrl: `https://storage.test/${PHOTO}` }]);
+    expect(await directions.listDirections("club")).toMatchObject([{ id, isVisible: false, photoUrl: `https://storage.test/${PHOTO}` }]);
   });
 });
 
@@ -215,7 +215,7 @@ describe("удаление Фото вместе с файлом", () => {
     state.files.add(PHOTO);
     state.files.add("gallery/other.webp");
 
-    await directions.deleteDirection(id);
+    await directions.deleteDirection("club", id);
 
     expect(state.rows).toEqual([]);
     expect(storage.removeObjects).toHaveBeenCalledWith([PHOTO]);
@@ -223,7 +223,7 @@ describe("удаление Фото вместе с файлом", () => {
   });
 
   it("у Направления без Фото в хранилище ничего не трогаем", async () => {
-    await directions.deleteDirection(await add("Без фото"));
+    await directions.deleteDirection("club", await add("Без фото"));
     expect(storage.removeObjects).not.toHaveBeenCalled();
   });
 
@@ -232,7 +232,7 @@ describe("удаление Фото вместе с файлом", () => {
     state.rows[0].photo = PHOTO;
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     storage.removeObjects.mockRejectedValueOnce(new Error("storage down"));
-    await expect(directions.deleteDirection(id)).resolves.toBeUndefined();
+    await expect(directions.deleteDirection("club", id)).resolves.toBeUndefined();
     expect(state.rows).toEqual([]);
     log.mockRestore();
   });
@@ -250,13 +250,13 @@ describe("удаление Фото вместе с файлом", () => {
 describe("права: без сессии Владельца — отказ", () => {
   const NO_SESSION = new Error("NEXT_REDIRECT;/admin/login");
   const owner: [string, () => Promise<unknown>][] = [
-    ["listDirections", () => directions.listDirections()],
-    ["getDirection", () => directions.getDirection("d1")],
-    ["saveDirection (новое)", () => directions.saveDirection(input)],
-    ["saveDirection (правка)", () => directions.saveDirection({ ...input, id: "d1", titleRu: "подмена" })],
-    ["toggleDirection", () => directions.toggleDirection("d1")],
-    ["moveDirection", () => directions.moveDirection("d1", "down")],
-    ["deleteDirection", () => directions.deleteDirection("d1")],
+    ["listDirections", () => directions.listDirections("club")],
+    ["getDirection", () => directions.getDirection("club", "d1")],
+    ["saveDirection (новое)", () => directions.saveDirection("club", input)],
+    ["saveDirection (правка)", () => directions.saveDirection("club", { ...input, id: "d1", titleRu: "подмена" })],
+    ["toggleDirection", () => directions.toggleDirection("club", "d1")],
+    ["moveDirection", () => directions.moveDirection("club", "d1", "down")],
+    ["deleteDirection", () => directions.deleteDirection("club", "d1")],
   ];
 
   it("каждая функция сервиса либо требует сессию, либо это чтение для сайта", () => {
@@ -287,7 +287,7 @@ describe("права: без сессии Владельца — отказ", ()
     await add("Скрытое", { isVisible: false });
     vi.clearAllMocks();
     requireOwner.mockRejectedValue(NO_SESSION);
-    expect((await directions.listVisibleDirections()).map((r) => r.titleRu)).toEqual(["Видимое"]);
+    expect((await directions.listVisibleDirections("club")).map((r) => r.titleRu)).toEqual(["Видимое"]);
     expect(requireOwner).not.toHaveBeenCalled();
   });
 });

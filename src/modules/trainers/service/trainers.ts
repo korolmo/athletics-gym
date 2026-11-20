@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/lib/db";
+import { dbFor } from "@/lib/tenant-db";
 import { requireOwner } from "@/modules/owner";
 import { NOT_FOUND_MESSAGE, isNotFound } from "@/lib/admin/db-errors";
 import type { HallId } from "@/modules/tariffs/client";
@@ -17,9 +17,9 @@ const byOrder = [{ sortOrder: "asc" as const }, { name: "asc" as const }];
 const tariffsByOrder = [{ sortOrder: "asc" as const }, { price: "asc" as const }];
 
 /** Тренеры Зала с их видимыми на сайте Тарифами. */
-export async function listTrainers(hallId: HallId) {
+export async function listTrainers(clubId: string, hallId: HallId) {
   await requireOwner();
-  return db.trainer.findMany({
+  return dbFor(clubId).trainer.findMany({
     where: { hallId },
     orderBy: byOrder,
     include: { tariffs: { where: { isVisible: true } } },
@@ -27,14 +27,14 @@ export async function listTrainers(hallId: HallId) {
 }
 
 /** Тренер со всеми его Тарифами (включая скрытые) — для карточки в админке. */
-export async function getTrainerWithTariffs(id: string) {
+export async function getTrainerWithTariffs(clubId: string, id: string) {
   await requireOwner();
-  return db.trainer.findUnique({ where: { id }, include: { tariffs: { orderBy: tariffsByOrder } } });
+  return dbFor(clubId).trainer.findUnique({ where: { id }, include: { tariffs: { orderBy: tariffsByOrder } } });
 }
 
-export async function getTrainer(id: string) {
+export async function getTrainer(clubId: string, id: string) {
   await requireOwner();
-  return db.trainer.findUnique({ where: { id } });
+  return dbFor(clubId).trainer.findUnique({ where: { id } });
 }
 
 /**
@@ -43,16 +43,16 @@ export async function getTrainer(id: string) {
  * новый Тренер без заданного порядка встаёт в конец списка своего Зала;
  * при правке пустой порядок значит «не менять».
  */
-export async function saveTrainer(input: TrainerInput): Promise<ServiceResult<{ id: string }>> {
+export async function saveTrainer(clubId: string, input: TrainerInput): Promise<ServiceResult<{ id: string }>> {
   await requireOwner();
   const { id, sortOrder, ...data } = input;
 
   if (id) {
     try {
-      await db.$transaction([
-        db.trainer.update({ where: { id }, data: { ...data, ...sortOrderOnUpdate(sortOrder) } }),
+      await dbFor(clubId).$transaction([
+        dbFor(clubId).trainer.update({ where: { id }, data: { ...data, ...sortOrderOnUpdate(sortOrder) } }),
         // Таблицу Тарифов пишет модуль Тарифы; здесь — только его запрос в общей транзакции
-        moveTrainerTariffs(id, data.hallId),
+        moveTrainerTariffs(clubId, id, data.hallId),
       ]);
     } catch (e) {
       // Тренера могли удалить в другой вкладке — сообщаем, а не падаем с ошибкой сервера
@@ -63,19 +63,19 @@ export async function saveTrainer(input: TrainerInput): Promise<ServiceResult<{ 
   }
 
   // Фото загрузим на этапе 2
-  const last = await db.trainer.aggregate({ where: { hallId: data.hallId }, _max: { sortOrder: true } });
-  const created = await db.trainer.create({
+  const last = await dbFor(clubId).trainer.aggregate({ where: { hallId: data.hallId }, _max: { sortOrder: true } });
+  const created = await dbFor(clubId).trainer.create({
     data: { ...data, sortOrder: sortOrderOnCreate(sortOrder, last._max.sortOrder) },
   });
   return { ok: true, id: created.id };
 }
 
 /** Удаляет Тренера вместе с его Тарифами (каскад в схеме) и загруженным Плакатом. Возвращает Зал, где он был. */
-export async function deleteTrainer(id: string): Promise<{ hallId: string } | null> {
+export async function deleteTrainer(clubId: string, id: string): Promise<{ hallId: string } | null> {
   await requireOwner();
-  const trainer = id ? await db.trainer.findUnique({ where: { id } }) : null;
+  const trainer = id ? await dbFor(clubId).trainer.findUnique({ where: { id } }) : null;
   if (!trainer) return null;
-  await db.trainer.deleteMany({ where: { id } });
+  await dbFor(clubId).trainer.deleteMany({ where: { id } });
   // Загруженный Плакат Тренера удаляем и из хранилища; если не вышло — файл подберёт уборка
   if (trainer.uploadedPhoto) {
     await removeObjects([trainer.uploadedPhoto]).catch((e) => logError("Хранилище фото: плакат удалённого Тренера остался.", e));
@@ -84,15 +84,15 @@ export async function deleteTrainer(id: string): Promise<{ hallId: string } | nu
 }
 
 /** Зал Тренера (или null) — для Тарифов: персональный Тариф лежит в Зале Тренера (TrainerHallLookup). */
-export async function trainerHall(trainerId: string): Promise<string | null> {
+export async function trainerHall(clubId: string, trainerId: string): Promise<string | null> {
   await requireOwner();
-  return (await db.trainer.findUnique({ where: { id: trainerId }, select: { hallId: true } }))?.hallId ?? null;
+  return (await dbFor(clubId).trainer.findUnique({ where: { id: trainerId }, select: { hallId: true } }))?.hallId ?? null;
 }
 
-export async function toggleTrainerVisibility(id: string): Promise<void> {
+export async function toggleTrainerVisibility(clubId: string, id: string): Promise<void> {
   await requireOwner();
-  const trainer = await db.trainer.findUnique({ where: { id } });
+  const trainer = await dbFor(clubId).trainer.findUnique({ where: { id } });
   if (trainer) {
-    await db.trainer.updateMany({ where: { id }, data: { isVisible: !trainer.isVisible } });
+    await dbFor(clubId).trainer.updateMany({ where: { id }, data: { isVisible: !trainer.isVisible } });
   }
 }
